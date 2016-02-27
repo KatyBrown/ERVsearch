@@ -60,8 +60,8 @@ After cloning the repository, the program can be used as is (with the above prer
 
       e.g. hg19.fa saved in /home/myname/genome/hg19.fa would require the following options:
       
-        - genome=hg19
-        - genome_directory=/home/myname/genome
+            genome=hg19
+            genome_directory=/home/myname/genome
     
     If your genome is assembled into chromosomes, has_chroms should be 1, otherwise it should be 0.
 
@@ -69,15 +69,15 @@ After cloning the repository, the program can be used as is (with the above prer
 
       e.g if you cloned to /home/ERVsearch then paths would be
       
-        - path_to_refs=/home/ERVsearch/ERV_db/all_ERVs.fasta
-        - path_to_phyloseqs=/home/ERVsearch/phylogenies
-        - sequencedir=/home/ERVsearch/ERV_db
+            path_to_refs=/home/ERVsearch/ERV_db/all_ERVs.fasta
+            path_to_phyloseqs=/home/ERVsearch/phylogenies
+            sequencedir=/home/ERVsearch/ERV_db
 
     Change the paths to the required software.
 
 4. Run the pipeline in the working directory as:
 
-    -python /path_to_ERVsearch/ERVsearch/src/pipeline_ERVs.py -v
+            python /path_to_ERVsearch/ERVsearch/src/pipeline_ERVs.py -v
 
 
 Details
