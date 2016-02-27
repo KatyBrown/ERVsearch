@@ -9,17 +9,19 @@ Reference genome sequences are available from http://www.ensembl.org/info/about/
 
 ERV search will take this genome and output:
 
-A table showing regions of the genome related to each of the major retroviral genes (gag, pol and env).  This table shows:
+1. A table showing regions of the genome related to each of the major retroviral genes (gag, pol and env).  This table shows:
 
 - ID, chromosome, start position, end position and length of the ERV region
 - The name and source of the most similar previously known retrovirus sequence and its similarity to the region
 - The start position, end position and length of the longest open reading frame (ORF) in the region
 
-Summary plots for each gene, consisting of:
+2. Summary plots for each gene, consisting of:
 - A bar plot showing the number of genes per chromosome
 - A histogram of the ORF length
 - A pie chart showing distribution between retroviral genera
 - A bar plot showing the frequencies of regions related to different known retroviruses
+
+3. Phylogenetic trees summarising the ERVS identified.
 
 Prerequisites
 -------------
