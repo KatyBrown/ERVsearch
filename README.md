@@ -8,7 +8,9 @@ ERVsearch provides a comprehensive screen for endogenous retrovirus (ERV) like r
 Reference genome sequences are available from http://www.ensembl.org/info/about/species.html and https://genome-euro.ucsc.edu/index.html. De novo assemblies can also be used.
 
 ERV search will take this genome and output:
+
 A table showing regions of the genome related to each of the major retroviral genes (gag, pol and env).  This table shows:
+
 - ID, chromosome, start position, end position and length of the ERV region
 - The name and source of the most similar previously known retrovirus sequence and its similarity to the region
 - The start position, end position and length of the longest open reading frame (ORF) in the region
