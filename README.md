@@ -75,6 +75,11 @@ After cloning the repository, the program can be used as is (with the above prer
 
     Change the paths to the required software.
 
+4. Run the pipeline in the working directory as:
+
+    -python /path_to_ERVsearch/ERVsearch/src/pipeline_ERVs.py -v
+
+
 Details
 -------
 Input
