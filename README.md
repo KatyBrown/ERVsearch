@@ -15,7 +15,7 @@ ERV search will take this genome and output:
 - The name and source of the most similar previously known retrovirus sequence and its similarity to the region
 - The start position, end position and length of the longest open reading frame (ORF) in the region
 
-2. Summary plots for each gene, consisting of:
+2.  Summary plots for each gene, consisting of:
 
 - A bar plot showing the number of genes per chromosome
 - A histogram of the ORF length
