@@ -16,6 +16,7 @@ ERV search will take this genome and output:
 - The start position, end position and length of the longest open reading frame (ORF) in the region
 
 2. Summary plots for each gene, consisting of:
+
 - A bar plot showing the number of genes per chromosome
 - A histogram of the ORF length
 - A pie chart showing distribution between retroviral genera
