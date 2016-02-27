@@ -1,3 +1,5 @@
+# This file provides functions used by the pipeline.
+
 import os
 import pandas as pd
 import numpy as np
