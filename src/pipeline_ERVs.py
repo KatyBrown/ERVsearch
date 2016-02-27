@@ -1,3 +1,5 @@
+# This is the main ruffus pipeline for ERVsearch.
+
 from ruffus import *
 
 import PipelineERVs as PipelineERVs
