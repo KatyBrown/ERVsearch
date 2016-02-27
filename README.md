@@ -31,7 +31,9 @@ Python 2 with the following packages:
 - pandas - https://pypi.python.org/pypi/pandas
 - ete2 - https://pypi.python.org/pypi/ete2
 - matplotlib - https://pypi.python.org/pypi/matplotlib
+
 All packages are available via pip and easy_install
+
 
 - Exonerate: http://www.ebi.ac.uk/about/vertebrate-genomics/software/exonerate
 - Bedtools: https://github.com/arq5x/bedtools2
@@ -40,6 +42,7 @@ All packages are available via pip and easy_install
 - Emboss: http://emboss.sourceforge.net/download/#Stable/
 - Mafft: http://mafft.cbrc.jp/alignment/software/linux.html
 - FastTree: http://meta.microbesonline.org/fasttree/#Install
+
 
 Quick Start
 -----------
