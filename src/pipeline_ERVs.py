@@ -163,9 +163,9 @@ def makeUBLASTDb(infile, outfile):
     This function generates this database for the three
     ERV_Amino_Acid_DB fasta files.
     '''
-    os.system("%s/usearch -makeudb_ublast -quiet \
-               %s -output %s --alpha aa" % (
-        PARAMS['path_to_usearch'], infile, outfile))
+    os.system("%s/usearch -makeudb_ublast \
+               %s -output %s --alpha aa -quiet" % (
+                   PARAMS['path_to_usearch'], infile, outfile))
 
 
 @transform(makeFasta, suffix(".fa"), add_inputs(makeUBLASTDb),
