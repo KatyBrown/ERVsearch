@@ -727,7 +727,7 @@ def summary(gag, pol, env, outfile, plot_dir):
     '''
     genes = ['Gag', 'Pol', 'Env']
     out = open(outfile, "w")
-    generaL = genera
+    generaL = pd.Series(genera)
     cols = [coldict[genus] for genus in generaL]
     i = 0
     for parsed_output in (gag, pol, env):
