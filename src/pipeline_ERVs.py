@@ -9,30 +9,82 @@ import pandas as pd
 import numpy as np
 import ruffus.cmdline as cmdline
 import logging
+import subprocess
 
 
 PARAMS = PipelineERVs.getParameters("./pipeline.ini")
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
+
+logfile = "%s_log.txt" % PARAMS['outfile_stem']
+handler = logging.FileHandler(logfile)
+handler.setLevel(logging.INFO)
+# create a logging format
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+log.addHandler(handler)
+
 for PARAM in PARAMS:
-    print("%s\t%s\n" % (PARAM, PARAMS[PARAM]))
+    log.info("%s\t%s\n" % (PARAM, PARAMS[PARAM]))
+
+PARAMS['sequencedir'] = "%s/ERV_db" % PARAMS['path_to_ERVSearch']
+PARAMS['path_to_refs'] = "%s/ERV_db/all_ERVs.fasta" % PARAMS[
+    'path_to_ERVSearch']
 
 parser = cmdline.get_argparse(description='Pipeline ERVs')
-
 options = parser.parse_args()
 
 
 @follows(mkdir("UBLAST_db"))
 @follows(mkdir("host_chromosomes"))
-@split("%s/%s.fa" % (PARAMS['genome_directory'], PARAMS['genome']),
-       r"host_chromosomes/*.fa")
+@split(PARAMS['genome'], r"host_chromosomes/*.fa")
 def genomeToChroms(infile, outfiles):
     '''
     Splits the host genome provided by the user into one fasta file for each
     chromosome, scaffold or contig.
 
+    A temporary unzipped copy of zipped and gzipped fasta files will be
+    created.
+
     This function generates a series of fasta files which are stored in the
     host_chromosomes directory.
     '''
-    PipelineERVs.splitChroms(infile)
+    assert os.path.exists(infile), "Input file %s not found" % infile
+    if infile.endswith(".gz"):
+        # unzip gzipped files
+        log.info("Unzipping gzipped input file %s" % infile)
+        stem = os.path.basename(infile).split(".gz")[0]
+        statement = ["gunzip", "-c", infile]
+        new_infile = stem
+        log.info("Running statement: %s" % " ".join(statement))
+        subprocess.run(statement, stdout=open(new_infile, "w"))
+    elif infile.endswith(".zip"):
+        # unzip zipped files
+        log.info("Unzipping zipped input file %s" % infile)
+        stem = os.path.basename(infile).split(".zip")[0]
+        statement = ["unzip", "-p", infile]
+        new_infile = stem
+        log.info("Running statement: %s" % " ".join(statement))
+        subprocess.run(statement, stdout=open(new_infile, "w"))
+    else:
+        log.info("Linking to input file %s" % infile)
+        stem = os.path.basename(infile)
+        statement = ["ln",  "-s", infile]
+        subprocess.run(statement)
+        new_infile = stem
+
+    statement = ["samtools", "faidx", new_infile]
+    log.info("Indexing fasta file: %s" % " ".join(statement))
+    s = subprocess.run(statement)
+    if s.returncode != 0:
+        raise RuntimeError("""Indexing the input Fasta file was not possible,
+                              please check your input file for errors""")
+    PipelineERVs.splitChroms(new_infile)
+    log.info("Removing temporary input file %s" % new_infile)
+    os.unlink(new_infile)
+    os.unlink("%s.fa" % new_infile)
 
 
 @transform(genomeToChroms, suffix(".fa"), ".fa.fai")
