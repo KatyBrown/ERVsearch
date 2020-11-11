@@ -39,14 +39,16 @@ Python 2 with the following packages:
 
 All packages are available via pip and easy_install
 
-
-- Exonerate: http://www.ebi.ac.uk/about/vertebrate-genomics/software/exonerate
+The following software needs to be installed and in your $PATH
 - Bedtools: https://github.com/arq5x/bedtools2
 - Samtools: https://sourceforge.net/projects/samtools/files/
-- Usearch: http://www.drive5.com/usearch/download.html
 - Emboss: http://emboss.sourceforge.net/download/#Stable/
 - Mafft: http://mafft.cbrc.jp/alignment/software/linux.html
 - FastTree: http://meta.microbesonline.org/fasttree/#Install
+
+The following software also needs to be installed
+- Exonerate: http://www.ebi.ac.uk/about/vertebrate-genomics/software/exonerate
+- Usearch: http://www.drive5.com/usearch/download.html
 
 
 Quick Start
@@ -55,28 +57,26 @@ After cloning the repository, the program can be used as is (with the above prer
 
 1. Make a copy of the pipeline.ini file (src/pipeline_ERVs/pipeline.ini) in your working directory (the directory in which would would like to store the output).
 
-2. Download a local copy of your genome of interest as a single fasta file.  Check if the genome is assembled into chromosomes, scaffolds or contigs.
+2. Download a local copy of your genome of interest as a single fasta file and name is as xxx.fa
 
-3. Edit this copy to configure the pipeline for your computer:
+3. Edit your copy of pipeline.ini to configure the pipeline for your computer:
 
     Change the working directory to the absolute path to the working directory.
 
     Add the name of your genome and the absolute path to the directory where you have saved it
 
-      e.g. hg19.fa saved in /home/myname/genome/hg19.fa would require the following options:
+      e.g. hg38.fa saved in /home/myname/genome/hg38.fa would require the following options:
       
-            genome=hg19
+            genome=hg38
             genome_directory=/home/myname/genome
     
-    If your genome is assembled into chromosomes, has_chroms should be 1, otherwise it should be 0.
 
     Change the paths to the ERV input files to the directories in which you have cloned the repository.
 
-      e.g if you cloned to /home/ERVsearch then paths would be
-      
-            path_to_refs=/home/ERVsearch/ERV_db/all_ERVs.fasta
-            path_to_phyloseqs=/home/ERVsearch/phylogenies
-            sequencedir=/home/ERVsearch/ERV_db
+      e.g if you cloned to /home/myname/ERVsearch then paths would be
+            path_to_refs=/home/myname/ERVsearch/ERV_db/all_ERVs.fasta
+            path_to_phyloseqs=/home/myname/ERVsearch/phylogenies
+            sequencedir=/home/myname/ERVsearch/ERV_db
 
     Change the paths to the required software.
 
