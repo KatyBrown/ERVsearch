@@ -38,8 +38,8 @@ options = parser.parse_args()
 
 
 @follows(mkdir("UBLAST_db"))
-@follows(mkdir("host_chromosomes"))
-@split(PARAMS['genome'], r"host_chromosomes/*.fa")
+@follows(mkdir("host_chromosomes.dir"))
+@split(PARAMS['genome'], r"host_chromosomes.dir/*.fa")
 def genomeToChroms(infile, outfiles):
     '''
     Splits the host genome provided by the user into one fasta file for each
@@ -71,7 +71,7 @@ def genomeToChroms(infile, outfiles):
     else:
         log.info("Linking to input file %s" % infile)
         stem = os.path.basename(infile)
-        statement = ["ln",  "-s", infile]
+        statement = ["ln",  "-sf", infile]
         subprocess.run(statement)
         new_infile = stem
 
@@ -79,12 +79,13 @@ def genomeToChroms(infile, outfiles):
     log.info("Indexing fasta file: %s" % " ".join(statement))
     s = subprocess.run(statement)
     if s.returncode != 0:
-        raise RuntimeError("""Indexing the input Fasta file was not possible,
-                              please check your input file for errors""")
-    PipelineERVs.splitChroms(new_infile)
+        err = RuntimeError("""Indexing the input Fasta file was not possible, please check your input file for errors""")
+        log.error(err)
+        raise(err)
+    PipelineERVs.splitChroms(new_infile, log)
     log.info("Removing temporary input file %s" % new_infile)
     os.unlink(new_infile)
-    os.unlink("%s.fa" % new_infile)
+    os.unlink("%s.fai" % new_infile)
 
 
 @transform(genomeToChroms, suffix(".fa"), ".fa.fai")

@@ -5,11 +5,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from itertools import groupby
-import re
 import ete3 as ete
-import textwrap
 import Bio.Seq as Seq
-
+import subprocess
 
 cols = ['crimson', 'mediumspringgreen', 'deepskyblue',
         'goldenrod', 'deeppink', 'mediumpurple', 'orangered']
@@ -18,7 +16,6 @@ coldict = dict(zip(genera, cols))
 
 
 def getParameters(ini_file):
-
     '''
     Reads the pipeline.ini file and generates the PARAMS dictionary of
     user-defined parameters
@@ -34,43 +31,40 @@ def getParameters(ini_file):
     return D
 
 
-def splitChroms(infile):
-
+def splitChroms(infile, log):
     '''
     For genomes assembled into chromosomes, split the input fasta file into
     one fasta file per chromosome.
     If a keep_chroms.tsv configuration file is provided, only keep the
     chromosomes listed in this file.
     '''
+    indexed = "%s.fai" % os.path.basename(infile)
+    allchroms = set([L.strip().split()[0] for L in open(indexed).readlines()])
 
-    outfile = ()
-    if os.path.exists("keep_chroms.tsv"):
-        keepchroms = [L.strip()
-                      for L in open(
-                      "keep_chroms.tsv").readlines()]
+    if os.path.exists("keep_chroms.txt"):
+        log.info("""keep_chroms.txt exists so only chromosomes in this\
+                    list will be screened""")
+        keepchroms = set([L.strip()
+                          for L in open("keep_chroms.txt").readlines()])
+        if len(keepchroms & allchroms) != len(keepchroms):
+            err =  RuntimeError("""Not all chromosomes in keepchroms.txt are found in the input fasta file, the following are missing \n%s""" % ("\n".join(list(keepchroms - allchroms))))
+            log.error(err)
+            raise(err)
     else:
-        keepchroms = None
+        keepchroms = allchroms
 
-    k = 0
-    x = 0
+    log.info("Splitting input genome into %i chromosomes" % len(keepchroms))
 
-    #  Generate a file each time a line starts with ">" and is in keepchroms
-    #  or all lines starting with ">" if no keepchroms file is provided
-    with open(infile) as input:
-        for line in input:
-            if line[0] == ">":
-                chromname = line.replace(">", "").strip().split(" ")[0]
-                if x != 0:
-                    outfile.close()
-                    k = 0
-                if (keepchroms is None or chromname in keepchroms):
-                    k = 1
-                    outfile = open("host_chromosomes/%s.fa" % chromname, "w")
-                    outfile.write(">%s\n" % chromname)
-                    x += 1
-            elif k == 1:
-                outfile.write(line)
-    outfile.close()
+    for chrom in keepchroms:
+        # output a fasta file for each chromosome using samtools faidx
+        statement = ["samtools", "faidx", infile, chrom]
+        log.info("Processing chromosome %s: %s" % (chrom, " ".join(statement)))
+        subprocess.run(statement, stdout=open(
+            "host_chromosomes.dir/%s.fasta" % chrom, "w"))
+        statement = ["samtools", "faidx",
+                     "host_chromosmes.dir/%s.fasta" % chrom]
+        log.info("Indexing chromosome %s: %s" % (chrom, " ".join(statement)))
+        subprocess.run(statement)
 
 
 def runExonerate(fasta, chrom, out, path):
