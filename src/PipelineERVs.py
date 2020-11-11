@@ -6,7 +6,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from itertools import groupby
 import re
-import ete2 as ete
+import ete3 as ete
+import textwrap
+import Bio.Seq as Seq
 
 
 cols = ['crimson', 'mediumspringgreen', 'deepskyblue',
@@ -30,75 +32,6 @@ def getParameters(ini_file):
                 line = line.split("=")
                 D[line[0]] = line[1]
     return D
-
-
-def makeChroms(infile, n_chroms):
-
-    '''
-    Takes an infile assembled into contigs or scaffolds and generates a
-    set of n_chroms "chromosomes" of approximately equal length, to allow
-    software designed for fully assembled genomes to run efficiently on
-    partially assembled data.
-    Generates chromosome_map.tsv showing the location of each scaffold and
-    the host_chromosomes directory containing a fasta file representing each
-    chromosome.
-    '''
-
-    mapout = open("chromosome_map.tsv", "w")
-
-    # Count the bases in the genome
-    genome_length = 0
-    with open(infile) as input:
-        for line in input:
-            if line[0] != ">":
-                genome_length += len(line.strip())
-
-    #  Determine the approx number of bases for each chromosome
-    chrom_length = genome_length / int(n_chroms)
-
-    # Build the chromosome fasta files
-    chrom_number = 1
-    chrom_pos = 0
-    p_chrom_pos = 0
-    x = 0
-    outchrom = open("host_chromosomes/chrom_%i.fa" % chrom_number, "w")
-    outchrom.write(">chrom_1\n")
-    contig_name = ()
-    with open(infile) as input:
-        for line in input:
-            if line[0] == ">":
-                line = line.strip()
-
-                if x != 0:
-                    # write locations to the mapout file
-                    mapout.write(
-                        "%s\t%i\t%i\t%i\n" % (
-                            contig_name, chrom_number, p_chrom_pos, chrom_pos))
-                    p_chrom_pos = chrom_pos
-
-                # append scaffolds until the position is greater than
-                # chrom_length, then start a new scaffold
-                if chrom_pos >= chrom_length:
-                    outchrom.close()
-                    chrom_number += 1
-                    outchrom = open(
-                        "host_chromosomes/chrom_%i.fa" % chrom_number, "w")
-                    outchrom.write(">chrom_%i\n" % chrom_number)
-
-                    chrom_pos = 0
-                    p_chrom_pos = 0
-                contig_name = line.replace(">", "")
-                x += 1
-            else:
-                outchrom.write(line)
-                chrom_pos += len(line.strip())
-
-    # write locations to the mapout file for final line
-    mapout.write("%s\t%i\t%i\t%i\n" % (contig_name, chrom_number,
-                                       p_chrom_pos, chrom_pos))
-
-    outchrom.close()
-    mapout.close()
 
 
 def splitChroms(infile):
@@ -126,20 +59,15 @@ def splitChroms(infile):
     with open(infile) as input:
         for line in input:
             if line[0] == ">":
-                chromname = line.replace(">", "").strip()
+                chromname = line.replace(">", "").strip().split(" ")[0]
                 if x != 0:
                     outfile.close()
                     k = 0
                 if (keepchroms is None or chromname in keepchroms):
-                        k = 1
-                        s = chromname.replace("chr", "")
-                        s = s.replace("chrom", "")
-                        s = s.replace("_", "-")
-                        cname = "chrom_%s" % s
-                        outfile = open(
-                            "host_chromosomes/%s.fa" % cname, "w")
-                        outfile.write(">%s\n" % cname)
-                        x += 1
+                    k = 1
+                    outfile = open("host_chromosomes/%s.fa" % chromname, "w")
+                    outfile.write(">%s\n" % chromname)
+                    x += 1
             elif k == 1:
                 outfile.write(line)
     outfile.close()
@@ -194,9 +122,9 @@ def filterExonerate(out, min_hit_length):
             if line[0] == "vulgar":
                 segs = line[1].split(" ")
                 for i in range(9):
-                    smalldf.ix[str(j), cnames[i]] = segs[i]
+                    smalldf.loc[str(j), cnames[i]] = segs[i]
                 rest = "|".join(segs[9:])
-                smalldf.ix[str(j), cnames[9]] = rest
+                smalldf.loc[str(j), cnames[9]] = rest
                 j += 1
 
     # Find the hit lengths (allowing for strand)
@@ -217,7 +145,7 @@ def filterExonerate(out, min_hit_length):
     minus['target_end'] = tempstart
 
     smalldf = plus.append(minus)
-    smalldf = smalldf.sort(['target_start'])
+    smalldf = smalldf.sort_values('target_start')
 
     # Filter hits which are too small or contain introns
     smalldf = smalldf[((smalldf['length'] > min_hit_length) &
@@ -229,7 +157,7 @@ def filterExonerate(out, min_hit_length):
     return smalldf[cnames]
 
 
-def makeFastaDict(multifasta):
+def makeFastaDict(multifasta, spliton=None):
 
     '''
     Turns any fasta file into a dictionary, with sequence names as the keys
@@ -248,6 +176,8 @@ def makeFastaDict(multifasta):
                 seq = []
             if line[0] == ">":
                 nam = line.replace(">", "").strip()
+                if spliton:
+                    nam = nam.split(spliton)[0]
                 x += 1
             else:
                 seq.append(line.strip())
@@ -282,7 +212,7 @@ def keyfunc(s):
             for k, g in groupby(s, str.isdigit)]
 
 
-def getORFS(matches, fasta, outfiles, emboss):
+def getORFS(fasta, outfile_nt, outfile_orf, min_orf_len):
 
     '''
     Uses the EMBOSS 'getorf' function to identify open reading frames in
@@ -291,44 +221,49 @@ def getORFS(matches, fasta, outfiles, emboss):
     to show the length, position and sequence of the longest ORF.
     '''
 
-    data = pd.read_csv(matches, sep="\t", index_col=0)
-
-    #  Run EMBOSS getorf
-    if len(data) != 0:
-        fasout = outfiles[1]
-        os.system("""sed 's/\:/_/g' %s |
-                     %s/getorf -filter -outseq %s""" % (fasta, emboss, fasout))
-        fasta = makeFastaDict(fasout)
-
-        # Find and record the starts, ends, lengths and seqeunces of the ORFs
-        # in the getorf output.
-        res = []
-        uniqs = []
-        for key in fasta.keys():
-            segs = re.split("_|\[|\]|\s+", key.strip())
-            nam = "chrom_%s:%s" % (segs[1], segs[2])
-            uniq = "_".join(segs[0:5])
-            uniqs.append(uniq)
-            div = segs[2].split("-")
-            ss, se = int(div[0]), int(div[1])
-            length = abs(ss - se)
-            all = [nam, ss, se, length, uniq, fasta[key]]
-            res.append(all)
-
-        # Make a temporary dataframe of this information and sort it by
-        # length for each ERV then take the longest only.
-        R = pd.DataFrame(res, columns=[
-            'id', 'start', 'end', 'length', 'uniq', 'seq'], index=uniqs)
-        R = R.sort_values(['id', 'length'])
-        R = R.groupby('id').last()
-        R = R.drop('uniq', 1)
-        R.columns = ['orf_start', 'orf_end', 'orf_len', 'orf_seq']
-
-        # Merge this into the results dataframe.
-        data = data.merge(R, left_index=True, right_index=True)
-        data.to_csv(outfiles[0], sep="\t")
-    else:
-        os.system("touch %s; touch %s" % (outfiles[0], outfiles[1]))
+    FD = makeFastaDict(fasta)
+    out_nt = open(outfile_nt, "w")
+    out_orf = open(outfile_orf, "w")
+    for nam, seq in FD.items():
+        F = Seq.Seq(seq)
+        R = F.reverse_complement()
+        typs = []
+        D_s = dict()
+        D_t = dict()
+        all_orfs = []
+        for i in np.arange(0, 3):
+            F_s = F[i:]
+            R_s = F[i:]
+            F_t = F[i:].translate()
+            R_t = R[i:].translate()
+            F_t_L = F_t.split("*")
+            R_t_L = R_t.split("*")
+            for orf in F_t_L:
+                if len(orf) >= min_orf_len:
+                    pos = (F_t.find(orf) * 3) + i
+                    length = len(orf) * 3
+                    orig_seq = F[pos: pos+length]
+                    assert orig_seq.translate() == orf
+                    out_orf.write(">%s_%s_%s_F+%s\n%s\n" % (nam, pos,
+                                                            pos+length,
+                                                            i+1, orf))
+                    out_nt.write(">%s_%s_%s_F+%s\n%s\n" % (nam, pos,
+                                                           pos+length,
+                                                           i+1, orig_seq))
+            for orf in R_t_L:
+                if len(orf) >= min_orf_len:
+                    pos = (R_t.find(orf) * 3) + i
+                    length = len(orf) * 3
+                    orig_seq = R[pos: pos+length]
+                    assert orig_seq.translate() == orf
+                    out_orf.write(">%s_%s_%s_F-%s\n%s\n" % (nam, pos,
+                                                            pos+length,
+                                                            i+1, orf))
+                    out_nt.write(">%s_%s_%s_F-%s\n%s\n" % (nam, pos,
+                                                           pos+length,
+                                                           i+1, orig_seq))
+    out_nt.close()
+    out_orf.close()
 
 
 def group(infile, convert, outfile):
@@ -383,12 +318,12 @@ def makeNovelDict(grouptable, group, novelfasta):
     noveldict = dict()
     groupseqs = grouptable[grouptable['group'] == group]
     #  Sample groups with > 40 seqs
-    if len(groupseqs) > 40:
-        ints = np.random.random_integers(0, len(groupseqs)-1, 20)
-        indices = groupseqs.index.values[ints]
-        idlist = groupseqs['id'][indices]
-    else:
-        idlist = groupseqs['id']
+   # if len(groupseqs) > 40:
+   #     ints = np.random.random_integers(0, len(groupseqs)-1, 20)
+   #     indices = groupseqs.index.values[ints]
+   #     idlist = groupseqs['id'][indices]
+   # else:
+    idlist = groupseqs['id']
     idlist = np.unique(idlist)
     for id in idlist:
         noveldict[id] = novelfasta[id]
@@ -456,6 +391,7 @@ def makePhyloFasta(grouptable, allgroups, fasta, phylopath, mafftpath,
     for group in allgroups:
         gene = group.split("_")[-1]
         genus = group.split("_")[-2]
+
         # Build dictionaries of sequences and sequence names
         iddict = makeNovelDict(grouptable, group, novelfasta)
         refdict = makeRefDict(phylopath, gene, genus, group)
@@ -481,12 +417,12 @@ def makePhyloFasta(grouptable, allgroups, fasta, phylopath, mafftpath,
         ali = outf.replace(".fasta", "_ali.fasta")
         tree = ali.replace("_ali.fasta", ".tre")
         tree = tree.replace("fastas", "trees")
-        os.system("%s/fftns --quiet %s > %s"
-                  % (mafftpath, outf, outf.replace(".fasta", "_ali.fasta")))
+        os.system("fftns --quiet %s > %s"
+                  % (outf, outf.replace(".fasta", "_ali.fasta")))
 
         # Build Trees
-        os.system("%s/FastTree -nt -gtr -quiet %s > %s" % (fasttreepath,
-                                                    ali, tree))
+        os.system("%s -nt -gtr -quiet %s > %s" % (fasttreepath,
+                                                  ali, tree))
 
         # Build Tree Images
         treepng = tree.replace(".tre", ".png")
@@ -531,63 +467,30 @@ def monophyleticERVgroups(tree):
 
     '''
     Based on a phylogenetic tree, finds monophyletic groups containing only
-    novel sequences (defined by the "chrom" prefix.
+    novel sequences (identified because names start with gag, pol or env)
     '''
     p = ete.Tree(tree)
     sets = []
-    all = []
-
+    done = set()
+    genes = ['gag', 'pol', 'env']
     # Runs through all the subtrees of the specified tree and determines
     # if they contain any non-novel groups.
     for x in p.traverse():
         leafnames = x.get_leaf_names()
-        count = sum([1 if leaf.startswith("chrom_") else 0
-                     for leaf in leafnames])
-        all.append([leaf if leaf.startswith("chrom_") else ''
-                    for leaf in leafnames])
+        count = 0
+        for leaf in leafnames:
+            if leaf[0:3] in genes and leaf not in done:
+                count += 1
         if count == len(leafnames):
+            done = done | set(leafnames)
             sets.append(set(leafnames))
-    all = set([b for a in all for b in a])
-    all.remove('')
 
     # sort the groups by desending size (by number of elements)
-    pairs = [(s, len(s)) for s in sets]
-    sortedgroups = [a[0]
-                    for a in sorted(pairs, key=lambda tup: tup[1])[::-1]]
-    i = 0
-    # keep only groups which are not a subset of another group
-    while i < len(sortedgroups):
-        sortedgroups = remove_subsets(sortedgroups[i], sortedgroups)
-        i += 1
-
-    return sortedgroups
+    return sets
 
 
-def correctGroupSize(groupsizes, tree, genetab):
-    '''
-    Corrects the group size for sequences representing a group if the original
-    tree was based on a sample of sequences, rather than all the sequences
-    in a group
-    '''
-    total = sum(groupsizes)
-    treenam = tree.replace(".tre", "").replace("trees/", "")
 
-    allmatches1 = set(genetab['id'][genetab['group'] == treenam])
-    allmatches2 = set(genetab['id'][genetab['match'] == treenam])
-    allmatches = allmatches1 | allmatches2
-
-    if len(allmatches) == total:
-        tt = "full"
-        return groupsizes, tt
-
-    elif len(allmatches) >= 40:
-        tt = "approx"
-        n_represented = int(round((float(len(allmatches)) / 20), 0))
-        cg = np.array(groupsizes) * n_represented
-        return cg, tt
-
-
-def makeRepFastas(infiles, genetab, wd, pp,
+def makeRepFastas(infiles, pp,
                   mafftpath, fasttreepath, seqdir, outfile):
     '''
     Using the Fasta files from makePhyloFastas, takes a single representative
@@ -595,6 +498,9 @@ def makeRepFastas(infiles, genetab, wd, pp,
     Generates a phylogeny and an image of each phylogeny with node labels sized
     according to the size of the group.
     '''
+    genus = outfile.split("/")[-1].split("_")[-2]
+    gene = outfile.split("_")[-1][0:3]
+
     allfasta = makeFastaDict("%s/all_ERVS.fasta" % seqdir)
     repcounts = dict()
     repseqs = dict()
@@ -605,14 +511,10 @@ def makeRepFastas(infiles, genetab, wd, pp,
     for tree in infiles:
         fasta = tree.replace("tree", "fasta")
         fasta = fasta.replace(".tre", ".fasta")
-        fasta = makeFastaDict(fasta)
+        fasta = makeFastaDict(fasta, spliton="(")
 
+        stem = tree.split("/")[-1].split(".")[0]
         groups = monophyleticERVgroups(tree)
-        groupsizes = [len(group) for group in groups]
-
-        # correct group sizes - for very large groups only a subset is in
-        # the input tree
-        corrected_groupsizes, tt = correctGroupSize(groupsizes, tree, genetab)
 
         # Record the representative member of each group, its sequence and
         # the corrected group size.  If the input trees contain all
@@ -620,33 +522,31 @@ def makeRepFastas(infiles, genetab, wd, pp,
         # with an ID number containing all the sequence names in the group
 
         j = 0
+        k = 1
         for group in groups:
             L = list(group)
             rep = L[0]
-            groupsizes.append(len(L))
-            rep = L[0]
-            repcounts[rep] = corrected_groupsizes[j]
+            repcounts[rep] = len(groups[j])
             repseqs[rep] = fasta[rep]
 
-            if tt == "full":
-                groupid = str(id(group))[-6:]
-                gout = open("group_lists/%s.txt" % groupid, "w")
-                for nam in group:
-                    if nam == rep:
-                        gout.write("%s**\n" % nam)
-                    else:
-                        gout.write("%s\n" % nam)
-                gout.close()
-                repgroups[rep] = groupid
-            else:
-                repgroups[rep] = ""
+            groupid = "%s_%s_%i" % (genus, gene, k)
+            gout = open("group_lists/%s.txt" % groupid, "w")
+            gfasta = open("group_fastas/%s.fasta" % groupid, "w")
+            for nam in group:
+                gfasta.write(">%s\n%s\n" % (nam, fasta[nam]))
+                if nam == rep:
+                    gout.write("%s**\n" % nam)
+                else:
+                    gout.write("%s\n" % nam)
+            gout.close()
+            gfasta.close()
+            repgroups[rep] = groupid
             j += 1
+            k += 1
 
     # Build a fasta file with the group representatives and the representative
     # reference trees
-    genus, gene = outfile.split("_")[-2:]
-    gene = gene.replace(".tre", "")
-    genus = genus.replace("trees/", "")
+
     others = makeFastaDict("%s/%s_%s.fasta" % (pp, gene, genus))
     outg = getOutgroup(pp, gene, genus)
     others[outg] = allfasta[outg]
@@ -665,13 +565,13 @@ def makeRepFastas(infiles, genetab, wd, pp,
     out.close()
 
     # Align the Fasta file
-    os.system("%s/fftns --quiet %s > %s"
-              % (mafftpath, fastaout,
+    os.system("fftns --quiet %s > %s"
+              % (fastaout,
                  fastaout.replace(".fasta", "_ali.fasta")))
 
     # Build a tree of the fasta file
-    os.system("%s/FastTree -nt -gtr -quiet %s > %s"
-              % (fasttreepath, aliout, outfile))
+    os.system("FastTree -nt -gtr -quiet %s > %s"
+              % (aliout, outfile))
 
     # Build an image of the fasta file
     treepng = outfile.replace(".tre", ".png")
@@ -680,7 +580,7 @@ def makeRepFastas(infiles, genetab, wd, pp,
     scale = 40 / float(m)
 
     for item in T.traverse():
-        if item.name[0:3] == "chr":
+        if item.name[0:3] in ['gag', 'pol', 'env']:
             group = repgroups[item.name]
             count = repcounts[item.name]
             countn = round(scale * count, 0)
@@ -736,9 +636,7 @@ def summary(gag, pol, env, outfile, plot_dir):
         if len(parsed_output) == 0:
             out.write("No results for %s\n" % gene)
         else:
-            out.write("Mean Length %s = %f\n" % (gene,
-                                                 np.mean(
-                                                     parsed_output['length'])))
+
             out.write("Number of Hits %s = %i\n" % (gene,
                                                     len(parsed_output)))
             M = np.max(parsed_output['orf_len'])
