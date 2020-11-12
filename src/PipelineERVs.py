@@ -72,9 +72,9 @@ def runExonerate(fasta, chrom, outf, log):
                        stdout=subprocess.PIPE,
                        stderr=subprocess.PIPE)
     if P.returncode != 0:
-        log.info(P.stdout)
+        log.error(P.stdout)
         err = RuntimeError("Exonerate error - see log file")
-        log.info(err)
+        log.error(err)
         raise err
     else:
         out = open(outf, "w")

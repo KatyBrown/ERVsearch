@@ -12,10 +12,6 @@ import ruffus.cmdline as cmdline
 import logging
 import subprocess
 import configparser
-import pybedtools
-
-global PARAMS
-global log
 
 
 parser = cmdline.get_argparse(description='Pipeline ERVs')
@@ -166,6 +162,10 @@ def mergeOverlaps(infiles, outfiles):
     similarity to the same retroviral gene are merged into
     single regions.  This is performed using bedtools merge on
     the bed files output by cleanExonerate.
+
+    If there is a gap of less than PARAMS['exonerate']['overlap'] between the
+    regions they will be merged.
+
     Merged bed files are stored as
     gags_merged.bed, pols_merged.bed and envs_merged.bed.
     '''
@@ -183,33 +183,46 @@ def mergeOverlaps(infiles, outfiles):
     merged.to_csv(outfiles[1], sep="\t", index=None, header=None)
 
 
-@split(mergeOverlaps, ("gag_merged.fasta",
-                       "pol_merged.fasta",
-                       "env_merged.fasta"))
+@follows(mkdir("gene_fasta_files.dir"))
+@transform(mergeOverlaps, regex("gene_bed_files.dir/(.*)_all.bed"),
+           r'gene_fasta_files.dir/\1_merged.fasta')
 def makeFastas(infiles, outfile):
     '''
     Fasta files are generated containing the sequences
     of the merged regions of the genome identified using
     mergeOverlaps.
-    These are extracted from the host chromosomes using Samtools.
-    The output files are stored in clean_exonerate_output as
-    gags.fa, pols.fa and envs.fa.
+    These are extracted from the host chromosomes using beodtols.
+    The output files are stored in gene_fasta_files.dir.
     '''
-    for infile in infiles:
-        if "merged" in infile:
-            outfile = infile.replace("_merged.bed", "_merged.fasta")
-            statement = 'bedtools getfasta -s -fi %s/%s.fa -bed %s > %s' % (
-                    PARAMS['genome_directory'], PARAMS['genome'],
-                    infile, outfile)
-            log.info(statement)
-            os.system(statement)
+    infile = infiles[1]
 
-@transform(makeFastas, suffix("_merged.fasta"),
-           "_unfiltered_exonerate_merged.fasta")
+    statement = ['bedtools',
+                 'getfasta',
+                 '-s', '-fi', PARAMS['input']['genome'],
+                 '-bed', infile]
+    log.info("Generating fasta file of regions in %s: %s" % (infile,
+                                                             statement))
+
+    P = subprocess.run(statement,
+                       stdout=open(outfile, "w"),
+                       stderr=subprocess.PIPE)
+    if P.returncode != 0:
+        log.error(P.stderr)
+        err = RuntimeError("Error converting bed file to fasta - see log file")
+        log.error(err)
+        raise err
+
+
+@transform(makeFastas, regex("gene_fasta_files.dir/(.*)_merged.fasta"),
+           r"gene_fasta_files.dir/\1_merged_renamed.fasta")
 def renameFastas(infile, outfile):
+    '''
+    Rename the genes in the fasta files so each record has a numbered unique
+    ID (gag1, gag2 etc).
+    '''
     out = open(outfile, "w")
     F = PipelineERVs.makeFastaDict(infile)
-    gene = infile.split("_")[0]
+    gene = os.path.basename(infile).split("_")[0]
     for i, nam in enumerate(F):
         out.write(">%s%s_%s\n%s\n" % (gene, i+1, nam, F[nam]))
     out.close()
