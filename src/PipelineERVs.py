@@ -84,12 +84,12 @@ def runExonerate(fasta, chrom, outf, log):
 
 def filterExonerate(infile, outfiles, min_hit_length, log):
     '''
+    Converts the results of the exonerate screen into a pandas dataframe
+    and saves as XXX_unfiltered.tsv.
     Filters hits shorter than the min_hit_length specified in pipeline.ini
-    from the Exonerate output.  Parses the columns in the Exonerate output
-    table and generates a pandas dataframe of this information - the
-    results output table.
+    and hits containing introns and saves as XXX_filtered.tsv
+    Converts to bed format - XXX.bed
     '''
-
     # Clean column names.  Details are from the final column of the
     # Exonerate showvulgar output, as listed here
     # http://www.ebi.ac.uk/about/vertebrate-genomics/software/exonerate-manual
@@ -120,9 +120,7 @@ def filterExonerate(infile, outfiles, min_hit_length, log):
         'target_end']
     exonerate['target_end'][exonerate['target_strand'] == "-"] = minus[
         'target_start']
-
     exonerate = exonerate.sort_values('target_start')
-
     exonerate.to_csv(outfiles[0], sep="\t", index=None)
 
     log.info("Filtering Exonerate output %s" % outfiles[0])
@@ -134,14 +132,72 @@ def filterExonerate(infile, outfiles, min_hit_length, log):
     exonerate.to_csv(outfiles[1], sep="\t", index=False)
 
     log.info("Converting Exonerate output %s to bed format" % outfiles[1])
-    bedcols = exonerate[['target_id', 'target_start', 'target_end',
-                         'target_strand', 'score', 'query_id']]
+    bedcols = exonerate[['target_id', 'target_start', 'target_end', 'query_id',
+                         'score', 'target_strand']]
     bedcols.to_csv(outfiles[2],
                    sep="\t", header=False, index=False)
 
 
-def makeFastaDict(multifasta, spliton=None):
+def combineBeds(beds):
+    '''
+    Concatenate bed files into a single output and sort
+    '''
+    rows = []
+    for bed in beds:
+        with open(bed) as inf:
+            for line in inf:
+                rows.append(line.strip().split("\t"))
 
+    # sort the combined bed file
+    df = pd.DataFrame(rows)
+    df[1] = df[1].astype(int)
+    df[2] = df[2].astype(int)
+    df = df.sort_values([0, 1])
+    return (df)
+
+
+def mergeBed(bed, overlap, log):
+    '''
+    Merge overlapping regions in a bed file
+    Output the name, strand and score for the highest scoring overlapping
+    region.
+    '''
+    statement = ['bedtools', 'merge',
+                 '-s', '-c', '4,5,6', '-d', overlap, '-o', 'collapse']
+    log.info("Merging bed file %s : %s" % (bed,
+                                           " ".join(statement)))
+    P = subprocess.run(statement,
+                       stdin=open(bed, "r"),
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE)
+    if P.returncode != 0:
+        log.info(P.stderr)
+        err = RuntimeError("Bedtools error - see log file")
+        log.error(err)
+        raise err
+
+    # Pick the highest scoring query for each merged region
+    # and output this into the bed file instead of all
+    # the names
+    df = pd.DataFrame([
+        x.split("\t") for x in P.stdout.decode().split("\n")[:-1]])
+    rows = []
+    for ind in df.index.values:
+        row = df.loc[ind]
+        scores = [int(x) for x in row[4].split(",")]
+        names = row[3].split(",")
+        strands = row[5].split(",")
+        maxind = scores.index(max(scores))
+        maxscore = scores[maxind]
+        maxname = names[maxind]
+        maxstrand = strands[maxind]
+        rows.append([row[0], row[1], row[2],
+                     maxname, maxscore, maxstrand])
+    merged = pd.DataFrame(rows)
+    return (merged)
+
+
+def makeFastaDict(multifasta, spliton=None):
     '''
     Turns any fasta file into a dictionary, with sequence names as the keys
     and sequences as the values.
@@ -170,7 +226,6 @@ def makeFastaDict(multifasta, spliton=None):
 
 
 def simpleFasta(L, seqs, outfile):
-
     '''
     Generates a fasta file containing sequences in list L, a subset of a
     larger fasta file seqs.
@@ -185,7 +240,6 @@ def simpleFasta(L, seqs, outfile):
 
 
 def keyfunc(s):
-
     '''
     Helper function for natural sort of chromosomes by number rather than
     name
@@ -196,7 +250,6 @@ def keyfunc(s):
 
 
 def getORFS(fasta, outfile_nt, outfile_orf, min_orf_len):
-
     '''
     Uses the EMBOSS 'getorf' function to identify open reading frames in
     the newly identified ERV regions.
@@ -250,7 +303,6 @@ def getORFS(fasta, outfile_nt, outfile_orf, min_orf_len):
 
 
 def group(infile, convert, outfile):
-
     '''
     The convert file approximately groups known retroviruses by phylogenetic
     group.  This function uses the output of the findBest function in

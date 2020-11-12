@@ -12,6 +12,7 @@ import ruffus.cmdline as cmdline
 import logging
 import subprocess
 import configparser
+import pybedtools
 
 global PARAMS
 global log
@@ -150,59 +151,36 @@ def runExonerate(infiles, outfiles):
             r'clean_exonerate_output.dir/\1.bed'])
 def cleanExonerate(infile, outfiles):
     # Minimum size number of aas in a hit t
-    min_hit_length = int(PARAMS['exonerate']['overlap'])
+    min_hit_length = int(PARAMS['exonerate']['min_hit_length'])
     PipelineERVs.filterExonerate(infile, outfiles, min_hit_length, log)
 
 
-@merge(cleanExonerate, ["gag_all.bed",
-                        "gag_merged.bed",
-                        "pol_all.bed",
-                        "pol_merged.bed",
-                        "env_all.bed",
-                        "env_merged.bed"])
+@follows(mkdir("gene_bed_files.dir"))
+@collate(cleanExonerate,
+         regex("clean_exonerate_output.dir/([a-z]+)s_(.*)_unfiltered.tsv"),
+         [r"gene_bed_files.dir/\1_all.bed",
+          r"gene_bed_files.dir/\1_merged.bed"])
 def mergeOverlaps(infiles, outfiles):
     '''
     Overlapping regions of the genome detected by Exonerate with
     similarity to the same retroviral gene are merged into
     single regions.  This is performed using bedtools merge on
-    the bed files output by runAndParseExonerate.
+    the bed files output by cleanExonerate.
     Merged bed files are stored as
     gags_merged.bed, pols_merged.bed and envs_merged.bed.
     '''
-    gag_out = open(outfiles[0], "w")
-    pol_out = open(outfiles[2], "w")
-    env_out = open(outfiles[4], "w")
+    log.info("Generating combined bed file %s" % outfiles[0])
+    beds = [inf[2] for inf in infiles]
+    combined = PipelineERVs.combineBeds(beds)
+    log.info("%i records identified in combined bed file %s" % (
+        len(combined), outfiles[0]))
+    combined.to_csv(outfiles[0], sep="\t", index=None, header=None)
 
-    D = {'gag': gag_out,
-         'pol': pol_out,
-         'env': env_out}
-
-    for infile_set in infiles:
-        for infile in infile_set:
-            if infile.endswith(".bed"):
-                gene = infile.split("/")[-1].split("_")[0]
-                lines = [line.strip().split("\t")
-                         for line in open(infile).readlines()]
-                for line in lines:
-                    L = "%s\t%s\t%s\tn\t%s\t%s\n" % (line[0],
-                                                     line[1],
-                                                     line[2],
-                                                     line[4],
-                                                     line[3])
-                    out = D[gene]
-                    out.write(L)
-
-    gag_out.close()
-    pol_out.close()
-    env_out.close()
-
-    for i in np.arange(0, 5, 2):
-        statement = """bedtools sort -i %s \
-                       | bedtools merge -s -c 4,5,6 -o first > %s""" % (
-                       outfiles[i],
-                       outfiles[i+1])
-        log.info(statement)
-        os.system(statement)
+    merged = PipelineERVs.mergeBed(outfiles[0], PARAMS['exonerate']['overlap'],
+                                   log)
+    log.info("Writing merged bed file %s with %i lines" % (
+        outfiles[1], len(merged)))
+    merged.to_csv(outfiles[1], sep="\t", index=None, header=None)
 
 
 @split(mergeOverlaps, ("gag_merged.fasta",
