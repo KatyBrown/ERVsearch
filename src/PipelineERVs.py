@@ -8,27 +8,13 @@ from itertools import groupby
 import ete3 as ete
 import Bio.Seq as Seq
 import subprocess
+import copy
+pd.set_option('mode.chained_assignment', None)
 
 cols = ['crimson', 'mediumspringgreen', 'deepskyblue',
         'goldenrod', 'deeppink', 'mediumpurple', 'orangered']
 genera = ['gamma', 'beta', 'spuma', 'epsilon', 'alpha', 'lenti', 'delta']
 coldict = dict(zip(genera, cols))
-
-
-def getParameters(ini_file):
-    '''
-    Reads the pipeline.ini file and generates the PARAMS dictionary of
-    user-defined parameters
-    '''
-
-    D = dict()
-    for line in open(ini_file).readlines():
-        line = line.strip().replace(" ", "")
-        if len(line) != 0:
-            if line[0] != "#":
-                line = line.split("=")
-                D[line[0]] = line[1]
-    return D
 
 
 def splitChroms(infile, log):
@@ -62,36 +48,41 @@ def splitChroms(infile, log):
         subprocess.run(statement, stdout=open(
             "host_chromosomes.dir/%s.fasta" % chrom, "w"))
         statement = ["samtools", "faidx",
-                     "host_chromosmes.dir/%s.fasta" % chrom]
+                     "host_chromosomes.dir/%s.fasta" % chrom]
         log.info("Indexing chromosome %s: %s" % (chrom, " ".join(statement)))
         subprocess.run(statement)
 
 
-def runExonerate(fasta, chrom, out, path):
-
+def runExonerate(fasta, chrom, outf, log):
     '''
     Runs Exonerate protein2dna.
-    Query - retrovirus sequences in the "sequencedir" directory provided in
-    pipeline.ini.  Must be fasta files of ERV sequences ending with .fa.
-    Recommended to use the provided ERV sequence files.
+    Query - FASTA file containing retrovirus amino acid sequences.
+
     Target - chromosomes in the host_chromosomes directory.
     Settings have been optimised for time and ERV detection.
     '''
 
-    statement = """
-    %s \
-    --model protein2dna \
-    --showalignment F \
-    --seedrepeat 1 \
-    --showvulgar T \
-    --query %s \
-    --target %s \
-    > %s""" % (path, fasta, chrom, out)
-    os.system(statement)
+    statement = ['exonerate', '--model', 'protein2dna',
+                 '--showalignment', 'F', '--seedrepeat', '1',
+                 '--showvulgar', 'T', '--query', fasta,
+                 '--target', chrom]
+    log.info("Running Exonerate on %s vs %s: %s" % (
+        chrom, fasta, " ".join(statement)))
+    P = subprocess.run(statement, universal_newlines=True,
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE)
+    if P.returncode != 0:
+        log.info(P.stdout)
+        err = RuntimeError("Exonerate error - see log file")
+        log.info(err)
+        raise err
+    else:
+        out = open(outf, "w")
+        out.write(P.stdout)
+        out.close()
 
 
-def filterExonerate(out, min_hit_length):
-
+def filterExonerate(infile, outfiles, min_hit_length, log):
     '''
     Filters hits shorter than the min_hit_length specified in pipeline.ini
     from the Exonerate output.  Parses the columns in the Exonerate output
@@ -99,56 +90,54 @@ def filterExonerate(out, min_hit_length):
     results output table.
     '''
 
-    # Parsed column names.  Details are from the final column of the
+    # Clean column names.  Details are from the final column of the
     # Exonerate showvulgar output, as listed here
     # http://www.ebi.ac.uk/about/vertebrate-genomics/software/exonerate-manual
 
     cnames = ["query_id", "query_start", "query_end", "query_strand",
               "target_id", "target_start", "target_end",
-              "target_strand", "score", "details", "length"]
-    smalldf = pd.DataFrame(columns=cnames)
-    j = 0
+              "target_strand", "score", "details"]
+    log.info("Converting Exonerate output %s to dataframe" % outfiles[0])
+    rows = []
+    with open(infile) as inf:
+        for line in inf:
+            if line.startswith('vulgar'):
+                line = line.strip().split(" ")
+                details = "|".join(line[10:])
+                rows.append(line[1:10] + [details])
+    log.info("%i rows identified in %s" % (len(rows), infile))
+    exonerate = pd.DataFrame(rows, columns=cnames)
+    for cname in ['query_start', 'query_end', 'target_start', 'target_end',
+                  'score']:
+        exonerate[cname] = exonerate[cname].astype(int)
+    exonerate['length'] = abs(exonerate['target_end'] -
+                              exonerate['target_start'])
 
-    # Read the input file
-    with open(out) as infile:
-        for line in infile:
-            line = line.strip().split(": ")
-            if line[0] == "vulgar":
-                segs = line[1].split(" ")
-                for i in range(9):
-                    smalldf.loc[str(j), cnames[i]] = segs[i]
-                rest = "|".join(segs[9:])
-                smalldf.loc[str(j), cnames[9]] = rest
-                j += 1
+    # swap the target start and target end co-ordinates for minus strand
+    # otherwise bedtools getfasta doesn't work
+    minus = copy.copy(exonerate[exonerate['target_strand'] == "-"])
+    exonerate['target_start'][exonerate['target_strand'] == "-"] = minus[
+        'target_end']
+    exonerate['target_end'][exonerate['target_strand'] == "-"] = minus[
+        'target_start']
 
-    # Find the hit lengths (allowing for strand)
-    smalldf['target_start'] = smalldf['target_start'].astype(int)
-    smalldf['target_end'] = smalldf['target_end'].astype(int)
+    exonerate = exonerate.sort_values('target_start')
 
-    smalldf['length'] = abs(smalldf['target_end'] -
-                            smalldf['target_start'])
+    exonerate.to_csv(outfiles[0], sep="\t", index=None)
 
-    plus = smalldf[smalldf['target_start'] <= smalldf['target_end']]
-    minus = smalldf[smalldf['target_start'] > smalldf['target_end']]
-
-    tempstart = minus['target_start']
-    tempend = minus['target_end']
-
-    minus = minus.drop(['target_start', 'target_end'], 1)
-    minus['target_start'] = tempend
-    minus['target_end'] = tempstart
-
-    smalldf = plus.append(minus)
-    smalldf = smalldf.sort_values('target_start')
-
+    log.info("Filtering Exonerate output %s" % outfiles[0])
     # Filter hits which are too small or contain introns
-    smalldf = smalldf[((smalldf['length'] > min_hit_length) &
-                       (smalldf.details.str.contains("I") == False))]
+    exonerate = exonerate[((exonerate['length'] > min_hit_length) &
+                           (~exonerate['details'].str.contains("I")))]
+    log.info("%i rows filtered out of %s" % (len(rows) - len(exonerate),
+                                             outfiles[1]))
+    exonerate.to_csv(outfiles[1], sep="\t", index=False)
 
-    smalldf['target_start'] = smalldf['target_start'].astype('object')
-    smalldf['target_end'] = smalldf['target_end'].astype('object')
-
-    return smalldf[cnames]
+    log.info("Converting Exonerate output %s to bed format" % outfiles[1])
+    bedcols = exonerate[['target_id', 'target_start', 'target_end',
+                         'target_strand', 'score', 'query_id']]
+    bedcols.to_csv(outfiles[2],
+                   sep="\t", header=False, index=False)
 
 
 def makeFastaDict(multifasta, spliton=None):
