@@ -12,6 +12,7 @@ import ruffus.cmdline as cmdline
 import logging
 import subprocess
 import configparser
+import pathlib
 
 
 parser = cmdline.get_argparse(description='Pipeline ERVs')
@@ -104,14 +105,28 @@ def genomeToChroms(infile, outfiles):
     os.unlink("%s.fai" % new_infile)
 
 
+@follows(mkdir("gene_databases.dir"))
+@originate(["gene_databases.dir/%s.fasta" % gene
+            for gene in PARAMS['gene'].keys()])
+def prepDBS(outfile):
+    gene = os.path.basename(outfile).split(".")[0]
+    genedb = PARAMS['gene'][gene]
+    statement = ['cp',
+                 genedb,
+                 "gene_databases.dir/%s.fasta" % gene]
+    log.info("Making a copy of database %s: %s" % (genedb,
+                                                   " ".join(statement)))
+    subprocess.run(statement)
+
+
 @follows(mkdir("raw_exonerate_output.dir"))
 @follows(mkdir("clean_exonerate_output.dir"))
 @follows(genomeToChroms)
 @product(genomeToChroms, formatter(),
-         [PARAMS['gene'][gene] for gene in genes],
+         prepDBS,
          formatter(),
          r'raw_exonerate_output.dir/{basename[1][0]}_{basename[0][0]}.tsv')
-def runExonerate(infiles, outfiles):
+def runExonerate(infiles, outfile):
     '''
     Runs the protein2dna algorithm in the Exonerate software package with
     the host chromosomes in host_chromosomes as target sequences and the
@@ -138,7 +153,8 @@ def runExonerate(infiles, outfiles):
     log.info("Running Exonerate on %s vs %s" % (infiles[0], infiles[1]))
 
     PipelineERVs.runExonerate(infiles[1], infiles[0],
-                              outfiles[0], log)
+                              outfile, log,
+                              PARAMS['paths']['path_to_exonerate'])
 
 
 @transform(runExonerate, regex("raw_exonerate_output.dir/(.*).tsv"),
@@ -153,7 +169,7 @@ def cleanExonerate(infile, outfiles):
 
 @follows(mkdir("gene_bed_files.dir"))
 @collate(cleanExonerate,
-         regex("clean_exonerate_output.dir/([a-z]+)s_(.*)_unfiltered.tsv"),
+         regex("clean_exonerate_output.dir/([a-z]+)_(.*)_unfiltered.tsv"),
          [r"gene_bed_files.dir/\1_all.bed",
           r"gene_bed_files.dir/\1_merged.bed"])
 def mergeOverlaps(infiles, outfiles):
@@ -172,15 +188,25 @@ def mergeOverlaps(infiles, outfiles):
     log.info("Generating combined bed file %s" % outfiles[0])
     beds = [inf[2] for inf in infiles]
     combined = PipelineERVs.combineBeds(beds)
-    log.info("%i records identified in combined bed file %s" % (
-        len(combined), outfiles[0]))
-    combined.to_csv(outfiles[0], sep="\t", index=None, header=None)
+    if combined is not None:
+        log.info("%i records identified in combined bed file %s" % (
+            len(combined), outfiles[0]))
+        combined.to_csv(outfiles[0], sep="\t", index=None, header=None)
 
-    merged = PipelineERVs.mergeBed(outfiles[0], PARAMS['exonerate']['overlap'],
-                                   log)
-    log.info("Writing merged bed file %s with %i lines" % (
-        outfiles[1], len(merged)))
-    merged.to_csv(outfiles[1], sep="\t", index=None, header=None)
+        merged = PipelineERVs.mergeBed(outfiles[0],
+                                       PARAMS['exonerate']['overlap'],
+                                       log)
+        if merged is not None:
+            log.info("Writing merged bed file %s with %i lines" % (
+                outfiles[1], len(merged)))
+            merged.to_csv(outfiles[1], sep="\t", index=None, header=None)
+        else:
+            log.info("No ERVs identified in %s" % outfiles[1])
+            pathlib.Path(outfiles[1]).touch()
+    else:
+        log.info("No records identified in combined bed file %s" % outfiles[0])
+        pathlib.Path(outfiles[0]).touch()
+        pathlib.Path(outfiles[1]).touch()
 
 
 @follows(mkdir("gene_fasta_files.dir"))
@@ -196,21 +222,24 @@ def makeFastas(infiles, outfile):
     '''
     infile = infiles[1]
 
-    statement = ['bedtools',
-                 'getfasta',
-                 '-s', '-fi', PARAMS['input']['genome'],
-                 '-bed', infile]
-    log.info("Generating fasta file of regions in %s: %s" % (infile,
-                                                             statement))
+    if os.stat(infile).st_size == 0:
+        pathlib.Path(outfile).touch()
+    else:
+        statement = ['bedtools',
+                     'getfasta',
+                     '-s', '-fi', PARAMS['input']['genome'],
+                     '-bed', infile]
+        log.info("Generating fasta file of regions in %s: %s" % (infile,
+                                                                 statement))
 
-    P = subprocess.run(statement,
-                       stdout=open(outfile, "w"),
-                       stderr=subprocess.PIPE)
-    if P.returncode != 0:
-        log.error(P.stderr)
-        err = RuntimeError("Error converting bed file to fasta - see log file")
-        log.error(err)
-        raise err
+        P = subprocess.run(statement,
+                           stdout=open(outfile, "w"),
+                           stderr=subprocess.PIPE)
+        if P.returncode != 0:
+            log.error(P.stderr)
+            err = RuntimeError("Error converting bed file to fasta - see log file")
+            log.error(err)
+            raise err
 
 
 @transform(makeFastas, regex("gene_fasta_files.dir/(.*)_merged.fasta"),
@@ -219,143 +248,204 @@ def renameFastas(infile, outfile):
     '''
     Rename the genes in the fasta files so each record has a numbered unique
     ID (gag1, gag2 etc).
+    Also removes ":" from sequence names
     '''
-    out = open(outfile, "w")
-    F = PipelineERVs.makeFastaDict(infile)
-    gene = os.path.basename(infile).split("_")[0]
-    for i, nam in enumerate(F):
-        out.write(">%s%s_%s\n%s\n" % (gene, i+1, nam, F[nam]))
-    out.close()
+    if os.stat(infile).st_size == 0:
+        pathlib.Path(outfile).touch()
+    else:
+        out = open(outfile, "w")
+        F = PipelineERVs.makeFastaDict(infile)
+        log.info("Generating gene IDs for %s" % infile)
+        gene = os.path.basename(infile).split("_")[0]
+        for i, nam in enumerate(F):
+            out.write(">%s%s_%s\n%s\n" % (gene, i+1, nam.replace(":", "-"),
+                                          F[nam]))
+        out.close()
 
 
-@transform("%s/*fa" % PARAMS["database"],
-           regex("%s/(.*).fa" % PARAMS["database"]),
-           r'UBLAST_db/\1.udb')
+@follows(mkdir("UBLAST_db.dir"))
+@transform(prepDBS,
+           formatter(),
+           r'UBLAST_db.dir/{basename[0]}_db.udb')
 def makeUBLASTDb(infile, outfile):
     '''
     USEARCH requires an indexed database of query sequences to run.
     This function generates this database for the three
     ERV_Amino_Acid_DB fasta files.
     '''
-    os.system("%s -makeudb_ublast \
-               %s -output %s  -quiet" % (
-                   PARAMS['path_to_usearch'], infile, outfile))
+    usearch = PARAMS['paths']['path_to_usearch']
+    if not os.path.exists(usearch):
+        err = FileNotFoundError("The path %s to the usearch executable is not valid" % usearch)
+        log.error(err)
+        raise err
+    statement = [usearch,
+                 '-makeudb_ublast',
+                 infile,
+                 '-output',
+                 outfile,
+                 '-quiet']
+    log.info("Building usearch database for %s: %s" % (infile,
+                                                       " ".join(statement)))
+    P = subprocess.run(statement,
+                       stderr=subprocess.PIPE)
+    if P.returncode != 0:
+        log.error(P.stderr)
+        err = RuntimeError(
+            "Error making usearch database %s - see log file" % outfile)
+        log.error(err)
+        raise err
 
 
-@transform(renameFastas, suffix("_unfiltered_exonerate_merged.fasta"),
-           add_inputs(makeUBLASTDb),
-           ("_filtered_UBLAST.tsv", "_raw_UBLAST_alignments.txt", "_filtered_UBLAST.fa"))
+@follows(mkdir("ublast.dir"))
+@collate((renameFastas, makeUBLASTDb), regex("(.*).dir/([a-z]+)_(.*)"),
+         [r"ublast.dir/\2_UBLAST_alignments.txt",
+          r"ublast.dir/\2_UBLAST.tsv",
+          r"ublast.dir/\2_filtered_UBLAST.fasta"])
 def runUBLASTCheck(infiles, outfiles):
     '''
     ERV regions in the fasta files generated by makeFasta
     are compared to the ERV_Amino_Acid_DB files for a second
     time, this time using USEARCH.
+
     This allows sequences with low similarity to known ERVs
     to be filtered out.  Similarity thresholds can be set in
     the pipeline.ini file (usearch_id, min_hit_length and usearch_coverage).
-    The output file is a fasta file of sequences with high similarity
-    to known retroviruses in the ERV_Amino_Acid_DB.
-    These are saved in parsed_exonerate_output as
-    gags_filtered.fa, pols_filtered.fa and envs_filtered.fa.
-    Raw output is also saved in parsed_exonerate_output as
-    gags_alignments.txt, pols_alignments.txt and envs_alignments.txt.
+
+    The output filess are:
+        ublast.dir/XXX_UBLAST_alignments.txt - UBLAST alignments output
+        ublast.dir/XXX_UBLAST.tsv- tabular UBLAST output
+        ublast.dir/XXX_BLAST.fasta - fasta file of UBLAST hits
     '''
-    fasta = infiles[0]
-    fastanam = fasta.split("/")[-1].split("_")[0] + "s"
-    for inf in infiles[1:]:
-        if inf.split("/")[-1].replace(".udb", "") == fastanam:
-            dbnam = inf
-    id_thresh = PARAMS['usearch_id']
-    min_coverage = PARAMS['usearch_coverage']
-    os.system("""%s -ublast %s \
-                 -db %s \
-                 -evalue 1 -query_cov %s -id %s\
-                 -top_hit_only \
-                 -blast6out %s \
-                 -quiet \
-                 -alnout %s""" % (PARAMS['path_to_usearch'], fasta, dbnam,
-                                  min_coverage, id_thresh, outfiles[0],
-                                  outfiles[1]))
-    L = set([line.strip().split("\t")[0]
-             for line in open(outfiles[0]).readlines()])
-    PipelineERVs.simpleFasta(L, infiles[0], outfiles[2])
+    db, fasta_in = infiles
+    alignments, tab, fasta_out = outfiles
+    if os.stat(fasta_in).st_size == 0:
+        pathlib.Path(alignments).touch()
+        L = []
+    else:
+
+        min_id = PARAMS['usearch']['min_id'].strip()
+        min_coverage = PARAMS['usearch']['min_coverage'].strip()
+        min_length = PARAMS['usearch']['min_hit_length'].strip()
+
+        statement = [PARAMS['paths']['path_to_usearch'],
+                     '-ublast', fasta_in,
+                     '-db', db,
+                     "-query_cov", min_coverage,
+                     "-id", min_id,
+                     "-mincols", min_length,
+                     '-top_hit_only',
+                     '-evalue', "1",
+                     '-blast6out', tab,
+                     '-alnout', alignments,
+                     '-quiet']
+        log.info("Running UBLAST check on %s: %s" % (fasta_in,
+                                                     " ".join(statement)))
+        P = subprocess.run(statement, stderr=subprocess.PIPE)
+        if P.returncode != 0:
+            log.error(P.stderr)
+            err = RuntimeError(
+                "Error running usearch on %s - see log file" % fasta_in)
+            log.error(err)
+            raise err
+        L = set([line.strip().split("\t")[0]
+                 for line in open(tab).readlines()])
+    # touch output files if nothing is found
+    if len(L) == 0:
+        pathlib.Path(tab).touch()
+        pathlib.Path(fasta_out).touch()
+    else:
+        PipelineERVs.filterFasta(L, fasta_in, fasta_out, log, split=False)
 
 
-@transform(runUBLASTCheck, suffix("_filtered_UBLAST.tsv"),
-           add_inputs(PARAMS['database']),
-           ["_all_matches_exonerate.tsv",
-            "_best_matches_exonerate.tsv",
-            "_refiltered_exonerate.fasta"])
-def findBest(infiles, outfiles):
+@follows(mkdir("exonerate_classification.dir"))
+@transform(runUBLASTCheck, regex("ublast.dir/(.*)_UBLAST_alignments.txt"),
+           [r"exonerate_classification.dir/\1_all_matches_exonerate.tsv",
+            r"exonerate_classification.dir/\1_best_matches_exonerate.tsv",
+            r"exonerate_classification.dir/\1_refiltered_exonerate.fasta"])
+def classifyWithExonerate(infiles, outfiles):
     '''
     Runs the exonerate ungapped algorithm with each ERV region
     in the fasta files generated by makeFasta as queries and the
-    All_ERVs_Fasta fasta file as a target, to detect which known
+    all_ERVS.fasta fasta file as a target, to detect which known
     retrovirus is most similar to each newly identified ERV region.
-    All_ERVs_Fasta contains nucleic acid sequences for many known
+
+    all_ERVS.fasta contains nucleic acid sequences for many known
     endogenous and exogenous retroviruses
-    The raw output is saved in parsed_exonerate_output as
-    gags_table_matches.tsv, pols_table_matches.tsv and
-    envs_table_matches.tsv.
-    Regions with no significant similarity to a known retrovirus
-    are filtered out.
-    The most similar known retrovirus to each of the ERV regions is
-    identified.
-    This result is saved as gags_table_bestmatches.tsv,
-    pols_table_bestmatches.tsv and envs_table_bestmatches.tsv
-    in the parsed_exonerate_output directory.
+
+    First all seqeunces are compared to the database and the raw output is
+    saved as exonerate_classification.dir/XXX_all_matches_exonerate.tsv.
+    Results need a score greater than PARAMS['exonerate']['min_score']
+    against one of the genes of the same type (gag, pol or env) in the
+    database.
+
+    These results are then sorted and filtered to keep only the highest
+    scoring hit for each putative ERV region, this is saved as
+    exonerate_classification.dir/XXX_best_matches_exonerate.tsv.
+
     '''
-    gene = infiles[0][0].split("/")[-1].split("_")[0]
-    fasta = infiles[0][2]
-    refs = infiles[1]
-    os.system("""
-    %s \
-    --query %s \
-    --target %s \
-    --showalignment F \
-    --showvulgar F \
-    --ryo "%%qi\t%%ti\t%%s\n" \
-    --verbose 0 \
-    --score %s\
-    | sort -n \
-    > %s """ % (PARAMS['path_to_exonerate'],
-                fasta, refs, PARAMS['exonerate_minscore'],
-                outfiles[0]))
+    gene = os.path.basename(infiles[0]).split("_")[0]
+    fasta = infiles[2]
+
+    if os.stat(fasta).st_size == 0:
+        for outfile in outfiles:
+            pathlib.Path(outfile).touch()
+    else:
+        exonerate_path = PARAMS['paths']['path_to_exonerate']
+        exonerate_minscore = PARAMS['exonerate']['min_score']
+        reference_ERVs = "%s/ERV_db/all_ERVS.fasta" % PARAMS[
+            'database']['path_to_ERVsearch']
+        PipelineERVs.classifyWithExonerate(reference_ERVs,
+                                           fasta, outfiles[0],
+                                           exonerate_path,
+                                           exonerate_minscore,
+                                           log)
+
+    log.info("Converting raw exonerate output %s to a table" % outfiles[0])
     res = pd.read_csv(outfiles[0],
                       sep="\t", header=None, names=['id', 'match', 'score'])
-    res['gene'] = res['match'].str.split("_").str.get(-1)
-    res = res[res['gene'] == gene]
-    res = res.drop('gene', 1)
-    rtab = pd.DataFrame(columns=['id', 'match', 'score'])
-    ids = np.unique(res['id'].values)
-    for id in ids:
-        subdf = res[res['id'] == id]
-        maxs = subdf[subdf['score'] == np.max(subdf['score'])].values[0]
-        rtab.loc[maxs[0]] = maxs
-    rtab['gene'] = rtab['match'].str.split("_").str.get(-1)
-    rtab['genus'] = rtab['match'].str.split("_").str.get(-2)
-    rtab.to_csv(outfiles[1], sep="\t", index=None)
+    log.info("Finding the highest scoring hit for each putative ERV in \
+             %s" % outfiles[0])
+    res = PipelineERVs.findBestExonerate(res, gene)
+    res.to_csv(outfiles[1], sep="\t", index=None)
 
-    L = list(set(rtab['id']))
-    PipelineERVs.simpleFasta(L, fasta, outfiles[2])
+    log.info("Generating a FASTA file for the results in %s" % outfiles[1])
+    L = list(set(res['id']))
+    PipelineERVs.filterFasta(L, fasta, outfiles[2], log, split=False)
 
 
-@transform(findBest, suffix("_all_matches_exonerate.tsv"),
-           ["_orfs_nt.fasta", "_orfs_aa.fasta"])
+@follows(mkdir("ORFs.dir"))
+@transform(classifyWithExonerate,
+           regex(
+               "exonerate_classification.dir/(.*)_all_matches_exonerate.tsv"),
+           [r"ORFs.dir/\1_orfs_raw.fasta",
+            r"ORFs.dir/\1_orfs_nt.fasta",
+            r"ORFs.dir/\1_orfs_aa.fasta"])
 def ORFs(infiles, outfiles):
     '''
     Finds the longest open reading frame in each of the ERV regions
     in the output table
-    This analysis is performed using EMBOSS getorfs
-    Raw getorfs output is saved in parsed_exonerate_output as
-    gags_table_orfs.fa, pols_table_orfs.fa and envs_table_orfs.fa.
+    This analysis is performed using EMBOSS sixpack
+
+    Raw sixpack output is saved in ORFs.dir as
+    ORFs.dir/XXX_raw_orfs.fasta
+
     The start, end, length and sequence of each ORF are added to the
     output tables and saved in parsed_exonerate_output as
     gags_table_orfs.tsv, pols_table_orfs.tsv and envs_table_orfs.tsv.
     '''
     fasta = infiles[2]
-    PipelineERVs.getORFS(fasta, outfiles[0], outfiles[1],
-                         int(PARAMS['min_orf_len']))
+    if os.stat(fasta).st_size == 0:
+        for outfile in outfiles:
+            pathlib.Path(outfile).touch()
+    else:
+        PipelineERVs.runTranseq(fasta,
+                                outfiles[0],
+                                PARAMS['orfs']['translation_table'],
+                                log)
+        PipelineERVs.filterTranseq(fasta,
+                                   outfiles[0], outfiles[1], outfiles[2],
+                                   int(PARAMS['orfs']['min_orf_len']),
+                                   PARAMS['input']['genome'], log)
 
 
 @transform(ORFs, suffix("_orfs_nt.fasta"),
@@ -388,7 +478,6 @@ def checkORFsUBLAST(infiles, outfiles):
 
 
 @transform(checkORFsUBLAST, suffix("_filtered_UBLAST_ORFs.tsv"),
-           add_inputs(findBest),
            "_groups.tsv")
 def makeGroups(infiles, outfile):
     '''

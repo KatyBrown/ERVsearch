@@ -9,12 +9,48 @@ import ete3 as ete
 import Bio.Seq as Seq
 import subprocess
 import copy
+import shutil
+import re
+
 pd.set_option('mode.chained_assignment', None)
 
 cols = ['crimson', 'mediumspringgreen', 'deepskyblue',
         'goldenrod', 'deeppink', 'mediumpurple', 'orangered']
 genera = ['gamma', 'beta', 'spuma', 'epsilon', 'alpha', 'lenti', 'delta']
 coldict = dict(zip(genera, cols))
+
+
+def filterFasta(keeplist, fasta_in, outnam, log, split=True):
+    '''
+    Make a FASTA file with only the sequences on keeplist from the input
+    fasta file "fasta"
+    '''
+    if not os.path.exists("%s.fai" % fasta_in):
+        statement = ['samtools', 'faidx', fasta_in]
+        log.info("Indexing fasta file %s: %s" % (fasta_in,
+                                                 " ".join(statement)))
+        subprocess.run(statement)
+    if not split:
+        out = open(outnam, "w")
+        out.close()
+    for seq in keeplist:
+        # output a fasta file for each sequence using samtools faidx
+        statement = ["samtools", "faidx", fasta_in, seq]
+        log.info("Processing chromosome %s: %s" % (seq, " ".join(statement)))
+        if split:
+            subprocess.run(statement, stdout=open(
+                "%s/%s.fasta" % (outnam, seq), "w"))
+            statement = ["samtools", "faidx",
+                         "%s/%s.fasta" % (outnam, seq)]
+            log.info("Indexing chromosome %s: %s" % (seq, " ".join(statement)))
+            subprocess.run(statement)
+        else:
+            subprocess.run(statement, stdout=open(outnam, "a"))
+
+    if not split:
+        statement = ["samtools", "faidx", outnam]
+        log.info("Indexing chromosome %s: %s" % (outnam, " ".join(statement)))
+        subprocess.run(statement)
 
 
 def splitChroms(infile, log):
@@ -40,20 +76,10 @@ def splitChroms(infile, log):
         keepchroms = allchroms
 
     log.info("Splitting input genome into %i chromosomes" % len(keepchroms))
-
-    for chrom in keepchroms:
-        # output a fasta file for each chromosome using samtools faidx
-        statement = ["samtools", "faidx", infile, chrom]
-        log.info("Processing chromosome %s: %s" % (chrom, " ".join(statement)))
-        subprocess.run(statement, stdout=open(
-            "host_chromosomes.dir/%s.fasta" % chrom, "w"))
-        statement = ["samtools", "faidx",
-                     "host_chromosomes.dir/%s.fasta" % chrom]
-        log.info("Indexing chromosome %s: %s" % (chrom, " ".join(statement)))
-        subprocess.run(statement)
+    filterFasta(keepchroms, infile, "host_chromosomes.dir", log)
 
 
-def runExonerate(fasta, chrom, outf, log):
+def runExonerate(fasta, chrom, outf, log, exonerate):
     '''
     Runs Exonerate protein2dna.
     Query - FASTA file containing retrovirus amino acid sequences.
@@ -61,8 +87,11 @@ def runExonerate(fasta, chrom, outf, log):
     Target - chromosomes in the host_chromosomes directory.
     Settings have been optimised for time and ERV detection.
     '''
-
-    statement = ['exonerate', '--model', 'protein2dna',
+    if not os.path.exists(exonerate):
+        err = FileNotFoundError("The path %s to the exonerate executable is not valid" % exonerate)
+        log.error(err)
+        raise err
+    statement = [exonerate, '--model', 'protein2dna',
                  '--showalignment', 'F', '--seedrepeat', '1',
                  '--showvulgar', 'T', '--query', fasta,
                  '--target', chrom]
@@ -147,13 +176,14 @@ def combineBeds(beds):
         with open(bed) as inf:
             for line in inf:
                 rows.append(line.strip().split("\t"))
-
-    # sort the combined bed file
-    df = pd.DataFrame(rows)
-    df[1] = df[1].astype(int)
-    df[2] = df[2].astype(int)
-    df = df.sort_values([0, 1])
-    return (df)
+    
+    if len(rows) != 0:
+        # sort the combined bed file
+        df = pd.DataFrame(rows)
+        df[1] = df[1].astype(int)
+        df[2] = df[2].astype(int)
+        df = df.sort_values([0, 1])
+        return (df)
 
 
 def mergeBed(bed, overlap, log):
@@ -247,6 +277,200 @@ def keyfunc(s):
 
     return [int(''.join(g)) if k else ''.join(g)
             for k, g in groupby(s, str.isdigit)]
+
+
+def classifyWithExonerate(reference_ervs, fasta, raw_out,
+                          exonerate, exonerate_minscore,
+                          log):
+    '''
+    Runs the exonerate ungapped algorithm with each ERV region
+    in the fasta file against the
+    all_ERVS.fasta fasta file, to detect which known
+    retrovirus is most similar to each newly identified ERV region.
+    '''
+
+    # we can use a more simple output format this time because we're not
+    # interested in introns
+
+    # generate the statement to run exonerate
+    statement = [exonerate,
+                 '--query', fasta,
+                 '--target', reference_ervs,
+                 '--showalignment', 'F',
+                 '--showvulgar', 'F',
+                 '--ryo', "%qi\\t%ti\\t%s\\n",
+                 '--score', exonerate_minscore]
+    log.info("Running a second exonerate pass for classification \
+              on %s: %s" % (fasta, " ".join(statement)))
+
+    P = subprocess.run(statement, universal_newlines=True,
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE)
+
+    if P.returncode != 0:
+        log.error(P.stdout)
+        err = RuntimeError("Exonerate error - see log file")
+        log.error(err)
+        raise err
+    else:
+        out = open(raw_out, "w")
+        out.write(P.stdout)
+        out.close()
+
+
+def findBestExonerate(res, gene):
+    '''
+    Takes the output of running Exonerate on all putative ERVs
+    vs a database of known ERVs, filters to keep only those matching the
+    correct gene then picks the highest scoring result for each putative
+    ERV.
+    '''
+    res['gene'] = res['match'].str.split("_").str.get(-1)
+    # check the hits are for the right gene
+    res = res[res['gene'] == gene]
+    res = res.drop('gene', 1)
+    # Sort by score
+    res = res.sort_values('score', ascending=False)
+    # Take the highest scoring result for each ID
+    res = res.groupby('id').first()
+    res['id'] = res.index.values
+    res.index = np.arange(len(res))
+    res['genus'] = res['match'].str.split("_").str.get(-2)
+    return (res)
+
+
+def runTranseq(fasta, rawout, trans_tab, log):
+
+    if not shutil.which('transeq'):
+        err = FileNotFoundError("EMBOSS transeq is not in your PATH")
+        log.error(err)
+        raise err
+    statement = ['transeq', '-sequence', fasta,
+                 '-outseq', rawout,
+                 '-frame', '6',
+                 '-table', trans_tab,
+                 '-auto']
+    log.info("Finding ORFs in %s: %s" % (fasta, " ".join(statement)))
+    P = subprocess.run(statement, stderr=subprocess.PIPE)
+    if P.returncode != 0:
+        log.error(P.stderr)
+        err = RuntimeError(
+            "Error running sixpack on %s - see log file" % fasta)
+        log.error(err)
+        raise err
+
+
+def splitNam(seqnam):
+    '''
+    Take a sequence name and return the ID, chromosome, start, end and strand.
+    '''
+    D = dict()
+    groups = re.match(r"([a-z]+[0-9]+)\_(.*)\-([0-9]+)\-([0-9]+)\(([+|-])\)",
+                      seqnam)
+    D['ID'] = groups[1]
+    D['chrom'] = groups[2]
+    D['start'] = int(groups[3])
+    D['end'] = int(groups[4])
+    D['strand'] = groups[5]
+    return (D)
+
+
+def revComp(seq):
+    rcdict = {"A": "T", "C": "G", "T": "A", "G": "C", "N": "N", "Y": "R",
+              "K": "M", "R": "Y", "M": "K", "B": "V", "V": "B", "D": "H",
+              "H": "D", "W": "W", "S": "S", "-": "-"}
+    seq = list(seq)[::-1]
+    seq = [rcdict[s] for s in seq]
+    seq = "".join(seq)
+    return (seq)
+
+
+def filterTranseq(fasta, transeq_raw, nt_out, aa_out, min_length, genome,
+                  log):
+    frames = [0, 1, 2, 0, 2, 1]
+    FD_nt = makeFastaDict(fasta, spliton="_")
+    FD_trans = makeFastaDict(transeq_raw)
+    aaD = dict()
+    for nam, aas in FD_trans.items():
+        nam2 = "_".join(nam.split("__"))[:-1]
+        # set up a dictionary to store the results
+        aaD.setdefault(nam2, dict())
+        aaD[nam2].setdefault('amino_acid', "")
+        aaD[nam2].setdefault("nucleotide", "")
+        aaD[nam2].setdefault("ID", "")
+
+        # split the sequence name to get the position etc
+        namD = splitNam(nam2)
+        orig_fw = FD_nt[namD['ID']]
+        orig_rv = revComp(orig_fw)
+        aas_split = aas.split("*")
+        for aa in aas_split:
+            if len(aa) >= min_length:
+                i = int(nam[-1])
+                frame = frames[i - 1]
+                pos = aas.index(aa)
+                pos_nt_start = (pos * 3) + frame
+                pos_nt_end = pos_nt_start + (len(aa) * 3)
+                if (i <= 3 and namD['strand'] == "+") or (
+                        i > 3 and namD['strand'] == "-"):
+                    nt = orig_fw[pos_nt_start:pos_nt_end]
+                    real_start = namD['start'] + pos_nt_start + 1
+                    real_end = namD['start'] + pos_nt_end
+                    s = "+"
+                else:
+                    nt = orig_rv[pos_nt_start:pos_nt_end]
+                    real_end = namD['end'] - pos_nt_start
+                    real_start = real_end - len(nt) + 1
+                    s = "-"
+
+                statement = ['samtools', 'faidx',
+                             genome, '%s:%i-%i' % (namD['chrom'],
+                                                   real_start, real_end)]
+
+                P = subprocess.run(statement, stdout=subprocess.PIPE)
+                out = P.stdout.decode()
+                if s == "+":
+                    nt_new = "".join(out.split("\n")[1:])
+                else:
+                    statement = ['revseq', '-sequence', 'stdin',
+                                 '-outseq', 'stdout', '-verbose',
+                                 '0', '-auto']
+                    P = subprocess.run(statement, stdout=subprocess.PIPE,
+                                       input=P.stdout)
+                    out = P.stdout.decode()
+                    nt_new = "".join(out.split("\n")[1:])
+
+                statement = ['transeq', '-sequence', 'stdin',
+                             '-outseq', 'stdout', '-verbose', '0',
+                             '-auto']
+
+                P = subprocess.run(statement, input=P.stdout,
+                                   stdout=subprocess.PIPE)
+                out = P.stdout.decode()
+
+                aa_new = "".join(out.split("\n")[1:])
+
+                if not aa == aa_new:
+                    err = RuntimeError(
+                        "Error translating %s - %s:%i-%i(%s)" % (
+                            nam, namD['chrom'], real_start, real_end, s))
+                    log.error(err)
+                    raise err
+                if len(aa_new) > len(aaD[nam2]['amino_acid']):
+                    aaD[nam2]['amino_acid'] = aa_new
+                    aaD[nam2]['nucleotide'] = nt_new
+                    aaD[nam2]['ID'] = "%s_%s:%i-%i(%s)" % (
+                        namD['ID'], namD['chrom'], real_start, real_end, s)
+    out_nt = open(nt_out, "w")
+    out_aa = open(aa_out, "w")
+    for nam in aaD:
+        if len(aaD[nam]['amino_acid']) != 0:
+            out_aa.write(">%s\n%s\n" % (
+                aaD[nam]['ID'], aaD[nam]['amino_acid']))
+            out_nt.write(">%s\n%s\n" % (
+                aaD[nam]['ID'], aaD[nam]['nucleotide']))
+    out_nt.close()
+    out_aa.close()
 
 
 def getORFS(fasta, outfile_nt, outfile_orf, min_orf_len):
