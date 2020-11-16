@@ -386,7 +386,23 @@ def revComp(seq):
 
 
 def filterTranseq(fasta, transeq_raw, nt_out, aa_out, min_length, genome,
-                  log):
+                  trans_table, log):
+    '''
+    Takes the raw output of transeq -frame 6 and finds the longest ORF
+    in each region (above a minimum length of min_length).
+
+    ORFs are written to two fasta files - one with the nucleotide sequence
+    and one with the amino acid sequence.
+
+    samtools faidx is used to extract the regions from the original genome
+    file, EMBOSS revseq is used to reverse complement where needed and
+    EMBOSS transeq is used to translate - then these are checked against the
+    original ORFs - just to make sure the output is correct.
+
+    ORF names are output as ID_chrom:start-end(strand) with strand relative
+    to the original genome input sequences rather than the ORF region
+    identified with Exonerate.
+    '''
     frames = [0, 1, 2, 0, 2, 1]
     FD_nt = makeFastaDict(fasta, spliton="_")
     FD_trans = makeFastaDict(transeq_raw)
@@ -405,12 +421,18 @@ def filterTranseq(fasta, transeq_raw, nt_out, aa_out, min_length, genome,
         orig_rv = revComp(orig_fw)
         aas_split = aas.split("*")
         for aa in aas_split:
+            # if the amino acid is longer than the threshold min_length
             if len(aa) >= min_length:
+                # find the frame (relative to the original ORF region)
                 i = int(nam[-1])
                 frame = frames[i - 1]
                 pos = aas.index(aa)
+
+                # find the start and end position relative to the original ORF
                 pos_nt_start = (pos * 3) + frame
                 pos_nt_end = pos_nt_start + (len(aa) * 3)
+
+                # find the start and end on the chromosome
                 if (i <= 3 and namD['strand'] == "+") or (
                         i > 3 and namD['strand'] == "-"):
                     nt = orig_fw[pos_nt_start:pos_nt_end]
@@ -423,10 +445,17 @@ def filterTranseq(fasta, transeq_raw, nt_out, aa_out, min_length, genome,
                     real_start = real_end - len(nt) + 1
                     s = "-"
 
+                # re-extract the appropriate regions from the chromosome
+                # and translate again
+                # just to double check they are the right regions and are
+                # translated correctly
+                # extract using samtools faidx
                 statement = ['samtools', 'faidx',
                              genome, '%s:%i-%i' % (namD['chrom'],
                                                    real_start, real_end)]
 
+                log.info("Extracting region %s:%s-%s: %s" % (
+                    namD['chrom'], real_start, real_end, " ".join(statement)))
                 P = subprocess.run(statement, stdout=subprocess.PIPE)
                 out = P.stdout.decode()
                 if s == "+":
@@ -435,6 +464,9 @@ def filterTranseq(fasta, transeq_raw, nt_out, aa_out, min_length, genome,
                     statement = ['revseq', '-sequence', 'stdin',
                                  '-outseq', 'stdout', '-verbose',
                                  '0', '-auto']
+                    log.info("Reverse complementing region %s:%s-%s: %s" % (
+                             namD['chrom'], real_start, real_end,
+                             " ".join(statement)))
                     P = subprocess.run(statement, stdout=subprocess.PIPE,
                                        input=P.stdout)
                     out = P.stdout.decode()
@@ -442,14 +474,17 @@ def filterTranseq(fasta, transeq_raw, nt_out, aa_out, min_length, genome,
 
                 statement = ['transeq', '-sequence', 'stdin',
                              '-outseq', 'stdout', '-verbose', '0',
-                             '-auto']
-
+                             '-auto', '-table', trans_table]
+                log.info("Translating region %s:%s-%s: %s" % (
+                         namD['chrom'], real_start, real_end,
+                         " ".join(statement)))
                 P = subprocess.run(statement, input=P.stdout,
                                    stdout=subprocess.PIPE)
                 out = P.stdout.decode()
 
                 aa_new = "".join(out.split("\n")[1:])
 
+                # check this sequence is right
                 if not aa == aa_new:
                     err = RuntimeError(
                         "Error translating %s - %s:%i-%i(%s)" % (
@@ -457,10 +492,12 @@ def filterTranseq(fasta, transeq_raw, nt_out, aa_out, min_length, genome,
                     log.error(err)
                     raise err
                 if len(aa_new) > len(aaD[nam2]['amino_acid']):
+                    # store the results in a dictionary
                     aaD[nam2]['amino_acid'] = aa_new
                     aaD[nam2]['nucleotide'] = nt_new
                     aaD[nam2]['ID'] = "%s_%s:%i-%i(%s)" % (
                         namD['ID'], namD['chrom'], real_start, real_end, s)
+    # output the nucleotide and amino acid ORFs to file
     out_nt = open(nt_out, "w")
     out_aa = open(aa_out, "w")
     for nam in aaD:
@@ -473,57 +510,6 @@ def filterTranseq(fasta, transeq_raw, nt_out, aa_out, min_length, genome,
     out_aa.close()
 
 
-def getORFS(fasta, outfile_nt, outfile_orf, min_orf_len):
-    '''
-    Uses the EMBOSS 'getorf' function to identify open reading frames in
-    the newly identified ERV regions.
-    Parses the output of this software and merges it into the output dataframe
-    to show the length, position and sequence of the longest ORF.
-    '''
-
-    FD = makeFastaDict(fasta)
-    out_nt = open(outfile_nt, "w")
-    out_orf = open(outfile_orf, "w")
-    for nam, seq in FD.items():
-        F = Seq.Seq(seq)
-        R = F.reverse_complement()
-        typs = []
-        D_s = dict()
-        D_t = dict()
-        all_orfs = []
-        for i in np.arange(0, 3):
-            F_s = F[i:]
-            R_s = F[i:]
-            F_t = F[i:].translate()
-            R_t = R[i:].translate()
-            F_t_L = F_t.split("*")
-            R_t_L = R_t.split("*")
-            for orf in F_t_L:
-                if len(orf) >= min_orf_len:
-                    pos = (F_t.find(orf) * 3) + i
-                    length = len(orf) * 3
-                    orig_seq = F[pos: pos+length]
-                    assert orig_seq.translate() == orf
-                    out_orf.write(">%s_%s_%s_F+%s\n%s\n" % (nam, pos,
-                                                            pos+length,
-                                                            i+1, orf))
-                    out_nt.write(">%s_%s_%s_F+%s\n%s\n" % (nam, pos,
-                                                           pos+length,
-                                                           i+1, orig_seq))
-            for orf in R_t_L:
-                if len(orf) >= min_orf_len:
-                    pos = (R_t.find(orf) * 3) + i
-                    length = len(orf) * 3
-                    orig_seq = R[pos: pos+length]
-                    assert orig_seq.translate() == orf
-                    out_orf.write(">%s_%s_%s_F-%s\n%s\n" % (nam, pos,
-                                                            pos+length,
-                                                            i+1, orf))
-                    out_nt.write(">%s_%s_%s_F-%s\n%s\n" % (nam, pos,
-                                                           pos+length,
-                                                           i+1, orig_seq))
-    out_nt.close()
-    out_orf.close()
 
 
 def group(infile, convert, outfile):
