@@ -524,33 +524,48 @@ def checkORFsUBLAST(infiles, outfiles):
         PipelineERVs.filterFasta(L, fasta_aa, fasta_out_aa, log, split=False)
 
 
-@transform(checkORFsUBLAST, suffix("_filtered_UBLAST_ORFs.tsv"),
-           "_groups.tsv")
+@follows(mkdir("grouped.dir"))
+@transform(checkORFsUBLAST,
+           regex("ublast_orfs.dir/(.*)_UBLAST_alignments.txt"),
+           r"grouped.dir/\1_groups.tsv")
 def makeGroups(infiles, outfile):
     '''
-    The retroviruses in All_ERVs_Fasta have been classified
+    The retroviruses in all_ERVs_Fasta have been classified
     into groups based on sequence similarity.
+
     Each group is named after a single representative ERV.
+
     The newly identified ERV regions are classified into the
-    same groups based on the output of the findBest function.
-    Each region is assigned to the same group as the retrovirus
-    sequence it was found to be most similar to by findBest.
+    same groups based on the most similar sequence identified with
+    UBLAST.
+
     The assigned group is added to the output tables, these are
     saved as gags_table_groups.tsv, pols_table_groups.tsv and
     envs_table_groups.tsv.
     '''
-    ORFs = infiles[0][2]
+    ORFs = infiles[2]
     ORF_fasta = PipelineERVs.makeFastaDict(ORFs, spliton="_")
-    ORF_nams_fasta = set(list(ORF_fasta.keys()))
-    gene = infiles[0][0].split("_")[0]
-    for infile in infiles[1:]:
-        if infile[0].startswith(gene):
-            matches = infile[1]
 
-    convert = pd.read_csv("%s/convert.tsv"
-                          % PARAMS['sequencedir'], sep="\t", index_col=0)
-    match_tab = pd.read_csv(matches, sep="\t")
+    # this table has the group information - read it and put it into
+    # a dictionary
+    convert = pd.read_csv("%s/ERV_db/convert.tsv"
+                          % PARAMS['database']['path_to_ERVsearch'],
+                          sep="\t", index_col=0)
     D = dict(zip(convert['id'], convert['match']))
+
+    # Read the UBLAST matches - these should already be the best UBLAST
+    # match
+    match_tab = pd.read_csv(infiles[1], sep="\t", header=None)
+    match_tab = match_tab[[0, 1, 2, 3, 10, 11]]
+    match_tab.columns = ['name', 'match', 'perc_identity', 'alignment_length',
+                         'evalue', 'bit_score']
+    match_tab['ID'] = [x.split("_")[0] for x in match_tab['name']]
+
+    segs = [PipelineERVs.splitNam(nam) for nam in match_tab['name']]
+    stab = pd.DataFrame(segs)
+
+    match_tab = match_tab.merge(stab)
+
     groups = []
     for nam in match_tab['match'].values:
         if nam in D:
@@ -559,8 +574,9 @@ def makeGroups(infiles, outfile):
             group = "_".join(nam.split("_")[-2:])
         groups.append(group)
     match_tab['group'] = groups
-    match_tab['short_id'] = match_tab['id'].str.split("_").str.get(0)
-    match_tab = match_tab[match_tab['short_id'].isin(ORF_nams_fasta)]
+    match_tab['evalue'] = ["%.3e" % e for e in match_tab['evalue']]
+    match_tab['genus'] = match_tab['match'].str.split("_").str.get(-1)
+    match_tab = match_tab[match_tab['ID'].isin(ORF_fasta)]
     match_tab.to_csv(outfile, sep="\t", index=None)
 
 
