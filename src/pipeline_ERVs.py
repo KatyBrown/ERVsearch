@@ -1,7 +1,7 @@
 # This is the main ruffus pipeline for ERVsearch.
 
 from ruffus import follows, split, transform, mkdir, formatter, originate
-from ruffus import suffix, collate, regex, merge, add_inputs
+from ruffus import suffix, collate, regex, merge
 from ruffus.combinatorics import product
 
 import PipelineERVs as PipelineERVs
@@ -13,6 +13,7 @@ import logging
 import subprocess
 import configparser
 import pathlib
+import math
 
 
 parser = cmdline.get_argparse(description='Pipeline ERVs')
@@ -56,13 +57,13 @@ PARAMS.write(open("%s_parameters.txt" % outstem, "w"))
 
 
 @follows(mkdir("host_chromosomes.dir"))
-@split(PARAMS['input']['genome'], r"host_chromosomes.dir/*.fasta")
+@split(PARAMS['genome']['file'], r"host_chromosomes.dir/*.fasta")
 def genomeToChroms(infile, outfiles):
     '''
     Splits the host genome provided by the user into one fasta file for each
     chromosome, scaffold or contig.
 
-    A temporary unzipped copy of zipped and gzipped fasta files will be
+    An unzipped copy of zipped and gzipped fasta files will be
     created.
 
     This function generates a series of fasta files which are stored in the
@@ -72,37 +73,42 @@ def genomeToChroms(infile, outfiles):
     if infile.endswith(".gz"):
         # unzip gzipped files
         log.info("Unzipping gzipped input file %s" % infile)
-        stem = os.path.basename(infile).split(".gz")[0]
         statement = ["gunzip", "-c", infile]
-        new_infile = stem
         log.info("Running statement: %s" % " ".join(statement))
-        subprocess.run(statement, stdout=open(new_infile, "w"))
+        subprocess.run(statement, stdout=open("genome.fa", "w"))
     elif infile.endswith(".zip"):
         # unzip zipped files
         log.info("Unzipping zipped input file %s" % infile)
-        stem = os.path.basename(infile).split(".zip")[0]
         statement = ["unzip", "-p", infile]
-        new_infile = stem
         log.info("Running statement: %s" % " ".join(statement))
-        subprocess.run(statement, stdout=open(new_infile, "w"))
+        subprocess.run(statement, stdout=open("genome.fa", "w"))
     else:
         log.info("Linking to input file %s" % infile)
-        stem = os.path.basename(infile)
-        statement = ["ln",  "-sf", infile]
+        statement = ["ln",  "-sf", infile, "genome.fa"]
         subprocess.run(statement)
-        new_infile = stem
 
-    statement = ["samtools", "faidx", new_infile]
+    statement = ["samtools", "faidx", "genome.fa"]
     log.info("Indexing fasta file: %s" % " ".join(statement))
     s = subprocess.run(statement)
     if s.returncode != 0:
-        err = RuntimeError("""Indexing the input Fasta file was not possible, please check your input file for errors""")
+        err = RuntimeError("""Indexing the input Fasta file was not possible, \
+                           please check your input file for errors""")
         log.error(err)
         raise(err)
-    PipelineERVs.splitChroms(new_infile, log)
-    log.info("Removing temporary input file %s" % new_infile)
-    os.unlink(new_infile)
-    os.unlink("%s.fai" % new_infile)
+
+    statement = ["wc", "-l", "genome.fa.fai"]
+    log.info("Counting chromosomes in fasta file genome.fa: \
+             %s" % (" ".join(statement)))
+    P = subprocess.run(statement, stdout=subprocess.PIPE)
+
+    if PARAMS['genome']['split'] == "True":
+        nsplits = int(PARAMS['genome']['split_n'])
+        n_per_split = math.ceil(
+            int(P.stdout.decode().split(" ")[0]) / nsplits)
+    else:
+        n_per_split = 1
+    log.info("%s chromosomes will be written per file" % n_per_split)
+    PipelineERVs.splitChroms("genome.fa", log, n=n_per_split)
 
 
 @follows(mkdir("gene_databases.dir"))
@@ -227,7 +233,7 @@ def makeFastas(infiles, outfile):
     else:
         statement = ['bedtools',
                      'getfasta',
-                     '-s', '-fi', PARAMS['input']['genome'],
+                     '-s', '-fi', "genome.fa",
                      '-bed', infile]
         log.info("Generating fasta file of regions in %s: %s" % (infile,
                                                                  statement))
@@ -237,7 +243,8 @@ def makeFastas(infiles, outfile):
                            stderr=subprocess.PIPE)
         if P.returncode != 0:
             log.error(P.stderr)
-            err = RuntimeError("Error converting bed file to fasta - see log file")
+            err = RuntimeError("Error converting bed file to fasta - \
+                               see log file")
             log.error(err)
             raise err
 
@@ -275,7 +282,8 @@ def makeUBLASTDb(infile, outfile):
     '''
     usearch = PARAMS['paths']['path_to_usearch']
     if not os.path.exists(usearch):
-        err = FileNotFoundError("The path %s to the usearch executable is not valid" % usearch)
+        err = FileNotFoundError("The path %s to the usearch executable \
+                                is not valid" % usearch)
         log.error(err)
         raise err
     statement = [usearch,
@@ -438,6 +446,7 @@ def ORFs(infiles, outfiles):
         for outfile in outfiles:
             pathlib.Path(outfile).touch()
     else:
+        log.info("Looking for ORFs in %s" % fasta)
         PipelineERVs.runTranseq(fasta,
                                 outfiles[0],
                                 PARAMS['orfs']['translation_table'],
@@ -445,36 +454,74 @@ def ORFs(infiles, outfiles):
         PipelineERVs.filterTranseq(fasta,
                                    outfiles[0], outfiles[1], outfiles[2],
                                    int(PARAMS['orfs']['min_orf_len']),
-                                   PARAMS['input']['genome'], log)
+                                   "genome.fa",
+                                   PARAMS['orfs']['translation_table'], log)
 
 
-@transform(ORFs, suffix("_orfs_nt.fasta"),
-           add_inputs(makeUBLASTDb),
-           ("_filtered_UBLAST_ORFs.tsv",
-            "_raw_UBLAST_alignments_ORFs.txt",
-            "_filtered_UBLAST_ORFs_aa.fasta",
-            "_filtered_UBLAST_ORFs_nt.fasta"))
+@follows(mkdir("ublast_orfs.dir"))
+@collate((ORFs, makeUBLASTDb),
+         regex("(.*).dir/([a-z]+)_(.*)"),
+         [r"ublast_orfs.dir/\2_UBLAST_alignments.txt",
+          r"ublast_orfs.dir/\2_UBLAST.tsv",
+          r"ublast_orfs.dir/\2_filtered_UBLAST_nt.fasta",
+          r"ublast_orfs.dir/\2_filtered_UBLAST_aa.fasta"])
 def checkORFsUBLAST(infiles, outfiles):
-    fasta = infiles[0][1]
-    fastanam = fasta.split("/")[-1].split("_")[0] + "s"
-    for inf in infiles[1:]:
-        if inf.split("/")[-1].replace(".udb", "") == fastanam:
-            dbnam = inf
-    id_thresh = PARAMS['usearch_id']
-    min_coverage = PARAMS['usearch_coverage']
-    os.system("""%s -ublast %s \
-                 -db %s \
-                 -evalue 1 -query_cov %s -id %s\
-                 -top_hit_only \
-                 -blast6out %s \
-                 -quiet \
-                 -alnout %s""" % (PARAMS['path_to_usearch'], fasta, dbnam,
-                                  min_coverage, id_thresh, outfiles[0],
-                                  outfiles[1]))
-    L = set([line.strip().split("\t")[0]
-             for line in open(outfiles[0]).readlines()])
-    PipelineERVs.simpleFasta(L, infiles[0][0], outfiles[3])
-    PipelineERVs.simpleFasta(L, infiles[0][1], outfiles[2])
+    '''
+    ERV ORFs in the fasta files generated by the ORFs function
+    are compared to the ERV_Amino_Acid_DB files using USEARCH.
+
+    This allows sequences with low similarity to known ERVs
+    to be filtered out.  Similarity thresholds can be set in
+    the pipeline.ini file (usearch min_id, min_hit_length and min_coverage).
+
+    The output filess are:
+        ublast_orfs.dir/XXX_UBLAST_alignments.txt - raw UBLAST alignments\
+        output
+        ublast_orfs.dir/XXX_UBLAST.tsv- tabular UBLAST output
+        ublast_orfs.dir/XXX_BLAST.fasta - fasta file of UBLAST hits
+    '''
+    db = infiles[0]
+    fasta_nt, fasta_aa = infiles[1][1:]
+    alignments, tab, fasta_out_nt, fasta_out_aa = outfiles
+    if os.stat(fasta_nt).st_size == 0:
+        pathlib.Path(alignments).touch()
+        L = []
+    else:
+
+        min_id = PARAMS['usearch']['min_id'].strip()
+        min_coverage = PARAMS['usearch']['min_coverage'].strip()
+        min_length = PARAMS['usearch']['min_hit_length'].strip()
+
+        statement = [PARAMS['paths']['path_to_usearch'],
+                     '-ublast', fasta_nt,
+                     '-db', db,
+                     "-query_cov", min_coverage,
+                     "-id", min_id,
+                     "-mincols", min_length,
+                     '-top_hit_only',
+                     '-evalue', "1",
+                     '-blast6out', tab,
+                     '-alnout', alignments,
+                     '-quiet']
+        log.info("Running UBLAST check on %s: %s" % (fasta_nt,
+                                                     " ".join(statement)))
+        P = subprocess.run(statement, stderr=subprocess.PIPE)
+        if P.returncode != 0:
+            log.error(P.stderr)
+            err = RuntimeError(
+                "Error running usearch on %s - see log file" % fasta_nt)
+            log.error(err)
+            raise err
+        L = set([line.strip().split("\t")[0]
+                 for line in open(tab).readlines()])
+    # touch output files if nothing is found
+    if len(L) == 0:
+        pathlib.Path(tab).touch()
+        pathlib.Path(fasta_out_nt).touch()
+        pathlib.Path(fasta_out_aa).touch()
+    else:
+        PipelineERVs.filterFasta(L, fasta_nt, fasta_out_nt, log, split=False)
+        PipelineERVs.filterFasta(L, fasta_aa, fasta_out_aa, log, split=False)
 
 
 @transform(checkORFsUBLAST, suffix("_filtered_UBLAST_ORFs.tsv"),
@@ -499,7 +546,7 @@ def makeGroups(infiles, outfile):
     for infile in infiles[1:]:
         if infile[0].startswith(gene):
             matches = infile[1]
-            
+
     convert = pd.read_csv("%s/convert.tsv"
                           % PARAMS['sequencedir'], sep="\t", index_col=0)
     match_tab = pd.read_csv(matches, sep="\t")
@@ -569,7 +616,7 @@ def PhyloFastasDone(infile, outfile):
 @follows(mkdir("group_fastas"))
 @follows(mkdir("summary_trees"))
 @follows(mkdir("summary_fastas"))
-@collate(makePhyloFastas, regex("trees/(.*?)_?([a-z]+)\_(gag|pol|env).tre"),
+@collate(makePhyloFastas, regex("trees/(.*?)_?([a-z]+)_(gag|pol|env).tre"),
          r"summary_trees/\2_\3.tre")
 def makeRepFastas(infiles, outfile):
     '''
@@ -592,8 +639,6 @@ def makeRepFastas(infiles, outfile):
     newick formatted trees and png images of trees are saved in the
     summary_trees directory.
     '''
-
-    gene = outfile.split("_")[-1].split(".")[0]
     pp = PARAMS['path_to_phyloseqs']
     PipelineERVs.makeRepFastas(infiles, pp,
                                PARAMS['path_to_mafft'],

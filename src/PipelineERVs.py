@@ -6,11 +6,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from itertools import groupby
 import ete3 as ete
-import Bio.Seq as Seq
 import subprocess
 import copy
 import shutil
 import re
+import textwrap
 
 pd.set_option('mode.chained_assignment', None)
 
@@ -20,10 +20,34 @@ genera = ['gamma', 'beta', 'spuma', 'epsilon', 'alpha', 'lenti', 'delta']
 coldict = dict(zip(genera, cols))
 
 
-def filterFasta(keeplist, fasta_in, outnam, log, split=True):
+def zapFile(filename):
+    '''
+    Removes the contents of a file but maintains the time stamp
+
+    Used to remove input files after output has been generated but not
+    disrupt the pipeline.
+    '''
+    # store the time stamp from the file
+    original = os.stat(filename)
+    # remove file contents
+    f = open(filename, "w")
+    f.close()
+    # change time stamp to original
+    os.utime(filename, (original.st_atime, original.st_mtime))
+
+
+def filterFasta(keeplist, fasta_in, outnam, log, split=True, n=1):
     '''
     Make a FASTA file with only the sequences on keeplist from the input
     fasta file "fasta"
+    If split is True and n == 1, make a new fasta file for each sequence
+    (with outnam as the directory)
+
+    If split is True and n > 1, put every n sequecnes into a new fasta file
+    (with outnam as the directory)
+
+    If split is False put all of the output into the same file
+    (with outnam as the file name)
     '''
     if not os.path.exists("%s.fai" % fasta_in):
         statement = ['samtools', 'faidx', fasta_in]
@@ -33,27 +57,50 @@ def filterFasta(keeplist, fasta_in, outnam, log, split=True):
     if not split:
         out = open(outnam, "w")
         out.close()
+    x = 0
+    k = 1
+    outf = "%s/section1.fasta" % outnam
     for seq in keeplist:
         # output a fasta file for each sequence using samtools faidx
-        statement = ["samtools", "faidx", fasta_in, seq]
-        log.info("Processing chromosome %s: %s" % (seq, " ".join(statement)))
+        statement_chrom = ["samtools", "faidx", fasta_in, seq]
+        log.info("Processing chromosome %s: %s" % (
+            seq, " ".join(statement_chrom)))
         if split:
-            subprocess.run(statement, stdout=open(
-                "%s/%s.fasta" % (outnam, seq), "w"))
-            statement = ["samtools", "faidx",
-                         "%s/%s.fasta" % (outnam, seq)]
-            log.info("Indexing chromosome %s: %s" % (seq, " ".join(statement)))
-            subprocess.run(statement)
+            if n == 1:
+                outf = "%s/%s.fasta" % (outnam, seq)
+                subprocess.run(statement_chrom, stdout=open(outf, "w"))
+                statement_ind = ['samtools', 'faidx', outf]
+                log.info("Indexing chromosome %s: %s" % (
+                    seq, " ".join(statement_chrom)))
+                subprocess.run(statement_ind)
+            else:
+                if x == n:
+                    statement_ind = ["samtools", "faidx", outf]
+                    log.info("Indexing %s: %s" % (
+                        outf, " ".join(statement_ind)))
+                    subprocess.run(statement_ind)
+
+                    outf = "%s/section%i.fasta" % (outnam, k+1)
+                    out = open(outf, "w")
+                    out.close()
+                    k += 1
+                    x = 0
+                subprocess.run(statement_chrom, stdout=open(outf, "a"))
+                x += 1
         else:
-            subprocess.run(statement, stdout=open(outnam, "a"))
+            subprocess.run(statement_chrom, stdout=open(outnam, "a"))
 
     if not split:
         statement = ["samtools", "faidx", outnam]
         log.info("Indexing chromosome %s: %s" % (outnam, " ".join(statement)))
         subprocess.run(statement)
+    elif n != 1:
+        statement = ["samtools", "faidx", outf]
+        log.info("Indexing %s: %s" % (outf, " ".join(statement)))
+        subprocess.run(statement)
 
 
-def splitChroms(infile, log):
+def splitChroms(infile, log, n=1):
     '''
     For genomes assembled into chromosomes, split the input fasta file into
     one fasta file per chromosome.
@@ -69,14 +116,17 @@ def splitChroms(infile, log):
         keepchroms = set([L.strip()
                           for L in open("keep_chroms.txt").readlines()])
         if len(keepchroms & allchroms) != len(keepchroms):
-            err =  RuntimeError("""Not all chromosomes in keepchroms.txt are found in the input fasta file, the following are missing \n%s""" % ("\n".join(list(keepchroms - allchroms))))
+            err = RuntimeError("""Not all chromosomes in keepchroms.txt \
+                                  are found in the input fasta file, the \
+                                  following are missing \n%s""" % (
+                                  "\n".join(list(keepchroms - allchroms))))
             log.error(err)
             raise(err)
     else:
         keepchroms = allchroms
 
     log.info("Splitting input genome into %i chromosomes" % len(keepchroms))
-    filterFasta(keepchroms, infile, "host_chromosomes.dir", log)
+    filterFasta(keepchroms, infile, "host_chromosomes.dir", log, n=n)
 
 
 def runExonerate(fasta, chrom, outf, log, exonerate):
@@ -88,7 +138,8 @@ def runExonerate(fasta, chrom, outf, log, exonerate):
     Settings have been optimised for time and ERV detection.
     '''
     if not os.path.exists(exonerate):
-        err = FileNotFoundError("The path %s to the exonerate executable is not valid" % exonerate)
+        err = FileNotFoundError("The path %s to the exonerate executable \
+                                is not valid" % exonerate)
         log.error(err)
         raise err
     statement = [exonerate, '--model', 'protein2dna',
@@ -376,6 +427,9 @@ def splitNam(seqnam):
 
 
 def revComp(seq):
+    '''
+    Reverse complements a sequence.
+    '''
     rcdict = {"A": "T", "C": "G", "T": "A", "G": "C", "N": "N", "Y": "R",
               "K": "M", "R": "Y", "M": "K", "B": "V", "V": "B", "D": "H",
               "H": "D", "W": "W", "S": "S", "-": "-"}
@@ -383,6 +437,96 @@ def revComp(seq):
     seq = [rcdict[s] for s in seq]
     seq = "".join(seq)
     return (seq)
+
+
+def fastaBufferToString(fastabuffer):
+    '''
+    Converts a fasta file as a buffer read from STDOUT to a string
+    with just the sequence.
+    '''
+    outstr = "".join(fastabuffer.split("\n")[1:])
+    return (outstr)
+
+
+def extractCMD(genome, chrom, start, end, log,
+               rc=False, translate=False, trans_table=1):
+    '''
+    Uses samtools faidx to extract positions start:end from chromosome
+    chrom of an indexed genome.
+    If rc is True, the sequence is reverse complemented using EMBOSS revcomp
+    If translate is True the sequence is translated using the table
+    trans_table.
+    '''
+    # Extract the sequence
+    statement = ['samtools', 'faidx', genome,
+                 '%s:%i-%i' % (chrom, start, end)]
+    log.info("Extracting positions %s to %s from %s:%s : %s" % (
+              start, end, genome, chrom, " ".join(statement)))
+    P = subprocess.run(statement, stdout=subprocess.PIPE)
+    # reverse complement if required
+    if rc:
+        statement = ['revseq', '-sequence', 'stdin',
+                     '-outseq', 'stdout', '-verbose',
+                     '0', '-auto']
+        log.info("Reverse complementing region %s to %s from %s:%s : %s" % (
+                  start, end, genome, chrom, " ".join(statement)))
+        P = subprocess.run(statement, stdout=subprocess.PIPE, input=P.stdout)
+    out_nt = fastaBufferToString(P.stdout.decode())
+    if not translate:
+        return (out_nt)
+    # translate if required
+    statement = ['transeq', '-sequence', 'stdin',
+                 '-outseq', 'stdout', '-verbose', '0',
+                 '-auto', '-table', str(trans_table)]
+    log.info("Translating region %s to %s from %s:%s : %s" % (
+              start, end, genome, chrom, " ".join(statement)))
+    P = subprocess.run(statement, input=P.stdout,
+                       stdout=subprocess.PIPE)
+
+    out_aa = fastaBufferToString(P.stdout.decode())
+    return (out_nt, out_aa)
+
+
+def getAllAAs(genome, chrom, cl, start, end, log, trans_table=1):
+    '''
+    Generates a dictionary with every possible translation of the sequence
+    These are extracted directly from the FASTA file.
+    '''
+    aaD = dict()
+    if start == 0:
+        # transeq behaves weirdly for position 0
+        start += 1
+    if end == (cl - 1):
+        # and for the last position in the chromosome
+        if start > 2:
+            start -= 2
+        end -= 1
+    for i in np.arange(0, 3):
+
+        nt, aa = extractCMD(genome,
+                            chrom,
+                            start+i,
+                            end,
+                            log,
+                            trans_table=trans_table,
+                            translate=True)
+        aaD['%s+' % i] = dict()
+        aaD['%s+' % i]['aa'] = aa.strip("X")
+        aaD['%s+' % i]['start'] = start + i
+        aaD['%s+' % i]['end'] = end
+        nt, aa = extractCMD(genome,
+                            chrom,
+                            start,
+                            end+i,
+                            log,
+                            rc=True,
+                            trans_table=trans_table,
+                            translate=True)
+        aaD['%s-' % i] = dict()
+        aaD['%s-' % i]['aa'] = aa.strip("X")
+        aaD['%s-' % i]['start'] = start
+        aaD['%s-' % i]['end'] = end + i
+    return (aaD)
 
 
 def filterTranseq(fasta, transeq_raw, nt_out, aa_out, min_length, genome,
@@ -399,117 +543,121 @@ def filterTranseq(fasta, transeq_raw, nt_out, aa_out, min_length, genome,
     EMBOSS transeq is used to translate - then these are checked against the
     original ORFs - just to make sure the output is correct.
 
-    ORF names are output as ID_chrom:start-end(strand) with strand relative
+    ORF names are output as ID_chrom-start-end(strand) with strand relative
     to the original genome input sequences rather than the ORF region
     identified with Exonerate.
     '''
-    frames = [0, 1, 2, 0, 2, 1]
-    FD_nt = makeFastaDict(fasta, spliton="_")
-    FD_trans = makeFastaDict(transeq_raw)
-    aaD = dict()
-    for nam, aas in FD_trans.items():
-        nam2 = "_".join(nam.split("__"))[:-1]
-        # set up a dictionary to store the results
-        aaD.setdefault(nam2, dict())
-        aaD[nam2].setdefault('amino_acid', "")
-        aaD[nam2].setdefault("nucleotide", "")
-        aaD[nam2].setdefault("ID", "")
+    chrom_df = pd.read_csv("%s.fai" % genome, sep="\t", header=None)
+    # get the lengths of the chromosomes
+    chrom_lens = dict(zip(chrom_df[0], chrom_df[1]))
+    lengths = dict()
+    longest = dict()
+    transeq_raw = makeFastaDict(transeq_raw)
+    for nam in transeq_raw:
+        Ls = [len(x) for x in transeq_raw[nam].split("*")]
+        if max(Ls) > min_length:
+            log.info("%s has ORFs > %s amino acids: Checking ORFs" % (
+                nam, min_length))
+            # Get the raw translated sequence generated with transeq
+            aa = transeq_raw[nam]
+            nam2 = "_".join(nam.split("_")[:-1])
+            lengths.setdefault(nam2, 0)
+            longest.setdefault(nam2, dict())
 
-        # split the sequence name to get the position etc
-        namD = splitNam(nam2)
-        orig_fw = FD_nt[namD['ID']]
-        orig_rv = revComp(orig_fw)
-        aas_split = aas.split("*")
-        for aa in aas_split:
-            # if the amino acid is longer than the threshold min_length
-            if len(aa) >= min_length:
-                # find the frame (relative to the original ORF region)
-                i = int(nam[-1])
-                frame = frames[i - 1]
-                pos = aas.index(aa)
+            namD = splitNam(nam2)
 
-                # find the start and end position relative to the original ORF
-                pos_nt_start = (pos * 3) + frame
-                pos_nt_end = pos_nt_start + (len(aa) * 3)
+            # get every possible translation by manually RCing and clipping
+            # the sequences
 
-                # find the start and end on the chromosome
-                if (i <= 3 and namD['strand'] == "+") or (
-                        i > 3 and namD['strand'] == "-"):
-                    nt = orig_fw[pos_nt_start:pos_nt_end]
-                    real_start = namD['start'] + pos_nt_start + 1
-                    real_end = namD['start'] + pos_nt_end
-                    s = "+"
-                else:
-                    nt = orig_rv[pos_nt_start:pos_nt_end]
-                    real_end = namD['end'] - pos_nt_start
-                    real_start = real_end - len(nt) + 1
-                    s = "-"
+            aaD = getAllAAs(genome, namD['chrom'], chrom_lens[namD['chrom']],
+                            namD['start'], namD['end'], log,
+                            trans_table=trans_table)
 
-                # re-extract the appropriate regions from the chromosome
-                # and translate again
-                # just to double check they are the right regions and are
-                # translated correctly
-                # extract using samtools faidx
-                statement = ['samtools', 'faidx',
-                             genome, '%s:%i-%i' % (namD['chrom'],
-                                                   real_start, real_end)]
+            # iterate through the translation frames
+            for f, new_aa in aaD.items():
+                # this should be the correct translation
+                if aa in new_aa['aa']:
+                    if "+" in f:
+                        # adjust so that the ends are the same as the
+                        # original translation
+                        mod_s = new_aa['aa'].find(aa) * 3
+                        mod_e = new_aa['aa'][::-1].find(aa[::-1]) * 3
+                        s = new_aa['start'] + mod_s
+                        e = new_aa['end'] - mod_e
+                        rc = False
+                    else:
+                        mod_s = new_aa['aa'].find(aa) * 3
+                        mod_e = new_aa['aa'][::-1].find(aa[::-1]) * 3
+                        s = new_aa['start'] + mod_e - 1
+                        e = new_aa['end'] - mod_e
+                        rc = True
+                    # split the amino acid sequence into ORFs
+                    orfs = aa.split("*")
+                    for orf in orfs:
+                        if len(orf) > 50:
+                            opos = aa.find(orf)
+                            o_nt_pos = (opos * 3)
+                            if "+" in f:
+                                orf_s = s + o_nt_pos
+                                orf_e = s + o_nt_pos + (len(orf) * 3) - 1
+                            else:
+                                orf_s = e - o_nt_pos - (len(orf) * 3)
+                                orf_e = e - o_nt_pos
 
-                log.info("Extracting region %s:%s-%s: %s" % (
-                    namD['chrom'], real_start, real_end, " ".join(statement)))
-                P = subprocess.run(statement, stdout=subprocess.PIPE)
-                out = P.stdout.decode()
-                if s == "+":
-                    nt_new = "".join(out.split("\n")[1:])
-                else:
-                    statement = ['revseq', '-sequence', 'stdin',
-                                 '-outseq', 'stdout', '-verbose',
-                                 '0', '-auto']
-                    log.info("Reverse complementing region %s:%s-%s: %s" % (
-                             namD['chrom'], real_start, real_end,
-                             " ".join(statement)))
-                    P = subprocess.run(statement, stdout=subprocess.PIPE,
-                                       input=P.stdout)
-                    out = P.stdout.decode()
-                    nt_new = "".join(out.split("\n")[1:])
-
-                statement = ['transeq', '-sequence', 'stdin',
-                             '-outseq', 'stdout', '-verbose', '0',
-                             '-auto', '-table', trans_table]
-                log.info("Translating region %s:%s-%s: %s" % (
-                         namD['chrom'], real_start, real_end,
-                         " ".join(statement)))
-                P = subprocess.run(statement, input=P.stdout,
-                                   stdout=subprocess.PIPE)
-                out = P.stdout.decode()
-
-                aa_new = "".join(out.split("\n")[1:])
-
-                # check this sequence is right
-                if not aa == aa_new:
-                    err = RuntimeError(
-                        "Error translating %s - %s:%i-%i(%s)" % (
-                            nam, namD['chrom'], real_start, real_end, s))
-                    log.error(err)
-                    raise err
-                if len(aa_new) > len(aaD[nam2]['amino_acid']):
-                    # store the results in a dictionary
-                    aaD[nam2]['amino_acid'] = aa_new
-                    aaD[nam2]['nucleotide'] = nt_new
-                    aaD[nam2]['ID'] = "%s_%s:%i-%i(%s)" % (
-                        namD['ID'], namD['chrom'], real_start, real_end, s)
-    # output the nucleotide and amino acid ORFs to file
-    out_nt = open(nt_out, "w")
-    out_aa = open(aa_out, "w")
-    for nam in aaD:
-        if len(aaD[nam]['amino_acid']) != 0:
-            out_aa.write(">%s\n%s\n" % (
-                aaD[nam]['ID'], aaD[nam]['amino_acid']))
-            out_nt.write(">%s\n%s\n" % (
-                aaD[nam]['ID'], aaD[nam]['nucleotide']))
-    out_nt.close()
-    out_aa.close()
-
-
+                            # extract the ORF directly from the FASTA file
+                            nt, aa2 = extractCMD(genome,
+                                                 namD['chrom'],
+                                                 orf_s,
+                                                 orf_e,
+                                                 log,
+                                                 rc=rc,
+                                                 trans_table=trans_table,
+                                                 translate=True)
+                            aa2 = aa2.strip("X")
+                            orf = orf.strip("X")
+                            # Adjust again - sometimes there are stop codons
+                            if aa2.startswith("*"):
+                                orf_s -= 3
+                                orf_e -= 3
+                            if aa2.endswith("*"):
+                                orf_s += 3
+                                orf_e += 3
+                            if orf_e > chrom_lens[namD['chrom']]:
+                                orf_e = chrom_lens[namD['chrom']]
+                            nt, aa2 = extractCMD(genome,
+                                                 namD['chrom'],
+                                                 orf_s,
+                                                 orf_e,
+                                                 log,
+                                                 rc=rc,
+                                                 trans_table=trans_table,
+                                                 translate=True)
+                            aa2 = aa2.strip("X")
+                            orf = orf.strip("X")
+                            if "+" in f:
+                                frame = "+"
+                            else:
+                                frame = "-"
+                            ID = "%s_%s-%s-%s(%s)" % (namD['ID'],
+                                                      namD['chrom'],
+                                                      orf_s,
+                                                      orf_e,
+                                                      frame)
+                            if len(aa2) > lengths[nam2]:
+                                lengths[nam2] = len(aa2)
+                                longest[nam2]['aa'] = aa2
+                                longest[nam2]['nt'] = nt
+                                longest[nam2]['ID'] = ID
+    nt_out = open(nt_out, "w")
+    aa_out = open(aa_out, "w")
+    for nam in longest:
+        if 'ID' in longest[nam]:
+            nt = "\n".join(textwrap.wrap(longest[nam]['nt'], 70))
+            aa = "\n".join(textwrap.wrap(longest[nam]['aa'], 70))
+            nt_out.write(">%s\n%s\n" % (longest[nam]['ID'], nt))
+            aa_out.write(">%s\n%s\n" % (longest[nam]['ID'], aa))
+    nt_out.close()
+    aa_out.close()
 
 
 def group(infile, convert, outfile):
@@ -551,7 +699,6 @@ def group(infile, convert, outfile):
 
 
 def makeNovelDict(grouptable, group, novelfasta):
-
     '''
     Used by makePhyloFasta
     Builds a dictionary of the names and sequences of the newly identified
@@ -562,12 +709,7 @@ def makeNovelDict(grouptable, group, novelfasta):
 
     noveldict = dict()
     groupseqs = grouptable[grouptable['group'] == group]
-    #  Sample groups with > 40 seqs
-   # if len(groupseqs) > 40:
-   #     ints = np.random.random_integers(0, len(groupseqs)-1, 20)
-   #     indices = groupseqs.index.values[ints]
-   #     idlist = groupseqs['id'][indices]
-   # else:
+
     idlist = groupseqs['id']
     idlist = np.unique(idlist)
     for id in idlist:
