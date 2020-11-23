@@ -4,7 +4,6 @@ from ruffus import follows, split, transform, mkdir, formatter, originate
 from ruffus import collate, regex, subdivide, merge
 from ruffus.combinatorics import product
 
-import PipelineERVs as PipelineERVs
 import os
 import pandas as pd
 import numpy as np
@@ -14,6 +13,12 @@ import subprocess
 import configparser
 import pathlib
 import math
+import HelperFunctions
+import Fasta
+import Bed
+import Exonerate
+import ORFs
+import Trees
 import Summary
 
 
@@ -74,7 +79,7 @@ def initiate(outfile):
         samtools, bedtools, FastTree and mafft are in the PATH
         The correct paths to usearch and exonerate are provided
     '''
-    PipelineERVs.quickCheck(PARAMS, log)
+    HelperFunctions.quickCheck(PARAMS, log)
     out = open(outfile, "w")
     out.write("Passed initial checks")
     out.close()
@@ -132,7 +137,7 @@ def genomeToChroms(infile, outfiles):
     else:
         n_per_split = 1
     log.info("%s chromosomes will be written per file" % n_per_split)
-    PipelineERVs.splitChroms("genome.fa", log, n=n_per_split)
+    Fasta.splitChroms("genome.fa", log, n=n_per_split)
 
 
 @follows(mkdir("gene_databases.dir"))
@@ -182,9 +187,9 @@ def runExonerate(infiles, outfile):
 
     log.info("Running Exonerate on %s vs %s" % (infiles[0], infiles[1]))
 
-    PipelineERVs.runExonerate(infiles[1], infiles[0],
-                              outfile, log,
-                              PARAMS['paths']['path_to_exonerate'])
+    Exonerate.runExonerate(infiles[1], infiles[0],
+                           outfile, log,
+                           PARAMS['paths']['path_to_exonerate'])
 
 
 @transform(runExonerate, regex("raw_exonerate_output.dir/(.*).tsv"),
@@ -194,7 +199,7 @@ def runExonerate(infiles, outfile):
 def cleanExonerate(infile, outfiles):
     # Minimum size number of aas in a hit t
     min_hit_length = int(PARAMS['exonerate']['min_hit_length'])
-    PipelineERVs.filterExonerate(infile, outfiles, min_hit_length, log)
+    Exonerate.filterExonerate(infile, outfiles, min_hit_length, log)
 
 
 @follows(mkdir("gene_bed_files.dir"))
@@ -217,15 +222,15 @@ def mergeOverlaps(infiles, outfiles):
     '''
     log.info("Generating combined bed file %s" % outfiles[0])
     beds = [inf[2] for inf in infiles]
-    combined = PipelineERVs.combineBeds(beds)
+    combined = Bed.combineBeds(beds)
     if combined is not None:
         log.info("%i records identified in combined bed file %s" % (
             len(combined), outfiles[0]))
         combined.to_csv(outfiles[0], sep="\t", index=None, header=None)
 
-        merged = PipelineERVs.mergeBed(outfiles[0],
-                                       PARAMS['exonerate']['overlap'],
-                                       log)
+        merged = Bed.mergeBed(outfiles[0],
+                              PARAMS['exonerate']['overlap'],
+                              log)
         if merged is not None:
             log.info("Writing merged bed file %s with %i lines" % (
                 outfiles[1], len(merged)))
@@ -296,7 +301,7 @@ def renameFastas(infile, outfile):
         pathlib.Path(outfile).touch()
     else:
         out = open(outfile, "w")
-        F = PipelineERVs.makeFastaDict(infile)
+        F = Fasta.makeFastaDict(infile)
         log.info("Generating gene IDs for %s" % infile)
         gene = os.path.basename(infile).split("_")[0]
         for i, nam in enumerate(F):
@@ -397,7 +402,17 @@ def runUBLASTCheck(infiles, outfiles):
         pathlib.Path(tab).touch()
         pathlib.Path(fasta_out).touch()
     else:
-        PipelineERVs.filterFasta(L, fasta_in, fasta_out, log, split=False)
+        Fasta.filterFasta(L, fasta_in, fasta_out, log, split=False)
+
+
+@merge(runUBLASTCheck,
+       [r"summary_tables.dir/ublast_summary.txt",
+        r"summary_plots.dir/ublast_lengths.%s" % plot_format,
+        r"summary_plots.dir/ublast_similarity.%s" % plot_format,
+        r"summray_plots.dir/ublast_score.%s" % plot_format])
+def summariseUBLAST(infiles, outfiles):
+    Summary.summariseUBLAST(infiles, outfiles, log, genes,
+                            PARAMS['plots'])
 
 
 @follows(mkdir("exonerate_classification.dir"))
@@ -437,23 +452,23 @@ def classifyWithExonerate(infiles, outfiles):
         exonerate_minscore = PARAMS['exonerate']['min_score']
         reference_ERVs = "%s/ERV_db/all_ERVS.fasta" % PARAMS[
             'database']['path_to_ERVsearch']
-        PipelineERVs.classifyWithExonerate(reference_ERVs,
-                                           fasta, outfiles[0],
-                                           exonerate_path,
-                                           exonerate_minscore,
-                                           log)
+        Exonerate.classifyWithExonerate(reference_ERVs,
+                                        fasta, outfiles[0],
+                                        exonerate_path,
+                                        exonerate_minscore,
+                                        log)
 
     log.info("Converting raw exonerate output %s to a table" % outfiles[0])
     res = pd.read_csv(outfiles[0],
                       sep="\t", header=None, names=['id', 'match', 'score'])
     log.info("Finding the highest scoring hit for each putative ERV in \
              %s" % outfiles[0])
-    res = PipelineERVs.findBestExonerate(res, gene)
+    res = Exonerate.findBestExonerate(res, gene)
     res.to_csv(outfiles[1], sep="\t", index=None)
 
     log.info("Generating a FASTA file for the results in %s" % outfiles[1])
     L = list(set(res['id']))
-    PipelineERVs.filterFasta(L, fasta, outfiles[2], log, split=False)
+    Fasta.filterFasta(L, fasta, outfiles[2], log, split=False)
 
 
 @follows(mkdir("ORFs.dir"))
@@ -463,7 +478,7 @@ def classifyWithExonerate(infiles, outfiles):
            [r"ORFs.dir/\1_orfs_raw.fasta",
             r"ORFs.dir/\1_orfs_nt.fasta",
             r"ORFs.dir/\1_orfs_aa.fasta"])
-def ORFs(infiles, outfiles):
+def getORFs(infiles, outfiles):
     '''
     Finds the longest open reading frame in each of the ERV regions
     in the output table
@@ -482,19 +497,19 @@ def ORFs(infiles, outfiles):
             pathlib.Path(outfile).touch()
     else:
         log.info("Looking for ORFs in %s" % fasta)
-        PipelineERVs.runTranseq(fasta,
-                                outfiles[0],
-                                PARAMS['orfs']['translation_table'],
-                                log)
-        PipelineERVs.filterTranseq(fasta,
-                                   outfiles[0], outfiles[1], outfiles[2],
-                                   int(PARAMS['orfs']['min_orf_len']),
-                                   "genome.fa",
-                                   PARAMS['orfs']['translation_table'], log)
+        ORFs.runTranseq(fasta,
+                        outfiles[0],
+                        PARAMS['orfs']['translation_table'],
+                        log)
+        ORFs.filterTranseq(fasta,
+                           outfiles[0], outfiles[1], outfiles[2],
+                           int(PARAMS['orfs']['min_orf_len']),
+                           "genome.fa",
+                           PARAMS['orfs']['translation_table'], log)
 
 
 @follows(mkdir("ublast_orfs.dir"))
-@collate((ORFs, makeUBLASTDb),
+@collate((getORFs, makeUBLASTDb),
          regex("(.*).dir/([a-z]+)_(.*)"),
          [r"ublast_orfs.dir/\2_UBLAST_alignments.txt",
           r"ublast_orfs.dir/\2_UBLAST.tsv",
@@ -555,8 +570,8 @@ def checkORFsUBLAST(infiles, outfiles):
         pathlib.Path(fasta_out_nt).touch()
         pathlib.Path(fasta_out_aa).touch()
     else:
-        PipelineERVs.filterFasta(L, fasta_nt, fasta_out_nt, log, split=False)
-        PipelineERVs.filterFasta(L, fasta_aa, fasta_out_aa, log, split=False)
+        Fasta.filterFasta(L, fasta_nt, fasta_out_nt, log, split=False)
+        Fasta.filterFasta(L, fasta_aa, fasta_out_aa, log, split=False)
 
 
 @follows(mkdir("grouped.dir"))
@@ -579,7 +594,7 @@ def assignGroups(infiles, outfile):
     envs_table_groups.tsv.
     '''
     ORFs = infiles[2]
-    ORF_fasta = PipelineERVs.makeFastaDict(ORFs, spliton="_")
+    ORF_fasta = Fasta.makeFastaDict(ORFs, spliton="_")
 
     # this table has the group information - read it and put it into
     # a dictionary
@@ -597,7 +612,7 @@ def assignGroups(infiles, outfile):
                          'evalue', 'bit_score']
     match_tab['ID'] = [x.split("_")[0] for x in match_tab['name']]
 
-    segs = [PipelineERVs.splitNam(nam) for nam in match_tab['name']]
+    segs = [ORFs.splitNam(nam) for nam in match_tab['name']]
     stab = pd.DataFrame(segs)
 
     match_tab = match_tab.merge(stab)
@@ -618,8 +633,8 @@ def assignGroups(infiles, outfile):
 
 @follows(mkdir("group_fastas.dir"))
 @subdivide(assignGroups, regex("grouped.dir/([a-z]+)_groups.tsv"),
-          [r"group_fastas.dir/\1_*.fasta",
-           r"group_fastas.dir/\1_*_A.fasta"])
+           [r"group_fastas.dir/\1_*.fasta",
+            r"group_fastas.dir/\1_*_A.fasta"])
 def makeGroupFastas(infile, outfiles):
     '''
     Two sets of reference fasta files are available (files are stored in
@@ -639,9 +654,9 @@ def makeGroupFastas(infile, outfiles):
     grouptable = pd.read_csv(infile, sep="\t")
     gene = os.path.basename(infile).split("_")[0]
     fasta = "ublast_orfs.dir/%s_filtered_UBLAST_nt.fasta" % gene
-    PipelineERVs.makeGroupFasta(grouptable, fasta,
-                                PARAMS['database']['path_to_ERVsearch'],
-                                log)
+    Trees.makeGroupFasta(grouptable, fasta,
+                         PARAMS['database']['path_to_ERVsearch'],
+                         log)
 
 
 @follows(mkdir("group_trees.dir"))
@@ -652,7 +667,7 @@ def makeGroupTrees(infile, outfile):
     A tree is built for each group using the FastTree algorithm,
     using the -gtr and -nt options.
     '''
-    PipelineERVs.buildTree(infile, outfile, log)
+    Trees.buildTree(infile, outfile, log)
 
 
 @transform(makeGroupTrees, regex("group_trees.dir/(.*).tre"),
@@ -665,10 +680,10 @@ def drawGroupTrees(infile, outfile):
         hlcolour = PARAMS['plots']['%s_colour' % (infile.split("_")[0])]
     else:
         hlcolour = PARAMS['trees']['highlightcolour']
-    PipelineERVs.drawTree(infile, outfile, PARAMS['trees']['maincolour'],
-                          hlcolour,
-                          PARAMS['trees']['outgroupcolour'],
-                          PARAMS['trees']['dpi'])
+    Trees.drawTree(infile, outfile, PARAMS['trees']['maincolour'],
+                   hlcolour,
+                   PARAMS['trees']['outgroupcolour'],
+                   PARAMS['trees']['dpi'])
 
 
 @follows(mkdir("summary_fastas.dir"))
@@ -693,9 +708,9 @@ def makeSummaryFastas(infiles, outfiles):
     inf = np.array(infiles)
     fastas = np.sort(inf[np.char.endswith(inf, ".fasta")])
     trees = np.sort(inf[np.char.endswith(inf, ".tre")])
-    PipelineERVs.makeRepFastas(fastas, trees,
-                               PARAMS['database']['path_to_ERVsearch'],
-                               outfiles, log)
+    Trees.makeRepFastas(fastas, trees,
+                        PARAMS['database']['path_to_ERVsearch'],
+                        outfiles, log)
 
 
 @follows(mkdir("summary_trees.dir"))
@@ -703,7 +718,7 @@ def makeSummaryFastas(infiles, outfiles):
            regex("summary_fastas.dir/(.*).fasta"),
            r"summary_trees.dir/\1.tre")
 def makeSummaryTrees(infiles, outfile):
-    PipelineERVs.buildTree(infiles[1], outfile, log)
+    Trees.buildTree(infiles[1], outfile, log)
 
 
 @transform(makeSummaryTrees,
@@ -714,13 +729,20 @@ def drawSummaryTrees(infile, outfile):
         hlcolour = PARAMS['plots']['%s_colour' % (infile.split("_")[0])]
     else:
         hlcolour = PARAMS['trees']['highlightcolour']
-    PipelineERVs.drawTree(infile, outfile, PARAMS['trees']['maincolour'],
-                          hlcolour,
-                          PARAMS['trees']['outgroupcolour'],
-                          PARAMS['trees']['dpi'], sizenodes=True)
+    Trees.drawTree(infile, outfile, PARAMS['trees']['maincolour'],
+                   hlcolour,
+                   PARAMS['trees']['outgroupcolour'],
+                   PARAMS['trees']['dpi'], sizenodes=True)
+
+
+@follows(summariseExonerateInitial)
+@follows(summariseUBLAST)
+def summarise():
+    pass
 
 
 @follows(drawSummaryTrees)
+@follows(summarise)
 def all():
     pass
 
