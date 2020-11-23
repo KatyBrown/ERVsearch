@@ -59,22 +59,6 @@ def quickCheck(PARAMS, log):
             raise(err)
 
 
-def zapFile(filename):
-    '''
-    Removes the contents of a file but maintains the time stamp
-
-    Used to remove input files after output has been generated but not
-    disrupt the pipeline.
-    '''
-    # store the time stamp from the file
-    original = os.stat(filename)
-    # remove file contents
-    f = open(filename, "w")
-    f.close()
-    # change time stamp to original
-    os.utime(filename, (original.st_atime, original.st_mtime))
-
-
 def filterFasta(keeplist, fasta_in, outnam, log, split=True, n=1):
     '''
     Make a FASTA file with only the sequences on keeplist from the input
@@ -898,8 +882,8 @@ def makeRepFastas(fastas, trees, path, outfiles, log):
             ID = "%s_%s_%i~" % (gene, genus, k)
 
             # write the sequence names and sequences to file
-            gout = open("group_lists.dir/%s.txt" % ID, "w")
-            gfasta = open("group_lists.dir/%s.fasta" % ID, "w")
+            gout = open("group_lists.dir/%s.txt" % ID[:-1], "w")
+            gfasta = open("group_lists.dir/%s.fasta" % ID[:-1], "w")
             for nam in group:
                 gfasta.write(">%s\n%s\n" % (nam, F[nam]))
                 if nam == rep:

@@ -1,7 +1,7 @@
 # This is the main ruffus pipeline for ERVsearch.
 
 from ruffus import follows, split, transform, mkdir, formatter, originate
-from ruffus import collate, regex, subdivide
+from ruffus import collate, regex, subdivide, merge
 from ruffus.combinatorics import product
 
 import PipelineERVs as PipelineERVs
@@ -14,6 +14,7 @@ import subprocess
 import configparser
 import pathlib
 import math
+import Summary
 
 
 parser = cmdline.get_argparse(description='Pipeline ERVs')
@@ -61,6 +62,7 @@ for gene in ['gag', 'pol', 'env']:
 
 PARAMS.write(open("%s_parameters.txt" % outstem, "w"))
 plot_format = PARAMS['plots']['format']
+
 
 @originate("init.txt")
 def initiate(outfile):
@@ -273,14 +275,13 @@ def makeFastas(infiles, outfile):
 
 @follows(mkdir("summary_tables.dir"))
 @follows(mkdir("summary_plots.dir"))
-@collate((mergeOverlaps, makeFastas),
-         regex("(.*).dir/([a-z]+)_(.*).([a-z]+)"),
-         [r"summary_tables.dir/\2_exonerate_initial_summary.txt",
-          r"summary_plots.dir/\2_exonerate_initial.%s" % plot_format])
+@merge(mergeOverlaps,
+       [r"summary_tables.dir/exonerate_initial_summary.txt",
+        r"summary_plots.dir/exonerate_initial_lengths.%s" % plot_format,
+        r"summary_plots.dir/exonerate_initial_by_sequence.%s" % plot_format])
 def summariseExonerateInitial(infiles, outfiles):
-    bed_all, bed_merged = infiles[0]
-    fasta_merged = infiles[1]
-    print (bed_all, bed_merged, fasta_merged)
+    Summary.summariseExonerateInitial(infiles, outfiles, log, genes,
+                                      PARAMS['plots'])
 
 
 @transform(makeFastas, regex("gene_fasta_files.dir/(.*)_merged.fasta"),
@@ -660,8 +661,12 @@ def drawGroupTrees(infile, outfile):
     '''
     An image of each tree is  generated, using the ete3 python package.
     '''
+    if PARAMS['trees']['use_gene_colour'] == "True":
+        hlcolour = PARAMS['plots']['%s_colour' % (infile.split("_")[0])]
+    else:
+        hlcolour = PARAMS['trees']['highlightcolour']
     PipelineERVs.drawTree(infile, outfile, PARAMS['trees']['maincolour'],
-                          PARAMS['trees']['highlightcolour'],
+                          hlcolour,
                           PARAMS['trees']['outgroupcolour'],
                           PARAMS['trees']['dpi'])
 
@@ -705,8 +710,12 @@ def makeSummaryTrees(infiles, outfile):
            regex("summary_trees.dir/(.*).tre"),
            r"summary_trees.dir/\1.%s" % PARAMS['trees']['format'])
 def drawSummaryTrees(infile, outfile):
+    if PARAMS['trees']['use_gene_colour'] == "True":
+        hlcolour = PARAMS['plots']['%s_colour' % (infile.split("_")[0])]
+    else:
+        hlcolour = PARAMS['trees']['highlightcolour']
     PipelineERVs.drawTree(infile, outfile, PARAMS['trees']['maincolour'],
-                          PARAMS['trees']['highlightcolour'],
+                          hlcolour,
                           PARAMS['trees']['outgroupcolour'],
                           PARAMS['trees']['dpi'], sizenodes=True)
 
