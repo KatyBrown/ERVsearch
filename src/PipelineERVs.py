@@ -4,7 +4,6 @@ import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from itertools import groupby
 import ete3 as ete
 import subprocess
 import copy
@@ -18,6 +17,46 @@ cols = ['crimson', 'mediumspringgreen', 'deepskyblue',
         'goldenrod', 'deeppink', 'mediumpurple', 'orangered']
 genera = ['gamma', 'beta', 'spuma', 'epsilon', 'alpha', 'lenti', 'delta']
 coldict = dict(zip(genera, cols))
+
+
+def quickCheck(PARAMS, log):
+    '''
+    Check the environment before starting.
+    Check that:
+        The input file exists
+        The correct path to ERVsearch is provided
+        samtools, bedtools, FastTree and mafft are in the PATH
+        The correct paths to usearch and exonerate are provided
+    '''
+    if not os.path.exists(PARAMS['genome']['file']):
+        if PARAMS['genome']['file'] == "!?":
+            err = RuntimeError(
+                "Input file needs to be specified in the pipeline.ini file")
+        else:
+            err = FileNotFoundError("Input file %s not found" % (
+                PARAMS['genome']['file']))
+        log.error(err)
+        raise (err)
+
+    pathD = {'ERVsearch':
+             '%s/src/pipeline_ERVs.py' % (
+                 PARAMS['database']['path_to_ERVsearch']),
+             'usearch': PARAMS['paths']['path_to_usearch'],
+             'exonerate': PARAMS['paths']['path_to_exonerate']}
+
+    for prog, path in pathD.items():
+        if not os.path.exists(path):
+            err = RuntimeError("%s is not at the location %s specified in \
+                               your pipeline.ini" % (prog, path))
+            log.error(err)
+            raise (err)
+
+    for tool in ['samtools', 'bedtools', 'mafft', 'FastTree',
+                 'revseq', 'transeq']:
+        if not shutil.which(tool):
+            err = RuntimeError("%s is not in your $PATH" % tool)
+            log.error(err)
+            raise(err)
 
 
 def zapFile(filename):
@@ -227,7 +266,7 @@ def combineBeds(beds):
         with open(bed) as inf:
             for line in inf:
                 rows.append(line.strip().split("\t"))
-    
+
     if len(rows) != 0:
         # sort the combined bed file
         df = pd.DataFrame(rows)
@@ -304,30 +343,6 @@ def makeFastaDict(multifasta, spliton=None):
     sequ = "".join(seq)
     querydict[nam] = sequ
     return querydict
-
-
-def simpleFasta(L, seqs, outfile):
-    '''
-    Generates a fasta file containing sequences in list L, a subset of a
-    larger fasta file seqs.
-    '''
-
-    fastaD = makeFastaDict(seqs)
-    outf = open(outfile, "w")
-    for line in L:
-        seq = fastaD[line]
-        outf.write(">%s\n%s\n" % (line, seq))
-    outf.close()
-
-
-def keyfunc(s):
-    '''
-    Helper function for natural sort of chromosomes by number rather than
-    name
-    '''
-
-    return [int(''.join(g)) if k else ''.join(g)
-            for k, g in groupby(s, str.isdigit)]
 
 
 def classifyWithExonerate(reference_ervs, fasta, raw_out,
@@ -660,100 +675,11 @@ def filterTranseq(fasta, transeq_raw, nt_out, aa_out, min_length, genome,
     aa_out.close()
 
 
-def group(infile, convert, outfile):
-    '''
-    The convert file approximately groups known retroviruses by phylogenetic
-    group.  This function uses the output of the findBest function in
-    the pipeline file to assign newly identified ERVs to these
-    approximate groups.
-    '''
-
-    try:
-        df = pd.read_csv(infile, sep="\t", index_col=0)
-    except:
-        df = []
-    if len(df) != 0:
-        # Expands the sequence names to get the start and end positions of
-        # the ERV like regions as the ORF step does not output these.  Merges
-        # these back into the input and converts them to integers.
-        details = df['id'].str.split(":", expand=True)
-        details.columns = ['chr', 'se']
-        details2 = details['se'].str.split("-", expand=True)
-        details2.columns = ['start', 'end']
-        details = details.drop('se', 1)
-        details = details.merge(details2, left_index=True, right_index=True)
-        details['start'] = details['start'].astype(int)
-        details['end'] = details['end'].astype(int)
-        details['length'] = details['end'] - details['start']
-
-        # Find the group in convert of the info in the "match"
-        # column in the dataframe and  add this to the "group" column
-        df['group'] = df['match'].apply(
-            lambda x: x if x not in convert['id']
-            else convert['match'][convert['id'] == x].values[0])
-        res = df.merge(details, left_index=True, right_index=True)
-        res.to_csv(outfile, sep="\t")
-    else:
-        # If there are no hits for this gene, generate a blank outfile.
-        os.system("touch %s" % outfile)
-
-
-def makeNovelDict(grouptable, group, novelfasta):
-    '''
-    Used by makePhyloFasta
-    Builds a dictionary of the names and sequences of the newly identified
-    ERV regions.
-    If there are more than 40 sequences in a group, a random sample of 20
-    sequences is extracted (as very large trees tend to be inaccurate)
-    '''
-
-    noveldict = dict()
-    groupseqs = grouptable[grouptable['group'] == group]
-
-    idlist = groupseqs['id']
-    idlist = np.unique(idlist)
-    for id in idlist:
-        noveldict[id] = novelfasta[id]
-    return noveldict
-
-
-def makeRefDict(phylopath, gene, genus, group):
-
-    '''
-    Used by makePhyloFasta
-    Takes a set of known retrovirus sequences corresponding to the group
-    of interest and builds a dictionary where keys are names and values
-    are sequences.
-    If there are few or no known sequences in the group, a standard set
-    of reference sequences are used.
-    '''
-
-    reffasta = makeFastaDict("%s/%s_%s.fasta" % (phylopath, gene, genus))
-    try:
-        groupfasta = makeFastaDict("%s/%s.fasta" % (phylopath, group))
-    except:
-        groupfasta = makeFastaDict("%s/%s_%s_strays.fasta"
-                                   % (phylopath, gene, genus))
-        groupfasta.update(reffasta)
-
-    if group not in groupfasta.keys():
-        groupfasta = reffasta
-
-    # If there are less than 8 sequences in the group, add the standard
-    # reference sequences (to avoid very small trees)
-    if len(groupfasta) < 8:
-        groupfasta.update(reffasta)
-
-    return groupfasta
-
-
 def getOutgroup(phylopath, gene, genus):
-
     '''
     Uses the provided reference file to identify an appropriate outgroup
     for a particular gene and genus of ERVs.
     '''
-
     outgdict = [tuple(line.strip().split("\t"))
                 for line in open(
                         "%s/outgroups.tsv" % phylopath).readlines()]
@@ -763,248 +689,257 @@ def getOutgroup(phylopath, gene, genus):
     return outg
 
 
-def makePhyloFasta(grouptable, allgroups, fasta, phylopath, mafftpath,
-                   fasttreepath, seqdir):
-
+def makeGroupFasta(grouptable, fastaf, path, log):
     '''
-    Builds a phylogenetic tree representing each small group of ERVs
-    Groups are identified in the makeGroups stage.
-    Sequences are compiled into fasta files, aligned using MAFFT and
-    trees are built using FastTree. An image of each tree is also generated.
+    Builds a fasta file representing each small group of ERVs using
+    the output table from the assignGroups function in pipeline_ERVs.
     '''
+    # make a dictionary of all reference ERVs - this is just used
+    # to find the outgroup
+    allfasta = makeFastaDict("%s/ERV_db/all_ERVS.fasta" % path)
+    fasta = makeFastaDict(fastaf)
+    allgroups = set(grouptable['match'])
+    db_path = "%s/phylogenies" % path
 
-    novelfasta = makeFastaDict(fasta)
-    allfasta = makeFastaDict("%s/all_ERVS.fasta" % seqdir)
+    exists = dict()
     for group in allgroups:
-        gene = group.split("_")[-1]
-        genus = group.split("_")[-2]
+        log.info("Making FASTA file for group %s" % group)
 
-        # Build dictionaries of sequences and sequence names
-        iddict = makeNovelDict(grouptable, group, novelfasta)
-        refdict = makeRefDict(phylopath, gene, genus, group)
+        f_group = dict()
 
-        outg = getOutgroup(phylopath, gene, genus)
-        refdict[outg] = allfasta[outg]
+        subtab = grouptable[grouptable['match'] == group]
+        new = set(subtab['name'])
+        for nam in new:
+            f_group['%s~' % nam] = fasta[nam]
 
-        #  write the fasta files
-        outf = ("fastas/%s.fasta" % (group))
-        out = open(outf, "w")
+        genus, gene = group.split("_")[-2:]
+        outgroup = getOutgroup(db_path, gene, genus)
+        f_group['outgroup_%s' % outgroup] = allfasta[outgroup]
 
-        for key in refdict:
-            seq = refdict[key]
-            out.write(">%s\n%s\n" % (key, seq))
+        group_path = "%s/group_phylogenies/%s.fasta" % (db_path, group)
+        summary_path = "%s/summary_phylogenies/%s_%s.fasta" % (db_path,
+                                                               gene, genus)
+        if os.path.exists(group_path):
+            f_group.update(makeFastaDict(group_path))
+            groupstem = "_".join(group.split("_")[:-1])
+            newnam = "%s_%s" % (gene, groupstem)
+            exists[newnam] = f_group
+        else:
+            f_group.update(makeFastaDict(summary_path))
+            exists.setdefault("%s_%s" % (gene, genus), dict())
+            exists["%s_%s" % (gene, genus)].update(f_group)
 
-        for id in iddict:
-            seq = iddict[id]
-            out.write(">%s\n%s\n" % (id.replace(":", "_"), seq))
+    for group in exists:
+        raw_out = "group_fastas.dir/%s.fasta" % (group)
+        ali_out = "group_fastas.dir/%s_A.fasta" % (group)
 
+        out = open(raw_out, "w")
+        for nam, seq in exists[group].items():
+            out.write(">%s\n%s\n" % (nam, seq))
         out.close()
+        align(raw_out, ali_out, group, log)
 
-        # Align Fasta Files
-        ali = outf.replace(".fasta", "_ali.fasta")
-        tree = ali.replace("_ali.fasta", ".tre")
-        tree = tree.replace("fastas", "trees")
-        os.system("fftns --quiet %s > %s"
-                  % (outf, outf.replace(".fasta", "_ali.fasta")))
 
-        # Build Trees
-        os.system("%s -nt -gtr -quiet %s > %s" % (fasttreepath,
-                                                  ali, tree))
+def align(infile, outfile, nam, log):
+    statement = ['fftns', "--quiet", infile]
 
-        # Build Tree Images
-        treepng = tree.replace(".tre", ".png")
-        T = ete.Tree(tree)
-        for item in T.traverse():
-            if item.name[0:3] == "chr":
-                col = 'darkgreen'
-            elif item.name == outg:
-                col = 'blue'
+    log.info("Aligning %s with FFTNS: %s %s" % (infile,
+                                                " ".join(statement),
+                                                outfile))
+    P = subprocess.run(statement, stdin=open(infile, "r"),
+                       stdout=open(outfile, "w"))
+    if P.returncode != 0:
+        log.error(P.stderr)
+        err = RuntimeError(
+            "Error aligning %s - see log file" % (nam))
+        log.error(err)
+        raise err
+
+
+def buildTree(infile, outfile, log):
+    statement = ["FastTree", "-nt", "-gtr", "-quiet", '-quote',
+                 infile]
+    log.info("Building phylogeny of %s: %s" % (infile, " ".join(statement)))
+    P = subprocess.run(statement, stdout=open(outfile, "w"),
+                       stderr=subprocess.PIPE)
+    if P.returncode != 0:
+        log.error(P.stderr.decode())
+        err = RuntimeError("Error running FastTree on %s - see log file" % (
+                            infile))
+        log.error(err)
+        raise err
+
+
+def getGroupSizes(group_names):
+    gD = dict()
+    for group in group_names:
+        if "~" in group:
+            size = len(open("group_lists.dir/%s.txt" % group[:-1]).readlines())
+            gD[group] = size
+    return (gD)
+
+
+def drawTree(tree, outfile, maincolour, highlightcolour,
+             outgroupcolour, dpi, sizenodes=False):
+    '''
+    Create an image file of a phylogenetic tree
+    '''
+    T = ete.Tree(tree, quoted_node_names=True)
+    if sizenodes:
+        sizeD = getGroupSizes(T.get_leaf_names())
+        scale = 20 / max(sizeD.values())
+    for item in T.get_leaves():
+        if "outgroup" in item.name:
+            T.set_outgroup(item)
+            col = outgroupcolour
+            text = item.name
+            size = 1
+        elif "~" in item.name:
+            col = highlightcolour
+            if sizenodes:
+                countn = round(sizeD[item.name] * scale, 0)
+                text = "%s (%i sequences)" % (item.name, sizeD[item.name])
+                item.add_face(ete.CircleFace(radius=countn, color=col),
+                              column=0)
             else:
-                col = 'black'
-
-            TF = ete.TextFace(item.name)
+                size = 1
+                text = item.name
+        else:
+            col = maincolour
+            size = 1
+            text = item.name
+        TF = ete.TextFace(text)
+        item.add_face(TF, column=1)
+        if sizenodes:
+            TF.fgcolor = 'black'
+        else:
             TF.fgcolor = col
-            item.add_face(TF, column=0)
-        T.set_outgroup(outg)
-        TS = ete.TreeStyle()
-        TS.show_leaf_name = False
-        T.render(treepng, tree_style=TS)
+
+    NS = ete.NodeStyle()
+    NS['size'] = 0
+    for node in T.traverse():
+        if not node.is_leaf():
+            f = ete.TextFace(node.support)
+            node.add_face(f, column=0, position="branch-top")
+
+    TS = ete.TreeStyle()
+    TS.show_leaf_name = False
+    T.render(outfile, tree_style=TS, dpi=int(dpi))
 
 
-def remove_subsets(set1, list_of_sets):
-
-    '''
-    Used by monophyleticERVgroups
-    Takes a specific set of strings and a list of sets of strings.
-    Sets in the list are removed if they are subsets of the specific set.
-    '''
-
-    i = 0
-    L = []
-    for aset in list_of_sets:
-        if not aset < set1:
-            L.append(i)
-        i += 1
-    L = np.array(L)
-    S = np.array(list_of_sets)
-    return S[L]
-
-
-def monophyleticERVgroups(tree):
-
+def monophyleticERVgroups(tree, allfasta):
     '''
     Based on a phylogenetic tree, finds monophyletic groups containing only
-    novel sequences (identified because names start with gag, pol or env)
+    novel sequences (defined by containing "~".
     '''
-    p = ete.Tree(tree)
     sets = []
     done = set()
-    genes = ['gag', 'pol', 'env']
+    F = dict()
     # Runs through all the subtrees of the specified tree and determines
     # if they contain any non-novel groups.
-    for x in p.traverse():
+    for x in tree.traverse():
         leafnames = x.get_leaf_names()
         count = 0
         for leaf in leafnames:
-            if leaf[0:3] in genes and leaf not in done:
+            if "~" in leaf and leaf not in done:
                 count += 1
+            elif "outgroup" not in leaf and leaf not in done:
+                F[leaf] = allfasta[leaf]
         if count == len(leafnames):
             done = done | set(leafnames)
             sets.append(set(leafnames))
-
-    # sort the groups by desending size (by number of elements)
-    return sets
+    return (sets, F)
 
 
-
-def makeRepFastas(infiles, pp,
-                  mafftpath, fasttreepath, seqdir, outfile):
+def makeRepFastas(fastas, trees, path, outfiles, log):
     '''
-    Using the Fasta files from makePhyloFastas, takes a single representative
+    Takes a single representative for each monophyletic group of ERVs
     for monophyletic groups and builds a summary tree for each genus and gene.
-    Generates a phylogeny and an image of each phylogeny with node labels sized
-    according to the size of the group.
+
+    The summary tree has the summary_phylogenies sequences for the appropriate
+    gene and genus, more specific reference sequences for groups where ERVs
+    were identifed and a representative sequence for each new monophyletic
+    ERV cluster found.
     '''
-    genus = outfile.split("/")[-1].split("_")[-2]
-    gene = outfile.split("_")[-1][0:3]
+    # store sequences
+    seqD = dict()
+    # store number of groups in each tree (for naming)
+    k = 1
+    # store representaive sequences used
+    repD = dict()
+    phylopath = "%s/phylogenies" % path
+    bn = os.path.basename(fastas[0])
+    gene = bn[0:3]
+    genus = os.path.splitext(bn)[0].split("_")[-1]
+    allfasta = makeFastaDict("%s/ERV_db/all_ERVS.fasta" % path)
 
-    allfasta = makeFastaDict("%s/all_ERVS.fasta" % seqdir)
-    repcounts = dict()
-    repseqs = dict()
-    repgroups = dict()
+    for fasta, tree in zip(fastas, trees):
+        log.info("Incorporating %s into summary phylogeny" % tree)
 
-    # Choose a representative for each monophyletic cluster of novel ERV
-    # regions in the input trees
-    for tree in infiles:
-        fasta = tree.replace("tree", "fasta")
-        fasta = fasta.replace(".tre", ".fasta")
-        fasta = makeFastaDict(fasta, spliton="(")
+        # convert the fasta to a dictionary and read the tree with ete3
+        F = makeFastaDict(fasta)
+        T = ete.Tree(tree, quoted_node_names=True)
+        # get the local reference sequences and the monophyletic ERV groups
+        groups, refs = monophyleticERVgroups(T, allfasta)
 
-        stem = tree.split("/")[-1].split(".")[0]
-        groups = monophyleticERVgroups(tree)
+        log.info("Identified %s monophyletic ERV groups in %s" % (len(groups),
+                                                                  tree))
 
-        # Record the representative member of each group, its sequence and
-        # the corrected group size.  If the input trees contain all
-        # sequences, rather than subsets of sequences, make an outfile
-        # with an ID number containing all the sequence names in the group
+        # store the local reference sequences for this group
+        seqD.update(refs)
 
-        j = 0
-        k = 1
         for group in groups:
-            L = list(group)
-            rep = L[0]
-            repcounts[rep] = len(groups[j])
-            repseqs[rep] = fasta[rep]
+            seqs = [F[nam] for nam in group]
+            # sort from longest to smallest
+            Z = sorted(zip(group, seqs), key=lambda x: len(x[1]),
+                       reverse=True)
+            # use the longest as the representative
+            rep = list(Z)[0][0]
+            ID = "%s_%s_%i~" % (gene, genus, k)
 
-            groupid = "%s_%s_%i" % (genus, gene, k)
-            gout = open("group_lists/%s.txt" % groupid, "w")
-            gfasta = open("group_fastas/%s.fasta" % groupid, "w")
+            # write the sequence names and sequences to file
+            gout = open("group_lists.dir/%s.txt" % ID, "w")
+            gfasta = open("group_lists.dir/%s.fasta" % ID, "w")
             for nam in group:
-                gfasta.write(">%s\n%s\n" % (nam, fasta[nam]))
+                gfasta.write(">%s\n%s\n" % (nam, F[nam]))
                 if nam == rep:
                     gout.write("%s**\n" % nam)
                 else:
                     gout.write("%s\n" % nam)
             gout.close()
             gfasta.close()
-            repgroups[rep] = groupid
-            j += 1
+
+            # update the results
+            repD[ID] = rep
+            seqD[ID] = F[rep]
             k += 1
 
+    # write the representative sequences to file
+    reps = open("group_lists.dir/%s_%s_representative_sequences.txt" % (
+        gene, genus), "w")
+    for nam, rep in repD.items():
+        reps.write("%s\t%s\n" % (nam, rep))
+    reps.close()
     # Build a fasta file with the group representatives and the representative
     # reference trees
 
-    others = makeFastaDict("%s/%s_%s.fasta" % (pp, gene, genus))
-    outg = getOutgroup(pp, gene, genus)
-    others[outg] = allfasta[outg]
+    # read in the summary reference sequences
+    allD = makeFastaDict("%s/summary_phylogenies/%s_%s.fasta" % (phylopath,
+                                                                 gene,
+                                                                 genus))
+    allD.update(seqD)
+    # find the outgroup
+    outg = getOutgroup(phylopath, gene, genus)
+    allD["outgroup_%s" % outg] = allfasta[outg]
 
-    fastadir = outfile.replace("summary_trees", "summary_fastas")
-
-    fastaout = fastadir.replace(".tre", ".fasta")
-    aliout = fastadir.replace(".tre", "_ali.fasta")
-
-    out = open(fastaout, "w")
-    for other in others:
-        out.write(">%s\n%s\n" % (other, others[other]))
-
-    for novel in repseqs:
-        out.write(">%s\n%s\n" % (novel, repseqs[novel]))
+    # write the output to file
+    out = open(outfiles[0], "w")
+    for nam, seq in allD.items():
+        out.write(">%s\n%s\n" % (nam, seq))
     out.close()
 
-    # Align the Fasta file
-    os.system("fftns --quiet %s > %s"
-              % (fastaout,
-                 fastaout.replace(".fasta", "_ali.fasta")))
-
-    # Build a tree of the fasta file
-    os.system("FastTree -nt -gtr -quiet %s > %s"
-              % (aliout, outfile))
-
-    # Build an image of the fasta file
-    treepng = outfile.replace(".tre", ".png")
-    T = ete.Tree(outfile)
-    m = max(repcounts.values())
-    scale = 40 / float(m)
-
-    for item in T.traverse():
-        if item.name[0:3] in ['gag', 'pol', 'env']:
-            group = repgroups[item.name]
-            count = repcounts[item.name]
-            countn = round(scale * count, 0)
-            C = ete.CircleFace(radius=countn, color=coldict[genus])
-            item.add_face(C, column=0)
-            R = ete.TextFace("  %s" % count)
-            R.fgcolor = 'black'
-            R.fsize = 16
-            item.add_face(R, column=1)
-            TF = ete.TextFace("  %s" % group)
-            TF.fgcolor = 'black'
-            item.add_face(TF, column=2)
-        elif item.name == outg:
-            nam = " ".join(item.name.split("_")[0:5])
-            nam = nam.replace("Human_ERV_", "HERV_")
-            TF = ete.TextFace(nam)
-            TF.fgcolor = 'blue'
-            TF.fsize = 12
-            item.add_face(TF, column=1)
-        else:
-            nam = " ".join(item.name.split("_")[0:5])
-            nam = nam.replace("Human_ERV_", "HERV_")
-            TF = ete.TextFace(nam)
-            TF.fsize = 12
-            TF.fgcolor = 'black'
-            item.add_face(TF, column=1)
-
-    T.set_outgroup(outg)
-    TS = ete.TreeStyle()
-    titl = ete.TextFace("%s, %s,  %i seqs"
-                        % (gene, genus, sum(repcounts.values())),
-                        fsize=20)
-    titl.margin_bottom = 20
-    TS.title.add_face(titl, column=1)
-    TS.show_leaf_name = False
-    TS.show_branch_support = True
-    T.render(treepng, tree_style=TS, dpi=600)
+    # align
+    align(outfiles[0], outfiles[1], "%s_%s" % (gene, genus), log)
 
 
 def summary(gag, pol, env, outfile, plot_dir):
