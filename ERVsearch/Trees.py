@@ -142,10 +142,7 @@ def drawTree(tree, outfile, maincolour, highlightcolour,
             text = item.name
         TF = ete.TextFace(text)
         item.add_face(TF, column=1)
-        if sizenodes:
-            TF.fgcolor = 'black'
-        else:
-            TF.fgcolor = col
+        TF.fgcolor = col
 
     NS = ete.NodeStyle()
     NS['size'] = 0

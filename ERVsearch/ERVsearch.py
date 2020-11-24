@@ -593,8 +593,8 @@ def assignGroups(infiles, outfile):
     saved as gags_table_groups.tsv, pols_table_groups.tsv and
     envs_table_groups.tsv.
     '''
-    ORFs = infiles[2]
-    ORF_fasta = Fasta.makeFastaDict(ORFs, spliton="_")
+    ORF_file = infiles[2]
+    ORF_fasta = Fasta.makeFastaDict(ORF_file, spliton="_")
 
     # this table has the group information - read it and put it into
     # a dictionary
@@ -677,7 +677,8 @@ def drawGroupTrees(infile, outfile):
     An image of each tree is  generated, using the ete3 python package.
     '''
     if PARAMS['trees']['use_gene_colour'] == "True":
-        hlcolour = PARAMS['plots']['%s_colour' % (infile.split("_")[0])]
+        hlcolour = PARAMS['plots']['%s_colour' % (os.path.basename(
+            infile).split("_")[0])]
     else:
         hlcolour = PARAMS['trees']['highlightcolour']
     Trees.drawTree(infile, outfile, PARAMS['trees']['maincolour'],
@@ -726,7 +727,8 @@ def makeSummaryTrees(infiles, outfile):
            r"summary_trees.dir/\1.%s" % PARAMS['trees']['format'])
 def drawSummaryTrees(infile, outfile):
     if PARAMS['trees']['use_gene_colour'] == "True":
-        hlcolour = PARAMS['plots']['%s_colour' % (infile.split("_")[0])]
+        hlcolour = PARAMS['plots']['%s_colour' % (os.path.basename(
+            infile).split("_")[0])]
     else:
         hlcolour = PARAMS['trees']['highlightcolour']
     Trees.drawTree(infile, outfile, PARAMS['trees']['maincolour'],
