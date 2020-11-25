@@ -27,7 +27,7 @@ def combineBeds(beds):
         return (df)
 
 
-def mergeBed(bed, overlap, log):
+def mergeBed(bed, overlap, log, mergenames=True):
     '''
     Merge overlapping regions in a bed file
     Output the name, strand and score for the highest scoring overlapping
@@ -47,22 +47,44 @@ def mergeBed(bed, overlap, log):
         log.error(err)
         raise err
 
-    # Pick the highest scoring query for each merged region
-    # and output this into the bed file instead of all
-    # the names
-    df = pd.DataFrame([
-        x.split("\t") for x in P.stdout.decode().split("\n")[:-1]])
-    rows = []
-    for ind in df.index.values:
-        row = df.loc[ind]
-        scores = [int(x) for x in row[4].split(",")]
-        names = row[3].split(",")
-        strands = row[5].split(",")
-        maxind = scores.index(max(scores))
-        maxscore = scores[maxind]
-        maxname = names[maxind]
-        maxstrand = strands[maxind]
-        rows.append([row[0], row[1], row[2],
-                     maxname, maxscore, maxstrand])
-    merged = pd.DataFrame(rows)
+    df = pd.DataFrame(
+        [x.split("\t") for x in P.stdout.decode().split("\n")[:-1]])
+    if mergenames:
+        # Pick the highest scoring query for each merged region
+        # and output this into the bed file instead of all the names
+        rows = []
+        for ind in df.index.values:
+            row = df.loc[ind]
+            scores = [int(x) for x in row[4].split(",")]
+            names = row[3].split(",")
+            strands = row[5].split(",")
+            maxind = scores.index(max(scores))
+            maxscore = scores[maxind]
+            maxname = names[maxind]
+            maxstrand = strands[maxind]
+            rows.append([row[0], row[1], row[2],
+                         maxname, maxscore, maxstrand])
+        merged = pd.DataFrame(rows)
+    else:
+        merged = df
+
     return (merged)
+
+
+def getFasta(infile, outfile, log):
+    statement = ['bedtools',
+                 'getfasta',
+                 '-s', '-fi', "genome.fa",
+                 '-bed', infile]
+    log.info("Generating fasta file of regions in %s: %s" % (infile,
+                                                             statement))
+
+    P = subprocess.run(statement,
+                       stdout=open(outfile, "w"),
+                       stderr=subprocess.PIPE)
+    if P.returncode != 0:
+        log.error(P.stderr)
+        err = RuntimeError("Error converting bed file %s to fasta - \
+                           see log file" % infile)
+        log.error(err)
+        raise err

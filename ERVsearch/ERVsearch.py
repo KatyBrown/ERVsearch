@@ -20,7 +20,7 @@ import Exonerate
 import ORFs
 import Trees
 import Summary
-
+import Regions
 
 parser = cmdline.get_argparse(description='Pipeline ERVs')
 options = parser.parse_args()
@@ -260,22 +260,7 @@ def makeFastas(infiles, outfile):
     if os.stat(infile).st_size == 0:
         pathlib.Path(outfile).touch()
     else:
-        statement = ['bedtools',
-                     'getfasta',
-                     '-s', '-fi', "genome.fa",
-                     '-bed', infile]
-        log.info("Generating fasta file of regions in %s: %s" % (infile,
-                                                                 statement))
-
-        P = subprocess.run(statement,
-                           stdout=open(outfile, "w"),
-                           stderr=subprocess.PIPE)
-        if P.returncode != 0:
-            log.error(P.stderr)
-            err = RuntimeError("Error converting bed file to fasta - \
-                               see log file")
-            log.error(err)
-            raise err
+        Bed.getFasta(infile, outfile, log)
 
 
 @follows(mkdir("summary_tables.dir"))
@@ -626,7 +611,7 @@ def assignGroups(infiles, outfile):
         groups.append(group)
     match_tab['group'] = groups
     match_tab['evalue'] = ["%.3e" % e for e in match_tab['evalue']]
-    match_tab['genus'] = match_tab['match'].str.split("_").str.get(-1)
+    match_tab['genus'] = match_tab['match'].str.split("_").str.get(-2)
     match_tab = match_tab[match_tab['ID'].isin(ORF_fasta)]
     match_tab.to_csv(outfile, sep="\t", index=None)
 
@@ -735,6 +720,57 @@ def drawSummaryTrees(infile, outfile):
                    hlcolour,
                    PARAMS['trees']['outgroupcolour'],
                    PARAMS['trees']['dpi'], sizenodes=True)
+
+
+@follows(mkdir("clean_beds.dir"))
+@transform(assignGroups, regex("grouped.dir/(.*)_groups.tsv"),
+           r"clean_beds.dir/\1.bed")
+def makeCleanBeds(infile, outfile):
+    df = pd.read_csv(infile, sep="\t")
+    cols = HelperFunctions.getBedColumns()
+    df['start'][df['strand'] == "+"] -= 1
+    df = df[cols]
+    df.to_csv(outfile, sep="\t", header=None, index=None)
+
+
+@follows(mkdir("clean_fastas.dir"))
+@transform(makeCleanBeds, regex("clean_beds.dir/(.*).bed"),
+           r"clean_fastas.dir/\1.fasta")
+def makeCleanFastas(infile, outfile):
+    if os.stat(infile).st_size == 0:
+        pathlib.Path(outfile).touch()
+    else:
+        Bed.getFasta(infile, outfile, log)
+
+
+@follows(mkdir("ERV_regions.dir"))
+@merge(makeCleanBeds,
+       ["ERV_regions.dir/all_ORFs.bed",
+        "ERV_regions.dir/all_regions.bed",
+        "ERV_regions.dir/multi_gene_regions.bed",
+        "ERV_regions.dir/regions.fasta"])
+def findERVRegions(infiles, outfiles):
+    combined = Bed.combineBeds(infiles)
+    combined.to_csv(outfiles[0], sep="\t", index=None, header=None)
+    merged = Bed.mergeBed(outfiles[0], overlap=PARAMS['regions']['maxdist'],
+                          log=log, mergenames=False)
+    merged.to_csv(outfiles[1], sep="\t", index=None, header=None)
+    merged = merged[merged[3].str.find(",") != -1]
+    merged.to_csv(outfiles[2], sep="\t", index=None, header=None)
+    Bed.getFasta(outfiles[2], outfiles[3], log)
+
+
+@merge(findERVRegions,
+       ["ERV_regions.dir/ERV_regions_final.tsv",
+        "ERV_regions.dir/ERV_regions_final.bed",
+        "ERV_regions.dir/ERV_regions_final.fasta"])
+def makeRegionTables(infiles, outfiles):
+    results = Regions.getRegions(infiles[2], genes)
+    results.to_csv(outfiles[0], sep="\t", index=None)
+    cols = HelperFunctions.getBedColumns()
+    results['score'] = 0
+    results[cols].to_csv(outfiles[1], sep="\t", index=None, header=None)
+    Bed.getFasta(outfiles[1], outfiles[2], log)
 
 
 @follows(summariseExonerateInitial)

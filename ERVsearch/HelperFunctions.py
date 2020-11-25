@@ -17,6 +17,10 @@ def getUBLASTColumns():
              'end_pos_target', 'evalue', 'bit_score'])
 
 
+def getBedColumns():
+    return (['chrom', 'start', 'end', 'name', 'score', 'strand'])
+
+
 def revComp(seq):
     '''
     Reverse complements a sequence.
