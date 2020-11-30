@@ -53,27 +53,40 @@ formats = logging.Formatter(
 handler.setFormatter(formats)
 log.addHandler(handler)
 
+# Setup custom gene databases
 genes = []
 PARAMS['gene'] = {}
+
+# The default is to use /ERV_db/gag.fasta /ERV_db/pol.fasta and
+# /ERV_db/env.fasta in the pipeline directory but the user can
+# also provide their own FASTA files.
 
 usecustom = PARAMS['database']['use_custom_db'] == "True"
 
 for gene in ['gag', 'pol', 'env']:
     if PARAMS['database'][gene] != "None" or not usecustom:
         if usecustom:
+            # read the database path from the ini file if needed
             genedb = PARAMS['database'][gene]
         else:
+            # otherwise use the default database
             genedb = "%s/ERV_db/%s.fasta" % (
                 PARAMS['database']['path_to_ERVsearch'], gene)
         if not os.path.exists(genedb):
+            # if there's a custom database specified, check the file exists
             err = RuntimeError(
                 "Database fasta file %s does not exist" % genedb)
             log.error(err)
             raise err
+        # add this info to the parameter dictionary
         PARAMS['gene'][gene] = genedb
+        # keep track of which genes have databases
         genes.append(gene)
 
+# Write the parameters to file
 PARAMS.write(open("%s_parameters.txt" % outstem, "w"))
+
+# Store the plot format (as this is used in the ruffus calls)
 plot_format = PARAMS['plots']['format']
 
 
@@ -82,10 +95,10 @@ def initiate(outfile):
     '''
     Check the environment before starting.
     Check that:
-        The input file exists
-        The correct path to ERVsearch is provided
-        samtools, bedtools, FastTree and mafft are in the PATH
-        The correct paths to usearch and exonerate are provided
+        The input file exists.
+        The correct path to ERVsearch is provided.
+        samtools, bedtools, FastTree and mafft are in the PATH.
+        The correct paths to usearch and exonerate are provided.
     '''
     HelperFunctions.quickCheck(PARAMS, log)
     out = open(outfile, "w")
@@ -271,17 +284,6 @@ def makeFastas(infiles, outfile):
         Bed.getFasta(infile, outfile, log)
 
 
-@follows(mkdir("summary_tables.dir"))
-@follows(mkdir("summary_plots.dir"))
-@merge(mergeOverlaps,
-       [r"summary_tables.dir/exonerate_initial_summary.txt",
-        r"summary_plots.dir/exonerate_initial_lengths.%s" % plot_format,
-        r"summary_plots.dir/exonerate_initial_by_sequence.%s" % plot_format])
-def summariseExonerateInitial(infiles, outfiles):
-    Summary.summariseExonerateInitial(infiles, outfiles, log, genes,
-                                      PARAMS['plots'])
-
-
 @transform(makeFastas, regex("gene_fasta_files.dir/(.*)_merged.fasta"),
            r"gene_fasta_files.dir/\1_merged_renamed.fasta")
 def renameFastas(infile, outfile):
@@ -396,16 +398,6 @@ def runUBLASTCheck(infiles, outfiles):
         pathlib.Path(fasta_out).touch()
     else:
         Fasta.filterFasta(L, fasta_in, fasta_out, log, split=False)
-
-
-@merge(runUBLASTCheck,
-       [r"summary_tables.dir/ublast_summary.txt",
-        r"summary_plots.dir/ublast_lengths.%s" % plot_format,
-        r"summary_plots.dir/ublast_similarity.%s" % plot_format,
-        r"summray_plots.dir/ublast_score.%s" % plot_format])
-def summariseUBLAST(infiles, outfiles):
-    Summary.summariseUBLAST(infiles, outfiles, log, genes,
-                            PARAMS['plots'])
 
 
 @follows(mkdir("exonerate_classification.dir"))
@@ -626,6 +618,24 @@ def assignGroups(infiles, outfile):
     match_tab.to_csv(outfile, sep="\t", index=None)
 
 
+@follows(assignGroups)
+def Screen():
+    pass
+
+
+@follows(mkdir("summary_tables.dir"))
+@follows(mkdir("summary_plots.dir"))
+@merge(assignGroups,
+       [r"summary_tables.dir/exonerate_initial_summary.txt",
+        r"summary_plots.dir/exonerate_initial_lengths.%s" % plot_format,
+        r"summary_plots.dir/exonerate_initial_by_sequence.%s" % plot_format])
+def summariseScreen(infiles, outfiles):
+    Summary.summariseExonerateInitial(infiles, outfiles, log, genes,
+                                      PARAMS['plots'])
+    Summary.summariseUBLAST(infiles, outfiles, log, genes,
+                            PARAMS['plots'])
+
+
 @follows(mkdir("group_fastas.dir"))
 @subdivide(assignGroups, regex("grouped.dir/([a-z]+)_groups.tsv"),
            [r"group_fastas.dir/\1_*.fasta",
@@ -732,6 +742,19 @@ def drawSummaryTrees(infile, outfile):
                    PARAMS['trees']['dpi'], sizenodes=True)
 
 
+@follows(drawGroupTrees)
+@follows(drawSummaryTrees)
+def Groups():
+    pass
+
+
+@follows(Groups)
+@merge(drawSummaryTrees,
+       [r"summary_tables.dir/trees_summary.txt"])
+def summariseGroups(infiles, outfiles):
+    pass
+
+
 @follows(mkdir("clean_beds.dir"))
 @transform(assignGroups, regex("grouped.dir/(.*)_groups.tsv"),
            r"clean_beds.dir/\1.bed")
@@ -783,15 +806,30 @@ def makeRegionTables(infiles, outfiles):
     Bed.getFasta(outfiles[1], outfiles[2], log)
 
 
-@follows(summariseExonerateInitial)
-@follows(summariseUBLAST)
-def summarise():
+@follows(makeRegionTables)
+def ERVRegions():
     pass
 
 
-@follows(drawSummaryTrees)
-@follows(summarise)
-def all():
+@follows(ERVRegions)
+@merge(makeRegionTables,
+       [r"summary_tables.dir/erv)regions_summary.txt"])
+def summariseERVRegions(infiles, outfiles):
+    pass
+
+
+@follows(summariseScreen)
+@follows(summariseGroups)
+@follows(summariseERVRegions)
+def Summarise():
+    pass
+
+
+@follows(Screen)
+@follows(Trees)
+@follows(ERVRegions)
+@follows(Summarise)
+def full():
     pass
 
 
