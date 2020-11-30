@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # This is the main ruffus pipeline for ERVsearch.
 
 from ruffus import follows, split, transform, mkdir, formatter, originate
@@ -24,16 +26,22 @@ import Regions
 
 parser = cmdline.get_argparse(description='Pipeline ERVs')
 options = parser.parse_args()
+
+# Setup to read the ini config file
 PARAMS = configparser.ConfigParser()
 
+# Check the ini config file exists
 if not os.path.exists("pipeline.ini"):
     err = RuntimeError("A copy of the configuration file pipeline.ini needs\
                         to be in your working directory")
     raise (err)
 
+# Read the parameters from the ini config file
 PARAMS.read("pipeline.ini")
 
+# Read the output file stem for the log file
 outstem = PARAMS['output']['outfile_stem']
+
 # Set up logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -55,7 +63,7 @@ for gene in ['gag', 'pol', 'env']:
         if usecustom:
             genedb = PARAMS['database'][gene]
         else:
-            genedb = "%s/ERV_db/%ss.fa" % (
+            genedb = "%s/ERV_db/%s.fasta" % (
                 PARAMS['database']['path_to_ERVsearch'], gene)
         if not os.path.exists(genedb):
             err = RuntimeError(
@@ -435,7 +443,7 @@ def classifyWithExonerate(infiles, outfiles):
     else:
         exonerate_path = PARAMS['paths']['path_to_exonerate']
         exonerate_minscore = PARAMS['exonerate']['min_score']
-        reference_ERVs = "%s/ERV_db/all_ERVS.fasta" % PARAMS[
+        reference_ERVs = "%s/ERV_db/all_ERVs_nt.fasta" % PARAMS[
             'database']['path_to_ERVsearch']
         Exonerate.classifyWithExonerate(reference_ERVs,
                                         fasta, outfiles[0],
@@ -585,7 +593,7 @@ def assignGroups(infiles, outfile):
     # a dictionary
     convert = pd.read_csv("%s/ERV_db/convert.tsv"
                           % PARAMS['database']['path_to_ERVsearch'],
-                          sep="\t", index_col=0)
+                          sep="\t")
     D = dict(zip(convert['id'], convert['match']))
 
     log.info("Assigning %s to a group" % infiles[2])
@@ -603,15 +611,17 @@ def assignGroups(infiles, outfile):
     match_tab = match_tab.merge(stab)
 
     groups = []
+
     for nam in match_tab['match'].values:
-        if nam in D:
-            group = D[nam]
+        nam_stem = "_".join(nam.split("_")[:-2])
+        if nam_stem in D:
+            group = D[nam_stem]
         else:
-            group = "_".join(nam.split("_")[-2:])
+            group = "_".join(nam_stem.split("_")[-2:])
         groups.append(group)
     match_tab['group'] = groups
     match_tab['evalue'] = ["%.3e" % e for e in match_tab['evalue']]
-    match_tab['genus'] = match_tab['match'].str.split("_").str.get(-2)
+    match_tab['genus'] = match_tab['match'].str.split("_").str.get(-4)
     match_tab = match_tab[match_tab['ID'].isin(ORF_fasta)]
     match_tab.to_csv(outfile, sep="\t", index=None)
 
@@ -768,7 +778,7 @@ def makeRegionTables(infiles, outfiles):
     results = Regions.getRegions(infiles[2], genes)
     results.to_csv(outfiles[0], sep="\t", index=None)
     cols = HelperFunctions.getBedColumns()
-    results['score'] = 0
+    cols = cols[:4] + cols[5:]
     results[cols].to_csv(outfiles[1], sep="\t", index=None, header=None)
     Bed.getFasta(outfiles[1], outfiles[2], log)
 

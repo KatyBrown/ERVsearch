@@ -31,9 +31,9 @@ def makeGroupFasta(grouptable, fastaf, path, log):
     '''
     # make a dictionary of all reference ERVs - this is just used
     # to find the outgroup
-    allfasta = Fasta.makeFastaDict("%s/ERV_db/all_ERVS.fasta" % path)
+    allfasta = Fasta.makeFastaDict("%s/ERV_db/all_ERVs_nt.fasta" % path)
     fasta = Fasta.makeFastaDict(fastaf)
-    allgroups = set(grouptable['match'])
+    allgroups = set(grouptable['group'])
     db_path = "%s/phylogenies" % path
 
     exists = dict()
@@ -42,8 +42,9 @@ def makeGroupFasta(grouptable, fastaf, path, log):
 
         f_group = dict()
 
-        subtab = grouptable[grouptable['match'] == group]
+        subtab = grouptable[grouptable['group'] == group]
         new = set(subtab['name'])
+
         for nam in new:
             f_group['%s~' % nam] = fasta[nam]
 
@@ -150,6 +151,7 @@ def drawTree(tree, outfile, maincolour, highlightcolour,
         if not node.is_leaf():
             f = ete.TextFace(node.support)
             node.add_face(f, column=0, position="branch-top")
+        node.set_style(NS)
 
     TS = ete.TreeStyle()
     TS.show_leaf_name = False
@@ -200,7 +202,7 @@ def makeRepFastas(fastas, trees, path, outfiles, log):
     bn = os.path.basename(fastas[0])
     gene = bn[0:3]
     genus = os.path.splitext(bn)[0].split("_")[-1]
-    allfasta = Fasta.makeFastaDict("%s/ERV_db/all_ERVS.fasta" % path)
+    allfasta = Fasta.makeFastaDict("%s/ERV_db/all_ERVs_nt.fasta" % path)
 
     for fasta, tree in zip(fastas, trees):
         log.info("Incorporating %s into summary phylogeny" % tree)

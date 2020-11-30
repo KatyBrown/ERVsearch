@@ -18,7 +18,7 @@ def getUBLASTColumns():
 
 
 def getBedColumns():
-    return (['chrom', 'start', 'end', 'name', 'score', 'strand'])
+    return (['chrom', 'start', 'end', 'name', 'bit_score', 'strand'])
 
 
 def revComp(seq):
@@ -54,7 +54,7 @@ def quickCheck(PARAMS, log):
         raise (err)
 
     pathD = {'ERVsearch':
-             '%s/src/pipeline_ERVs.py' % (
+             '%s/ERVsearch/ERVsearch.py' % (
                  PARAMS['database']['path_to_ERVsearch']),
              'usearch': PARAMS['paths']['path_to_usearch'],
              'exonerate': PARAMS['paths']['path_to_exonerate']}
