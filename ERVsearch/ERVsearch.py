@@ -23,6 +23,7 @@ import ORFs
 import Trees
 import Summary
 import Regions
+import Errors
 
 parser = cmdline.get_argparse(description='Pipeline ERVs')
 options = parser.parse_args()
@@ -32,9 +33,7 @@ PARAMS = configparser.ConfigParser()
 
 # Check the ini config file exists
 if not os.path.exists("pipeline.ini"):
-    err = RuntimeError("A copy of the configuration file pipeline.ini needs\
-                        to be in your working directory")
-    raise (err)
+    Errors.raiseError(Errors.NoIniError)
 
 # Read the parameters from the ini config file
 PARAMS.read("pipeline.ini")
@@ -71,13 +70,11 @@ for gene in ['gag', 'pol', 'env']:
         else:
             # otherwise use the default database
             genedb = "%s/ERV_db/%s.fasta" % (
-                PARAMS['database']['path_to_ERVsearch'], gene)
+                PARAMS['paths']['path_to_ERVsearch'], gene)
         if not os.path.exists(genedb):
             # if there's a custom database specified, check the file exists
-            err = RuntimeError(
-                "Database fasta file %s does not exist" % genedb)
-            log.error(err)
-            raise err
+            Errors.raiseError(Errors.DatabaseNotFoundError, genedb, log=log)
+
         # add this info to the parameter dictionary
         PARAMS['gene'][gene] = genedb
         # keep track of which genes have databases
@@ -101,6 +98,8 @@ def initiate(outfile):
         The correct paths to usearch and exonerate are provided.
     '''
     HelperFunctions.quickCheck(PARAMS, log)
+
+    # This is just a placeholder to tell ruffus that this function ran.
     out = open(outfile, "w")
     out.write("Passed initial checks")
     out.close()
@@ -111,8 +110,24 @@ def initiate(outfile):
 @split(PARAMS['genome']['file'], r"host_chromosomes.dir/*.fasta")
 def genomeToChroms(infile, outfiles):
     '''
-    Splits the host genome provided by the user into one fasta file for each
-    chromosome, scaffold or contig.
+    Splits the host genome provided by the user fasta files of a suitable
+    size for running Exonerate efficiently.
+
+    If genomesplits_split in the pipeline.ini is False, the genome is split
+    into one fasta file for each sequence - each chromosome, scaffold or
+    contig.
+    If genomesplits_split in the pipeline.ini is True, the genome is split
+    into the number of batches specified by the genomesplits_splitn
+    parameter, unless the total number of sequences in the input file is
+    less than this number.
+
+    The pipeline will fail if the number of sequences which would result from
+    the genomesplits settings would result in >500 Exonerate runs, however
+    it is possible to force the pipeline to run despite this by setting
+    genomesplits_force to True.
+
+    If the file keep_chroms.txt exists in the working directory only
+    chromosomes listed in this file will be kept.
 
     An unzipped copy of zipped and gzipped fasta files will be
     created.
@@ -120,44 +135,49 @@ def genomeToChroms(infile, outfiles):
     This function generates a series of fasta files which are stored in the
     host_chromosomes.dir directory.
     '''
-    if infile.endswith(".gz"):
-        # unzip gzipped files
-        log.info("Unzipping gzipped input file %s" % infile)
-        statement = ["gunzip", "-c", infile]
-        log.info("Running statement: %s" % " ".join(statement))
-        subprocess.run(statement, stdout=open("genome.fa", "w"))
-    elif infile.endswith(".zip"):
-        # unzip zipped files
-        log.info("Unzipping zipped input file %s" % infile)
-        statement = ["unzip", "-p", infile]
-        log.info("Running statement: %s" % " ".join(statement))
-        subprocess.run(statement, stdout=open("genome.fa", "w"))
+    # unzip the file if needed
+    Fasta.unZip(infile, log)
+
+    # index with samtools faidx
+    Fasta.indexFasta("genome.fa", log)
+
+    # count the chromosomes (or sequences)
+    nchroms = Fasta.countFasta("genome.fa", log)
+
+    # how many files should the genome be split into
+    nsplits = int(PARAMS['genomesplits']['split_n'])
+
+    # if keep_chroms.txt exists only keep chromosomes in this file
+    keepchroms = Fasta.readKeepChroms(log)
+    if len(keepchroms) != 0:
+        nchroms = len(keepchroms)
+
+    # decide how many chromsomes (or sequences) need to go in each output
+    # file
+
+    if PARAMS['genomesplits']['split'] == "True" and nsplits < nchroms:
+        # if the genome_splits_split parameter is set and there are less splits
+        # specified than the total number of chromosomes, the number per
+        # file is the number of chromsomes / number of splits
+        n_per_split = math.ceil(nchroms / nsplits)
     else:
-        log.info("Linking to input file %s" % infile)
-        statement = ["ln",  "-sf", infile, "genome.fa"]
-        subprocess.run(statement)
-
-    statement = ["samtools", "faidx", "genome.fa"]
-    log.info("Indexing fasta file: %s" % " ".join(statement))
-    s = subprocess.run(statement)
-    if s.returncode != 0:
-        err = RuntimeError("""Indexing the input Fasta file was not possible, \
-                           please check your input file for errors""")
-        log.error(err)
-        raise(err)
-
-    statement = ["wc", "-l", "genome.fa.fai"]
-    log.info("Counting chromosomes in fasta file genome.fa: \
-             %s" % (" ".join(statement)))
-    P = subprocess.run(statement, stdout=subprocess.PIPE)
-
-    if PARAMS['genome']['split'] == "True":
-        nsplits = int(PARAMS['genome']['split_n'])
-        n_per_split = math.ceil(
-            int(P.stdout.decode().split(" ")[0]) / nsplits)
-    else:
+        # otherwise make one output file per chromosome
+        nsplits = nchroms
         n_per_split = 1
+
+    # Exonerate will run once per gene for each split file
+    nruns = nsplits * len(genes)
+
+    # Raise an error if Exonerate will run more than 500 time, unless the
+    # user specifies genomesplits_force
+    if nruns > 500 and PARAMS['genomesplits']['force'] == "True":
+        Errors.raiseError(Errors.TooManyRunsWarn, nsplits, nruns, log=log)
+    elif nruns > 500:
+        Errors.raiseError(Errors.TooManyRunsError, nsplits, nruns, log=log)
+
     log.info("%s chromosomes will be written per file" % n_per_split)
+
+    # Split the file and write the output to the host_chromosomes.dir directory
     Fasta.splitChroms("genome.fa", log, n=n_per_split)
 
 
@@ -744,14 +764,14 @@ def drawSummaryTrees(infile, outfile):
 
 @follows(drawGroupTrees)
 @follows(drawSummaryTrees)
-def Groups():
+def Classify():
     pass
 
 
-@follows(Groups)
+@follows(Classify)
 @merge(drawSummaryTrees,
        [r"summary_tables.dir/trees_summary.txt"])
-def summariseGroups(infiles, outfiles):
+def summariseClassify(infiles, outfiles):
     pass
 
 
@@ -819,14 +839,14 @@ def summariseERVRegions(infiles, outfiles):
 
 
 @follows(summariseScreen)
-@follows(summariseGroups)
+@follows(summariseClassify)
 @follows(summariseERVRegions)
 def Summarise():
     pass
 
 
 @follows(Screen)
-@follows(Trees)
+@follows(Classify)
 @follows(ERVRegions)
 @follows(Summarise)
 def full():
