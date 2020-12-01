@@ -6,6 +6,7 @@ Functions for reading, generating and processing FASTA files
 import os
 import pandas as pd
 import subprocess
+import Errors
 pd.set_option('mode.chained_assignment', None)
 
 
@@ -50,11 +51,11 @@ def filterFasta(keeplist, fasta_in, outnam, log, split=True, n=1):
     If split is False put all of the output into the same file
     (with outnam as the file name)
     '''
+    # Index the file if required.
     if not os.path.exists("%s.fai" % fasta_in):
-        statement = ['samtools', 'faidx', fasta_in]
-        log.info("Indexing fasta file %s: %s" % (fasta_in,
-                                                 " ".join(statement)))
-        subprocess.run(statement)
+        indexFasta(fasta_in, log)
+
+    # Initiate and clear the output file
     if not split:
         out = open(outnam, "w")
         out.close()
@@ -62,69 +63,129 @@ def filterFasta(keeplist, fasta_in, outnam, log, split=True, n=1):
     k = 1
     outf = "%s/section1.fasta" % outnam
     for seq in keeplist:
-        # output a fasta file for each sequence using samtools faidx
+        # get this sequence using samtools faidx
         statement_chrom = ["samtools", "faidx", fasta_in, seq]
         log.info("Processing chromosome %s: %s" % (
             seq, " ".join(statement_chrom)))
         if split:
             if n == 1:
+                # if n == 1 write one sequence to each output file and
+                # index as you go
                 outf = "%s/%s.fasta" % (outnam, seq)
+                # put the sequence in its own fasta file
                 subprocess.run(statement_chrom, stdout=open(outf, "w"))
-                statement_ind = ['samtools', 'faidx', outf]
-                log.info("Indexing chromosome %s: %s" % (
-                    seq, " ".join(statement_chrom)))
-                subprocess.run(statement_ind)
+                indexFasta(outf, log)
             else:
                 if x == n:
-                    statement_ind = ["samtools", "faidx", outf]
-                    log.info("Indexing %s: %s" % (
-                        outf, " ".join(statement_ind)))
-                    subprocess.run(statement_ind)
+                    # if you have enough chromosomes in the current file
+                    # index it and make a new file
+                    indexFasta(outf, log)
 
                     outf = "%s/section%i.fasta" % (outnam, k+1)
                     out = open(outf, "w")
                     out.close()
                     k += 1
                     x = 0
+                # put the sequence in the ongoing fasta file
                 subprocess.run(statement_chrom, stdout=open(outf, "a"))
                 x += 1
         else:
+            # put the sequence into the one output fasta file
             subprocess.run(statement_chrom, stdout=open(outnam, "a"))
 
+    # index the result if not indexed already
     if not split:
-        statement = ["samtools", "faidx", outnam]
-        log.info("Indexing chromosome %s: %s" % (outnam, " ".join(statement)))
-        subprocess.run(statement)
+        indexFasta(outnam, log)
     elif n != 1:
-        statement = ["samtools", "faidx", outf]
-        log.info("Indexing %s: %s" % (outf, " ".join(statement)))
-        subprocess.run(statement)
+        indexFasta(outf, log)
 
 
 def splitChroms(infile, log, n=1):
     '''
-    For genomes assembled into chromosomes, split the input fasta file into
-    one fasta file per chromosome.
-    If a keep_chroms.tsv configuration file is provided, only keep the
+    Split a fasta file into multiple smaller fasta files, with n sequences
+    per file.
+
+    If a keep_chroms.txt configuration file is provided, only keep the
     chromosomes listed in this file.
     '''
     indexed = "%s.fai" % os.path.basename(infile)
     allchroms = set([L.strip().split()[0] for L in open(indexed).readlines()])
 
+    keepchroms = readKeepChroms(log)
+    if len(keepchroms) == 0:
+        keepchroms = allchroms
+
+    # Check all the sequences named in keep_chroms are actually in the input
+    # file and error otherwise
+    if len(keepchroms & allchroms) != len(keepchroms):
+        Errors.raiseError(Errors.MissingChromsError, log=log)
+
+    log.info("Splitting input FASTA file into %i files" % len(keepchroms))
+    filterFasta(keepchroms, infile, "host_chromosomes.dir", log, n=n)
+
+
+def unZip(infile, log):
+    '''
+    Determines if the file is zipped, gzipped or not zipped and creates
+    genome.fa in the working directory as either an unzipped copy or a
+    link to the original.
+    '''
+
+    if infile.endswith(".gz"):
+        # unzip gzipped files
+        log.info("Unzipping gzipped input file %s" % infile)
+        statement = ["gunzip", "-c", infile]
+        log.info("Running statement: %s" % " ".join(statement))
+        subprocess.run(statement, stdout=open("genome.fa", "w"))
+    elif infile.endswith(".zip"):
+        # unzip zipped files
+        log.info("Unzipping zipped input file %s" % infile)
+        statement = ["unzip", "-p", infile]
+        log.info("Running statement: %s" % " ".join(statement))
+        subprocess.run(statement, stdout=open("genome.fa", "w"))
+    else:
+        log.info("Linking to input file %s" % infile)
+        statement = ["ln",  "-sf", infile, "genome.fa"]
+        subprocess.run(statement)
+
+
+def indexFasta(infile, log):
+    '''
+    Indexes a FASTA file using samtools faidx.
+    '''
+    statement = ["samtools", "faidx", infile]
+    log.info("Indexing fasta file: %s" % " ".join(statement))
+    s = subprocess.run(statement)
+    if s.returncode != 0:
+        log.error(s.stderr)
+        Errors.raiseError(Errors.FastaIndexError, log=log)
+
+
+def countFasta(infile, log):
+    '''
+    Counts the number of chromosomes or sequences in an indexed Fasta file
+
+    '''
+    statement = ["wc", "-l", "%s.fai" % infile]
+    log.info("Counting chromosomes in fasta file genome.fa: \
+             %s" % (" ".join(statement)))
+    P = subprocess.run(statement, stdout=subprocess.PIPE)
+    nchroms = int(P.stdout.decode().split(" ")[0])
+    log.info("%s has %i chromosomes (or contigs / scaffolds" % (infile,
+                                                                nchroms))
+    return (nchroms)
+
+
+def readKeepChroms(log):
+    '''
+    Reads the chromosome names in the keep_chroms.txt file and returns
+    them as a set.
+    '''
     if os.path.exists("keep_chroms.txt"):
         log.info("""keep_chroms.txt exists so only chromosomes in this\
                     list will be screened""")
         keepchroms = set([L.strip()
                           for L in open("keep_chroms.txt").readlines()])
-        if len(keepchroms & allchroms) != len(keepchroms):
-            err = RuntimeError("""Not all chromosomes in keepchroms.txt \
-                                  are found in the input fasta file, the \
-                                  following are missing \n%s""" % (
-                                  "\n".join(list(keepchroms - allchroms))))
-            log.error(err)
-            raise(err)
     else:
-        keepchroms = allchroms
-
-    log.info("Splitting input genome into %i chromosomes" % len(keepchroms))
-    filterFasta(keepchroms, infile, "host_chromosomes.dir", log, n=n)
+        keepchroms = set()
+    return (keepchroms)
