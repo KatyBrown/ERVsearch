@@ -5,6 +5,7 @@ General functions for the pipeline.
 import os
 import pandas as pd
 import shutil
+import Errors
 
 pd.set_option('mode.chained_assignment', None)
 
@@ -40,18 +41,17 @@ def quickCheck(PARAMS, log):
     Check that:
         The input file exists
         The correct path to ERVsearch is provided
-        samtools, bedtools, FastTree and mafft are in the PATH
-        The correct paths to usearch and exonerate are provided
+        Samtools, Bedtools, FastTree and Mafft are in the PATH
+        The correct paths to usearch and Exonerate are provided
     '''
-    if not os.path.exists(PARAMS['genome']['file']):
+    log.info("Checking ERVsearch setup")
+    genome = PARAMS['genome']['file']
+    if not os.path.exists(genome):
         if PARAMS['genome']['file'] == "!?":
-            err = RuntimeError(
-                "Input file needs to be specified in the pipeline.ini file")
+            Errors.raiseError(Errors.InputFileNotSpecifiedError, log=log)
         else:
-            err = FileNotFoundError("Input file %s not found" % (
-                PARAMS['genome']['file']))
-        log.error(err)
-        raise (err)
+            Errors.raiseError(Errors.InputFileNotFoundError, genome,
+                              log=log)
 
     pathD = {'ERVsearch':
              '%s/ERVsearch/ERVsearch.py' % (
@@ -60,15 +60,14 @@ def quickCheck(PARAMS, log):
              'exonerate': PARAMS['paths']['path_to_exonerate']}
 
     for prog, path in pathD.items():
+        if path == "!?":
+            Errors.raiseError(Errors.ToolPathNotSpecifiedError, prog, log=log)
         if not os.path.exists(path):
-            err = RuntimeError("%s is not at the location %s specified in \
-                               your pipeline.ini" % (prog, path))
-            log.error(err)
-            raise (err)
+            Errors.raiseError(Errors.ToolNotInPathError, prog, path,
+                              log=log)
 
     for tool in ['samtools', 'bedtools', 'mafft', 'FastTree',
                  'revseq', 'transeq']:
         if not shutil.which(tool):
-            err = RuntimeError("%s is not in your $PATH" % tool)
-            log.error(err)
-            raise(err)
+            Errors.raiseError(Errors.ToolNotInPathError, tool,
+                              log=log)
