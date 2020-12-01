@@ -5,33 +5,29 @@ Functions to identify and process open reading frames (ORFs)
 import pandas as pd
 import numpy as np
 import subprocess
-import shutil
 import re
 import textwrap
 import Fasta
+import Errors
 
 
 def runTranseq(fasta, rawout, trans_tab, log):
     '''
-    Runs the EMBOSS transeq function
+    Runs the EMBOSS transeq function to translate a sequence in all six
+    frames.
     '''
-    if not shutil.which('transeq'):
-        err = FileNotFoundError("EMBOSS transeq is not in your PATH")
-        log.error(err)
-        raise err
+    # Generate the statement to run transeq
     statement = ['transeq', '-sequence', fasta,
                  '-outseq', rawout,
                  '-frame', '6',
                  '-table', trans_tab,
                  '-auto']
     log.info("Finding ORFs in %s: %s" % (fasta, " ".join(statement)))
+    # Run the statement
     P = subprocess.run(statement, stderr=subprocess.PIPE)
     if P.returncode != 0:
         log.error(P.stderr)
-        err = RuntimeError(
-            "Error running sixpack on %s - see log file" % fasta)
-        log.error(err)
-        raise err
+        Errors.raiseError(Errors.SoftwareError, 'transeq', fasta, log=log)
 
 
 def splitNam(seqnam):
@@ -61,7 +57,8 @@ def fastaBufferToString(fastabuffer):
 def extractCMD(genome, chrom, start, end, log,
                rc=False, translate=False, trans_table=1):
     '''
-    Uses samtools faidx to extract positions start:end from chromosome
+    Uses samtools faidx http://www.htslib.org/doc/samtools-faidx.html
+    to extract positions start:end from chromosome
     chrom of an indexed genome.
     If rc is True, the sequence is reverse complemented using EMBOSS revcomp
     If translate is True the sequence is translated using the table
@@ -80,7 +77,14 @@ def extractCMD(genome, chrom, start, end, log,
                      '0', '-auto']
         log.info("Reverse complementing region %s to %s from %s:%s : %s" % (
                   start, end, genome, chrom, " ".join(statement)))
-        P = subprocess.run(statement, stdout=subprocess.PIPE, input=P.stdout)
+        P = subprocess.run(statement, stdout=subprocess.PIPE, input=P.stdout,
+                           stderr=subprocess.PIPE)
+
+        if P.returncode != 0:
+            log.error(P.stderr)
+            Errors.raiseError(Errors.SoftwareError,
+                              'revseq', "%s %s %s" % (chrom, start, end),
+                              log=log)
     out_nt = fastaBufferToString(P.stdout.decode())
     if not translate:
         return (out_nt)
@@ -91,8 +95,12 @@ def extractCMD(genome, chrom, start, end, log,
     log.info("Translating region %s to %s from %s:%s : %s" % (
               start, end, genome, chrom, " ".join(statement)))
     P = subprocess.run(statement, input=P.stdout,
-                       stdout=subprocess.PIPE)
-
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if P.returncode != 0:
+        log.error(P.stderr)
+        Errors.raiseError(Errors.SoftwareError,
+                          'transeq', "%s %s %s" % (chrom, start, end),
+                          log=log)
     out_aa = fastaBufferToString(P.stdout.decode())
     return (out_nt, out_aa)
 
@@ -112,7 +120,7 @@ def getAllAAs(genome, chrom, cl, start, end, log, trans_table=1):
             start -= 2
         end -= 1
     for i in np.arange(0, 3):
-
+        # extract the region from the chromosome
         nt, aa = extractCMD(genome,
                             chrom,
                             start+i,
@@ -120,10 +128,12 @@ def getAllAAs(genome, chrom, cl, start, end, log, trans_table=1):
                             log,
                             trans_table=trans_table,
                             translate=True)
+        # store the start position, end position and sequence
         aaD['%s+' % i] = dict()
         aaD['%s+' % i]['aa'] = aa.strip("X")
         aaD['%s+' % i]['start'] = start + i
         aaD['%s+' % i]['end'] = end
+        # same for the reverse complement
         nt, aa = extractCMD(genome,
                             chrom,
                             start,
@@ -156,29 +166,38 @@ def filterTranseq(fasta, transeq_raw, nt_out, aa_out, min_length, genome,
     ORF names are output as ID_chrom-start-end(strand) with strand relative
     to the original genome input sequences rather than the ORF region
     identified with Exonerate.
+
     '''
+    # get the lengths of the chromosomes - in order to deal correctly with
+    # sequence at the ends of the chromosomes
     chrom_df = pd.read_csv("%s.fai" % genome, sep="\t", header=None)
-    # get the lengths of the chromosomes
     chrom_lens = dict(zip(chrom_df[0], chrom_df[1]))
     lengths = dict()
     longest = dict()
+
+    # read the raw transeq output into a dictionary
     transeq_raw = Fasta.makeFastaDict(transeq_raw)
     for nam in transeq_raw:
+        # split the sequence into ORFs and find the lengths
         Ls = [len(x) for x in transeq_raw[nam].split("*")]
+        # if at least one ORF is long enough
         if max(Ls) > min_length:
             log.info("%s has ORFs > %s amino acids: Checking ORFs" % (
                 nam, min_length))
             # Get the raw translated sequence generated with transeq
             aa = transeq_raw[nam]
+
+            # The transeq names have _frame as a suffix - cut it off
             nam2 = "_".join(nam.split("_")[:-1])
             lengths.setdefault(nam2, 0)
             longest.setdefault(nam2, dict())
 
+            # extract the ID, start and end positions and strand from the
+            # sequence name
             namD = splitNam(nam2)
 
             # get every possible translation by manually RCing and clipping
             # the sequences
-
             aaD = getAllAAs(genome, namD['chrom'], chrom_lens[namD['chrom']],
                             namD['start'], namD['end'], log,
                             trans_table=trans_table)
@@ -242,12 +261,14 @@ def filterTranseq(fasta, transeq_raw, nt_out, aa_out, min_length, genome,
                                                  rc=rc,
                                                  trans_table=trans_table,
                                                  translate=True)
+                            # Remove Xs from the ends of the sequences
                             aa2 = aa2.strip("X")
                             orf = orf.strip("X")
                             if "+" in f:
                                 frame = "+"
                             else:
                                 frame = "-"
+                            # Create a new ID
                             ID = "%s_%s-%s-%s(%s)" % (namD['ID'],
                                                       namD['chrom'],
                                                       orf_s,
@@ -260,6 +281,7 @@ def filterTranseq(fasta, transeq_raw, nt_out, aa_out, min_length, genome,
                                 longest[nam2]['ID'] = ID
     nt_out = open(nt_out, "w")
     aa_out = open(aa_out, "w")
+    # output the longest ORF in each ERV region to file
     for nam in longest:
         if 'ID' in longest[nam]:
             nt = "\n".join(textwrap.wrap(longest[nam]['nt'], 70))

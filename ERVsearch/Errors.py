@@ -48,3 +48,11 @@ def TooManyRunsError(*args):
 
 def MissingChromsError(*args):
     return RuntimeError("""Not all chromosomes in keepchroms.txt are found in the input fasta file""")
+
+
+def UBLASTDBError(*args):
+    return RuntimeError("""Error generating UBLAST database for file %s - see log file""" % args[0])
+
+
+def SoftwareError(*args):
+    return RuntimeError("""Error running %s on %s - see log file""" % (args[0], args[1]))

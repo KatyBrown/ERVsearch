@@ -14,6 +14,10 @@ def makeFastaDict(multifasta, spliton=None):
     '''
     Turns any fasta file into a dictionary, with sequence names as the keys
     and sequences as the values.
+
+    If spliton is set, the names will be truncated at the first occurance
+    of this character, e.g. NC_12345 human chromosome 1 with spliton=" "
+    would just be NC_12345.
     '''
 
     querydict = dict()
@@ -23,16 +27,20 @@ def makeFastaDict(multifasta, spliton=None):
     with open(multifasta) as infile:
         for line in infile:
             if line[0] == ">" and x != 0:
+                # reset at each new name
                 sequ = "".join(seq)
                 querydict[nam] = sequ
                 seq = []
             if line[0] == ">":
                 nam = line.replace(">", "").strip()
+                # truncate at the spliton character if it is specified
                 if spliton:
                     nam = nam.split(spliton)[0]
                 x += 1
             else:
+                # store the sequences in a list
                 seq.append(line.strip())
+    # add the last sequence
     sequ = "".join(seq)
     querydict[nam] = sequ
     return querydict
@@ -42,10 +50,11 @@ def filterFasta(keeplist, fasta_in, outnam, log, split=True, n=1):
     '''
     Make a FASTA file with only the sequences on keeplist from the input
     fasta file "fasta"
+
     If split is True and n == 1, make a new fasta file for each sequence
     (with outnam as the directory)
 
-    If split is True and n > 1, put every n sequecnes into a new fasta file
+    If split is True and n > 1, put every n sequences into a new fasta file
     (with outnam as the directory)
 
     If split is False put all of the output into the same file
@@ -151,7 +160,8 @@ def unZip(infile, log):
 
 def indexFasta(infile, log):
     '''
-    Indexes a FASTA file using samtools faidx.
+    Indexes a FASTA file using samtools faidx -
+    http://www.htslib.org/doc/samtools-faidx.html
     '''
     statement = ["samtools", "faidx", infile]
     log.info("Indexing fasta file: %s" % " ".join(statement))
@@ -164,12 +174,13 @@ def indexFasta(infile, log):
 def countFasta(infile, log):
     '''
     Counts the number of chromosomes or sequences in an indexed Fasta file
-
     '''
+    # count the lines in the index
     statement = ["wc", "-l", "%s.fai" % infile]
     log.info("Counting chromosomes in fasta file genome.fa: \
              %s" % (" ".join(statement)))
     P = subprocess.run(statement, stdout=subprocess.PIPE)
+    # this should equal the number of chromosomes
     nchroms = int(P.stdout.decode().split(" ")[0])
     log.info("%s has %i chromosomes (or contigs / scaffolds" % (infile,
                                                                 nchroms))
@@ -184,6 +195,7 @@ def readKeepChroms(log):
     if os.path.exists("keep_chroms.txt"):
         log.info("""keep_chroms.txt exists so only chromosomes in this\
                     list will be screened""")
+        # Each line is just a chromosome ID
         keepchroms = set([L.strip()
                           for L in open("keep_chroms.txt").readlines()])
     else:

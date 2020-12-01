@@ -7,6 +7,7 @@ import pandas as pd
 import ete3 as ete
 import subprocess
 import Fasta
+import Errors
 pd.set_option('mode.chained_assignment', None)
 
 
@@ -86,10 +87,7 @@ def align(infile, outfile, nam, log):
                        stdout=open(outfile, "w"))
     if P.returncode != 0:
         log.error(P.stderr)
-        err = RuntimeError(
-            "Error aligning %s - see log file" % (nam))
-        log.error(err)
-        raise err
+        Errors.raiseError(Errors.SoftwareError, infile, "mafft", log=log)
 
 
 def buildTree(infile, outfile, log):
@@ -100,10 +98,7 @@ def buildTree(infile, outfile, log):
                        stderr=subprocess.PIPE)
     if P.returncode != 0:
         log.error(P.stderr.decode())
-        err = RuntimeError("Error running FastTree on %s - see log file" % (
-                            infile))
-        log.error(err)
-        raise err
+        Errors.raiseError(Errors.SoftwareError, infile, "FastTree", log=log)
 
 
 def getGroupSizes(group_names):
