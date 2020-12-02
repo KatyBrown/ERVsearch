@@ -96,7 +96,7 @@ It is divided into three sections:
 * Identifies regions of the genome containing ORFs resembling more than one different retroviral gene within a certain distance
 
 
-##Input Files
+## Input Files
 
 ###Required Input Files
 
@@ -136,8 +136,8 @@ Required parameters are as follows:
 Optional parameters are listed in the **Parameters** section below.
 
 
-###Optional Input Files
-####Custom Databases
+### Optional Input Files
+#### Custom Databases
 By default, ERVsearch will use the provided database of 774 ERV nucleotide sequences and corresponding amino acid sequences as a query against the provided genome. This database is designed to be representative of known retroviruses and to identify the majority of ERVs. However, a more specific custom database can also be provided and used for the initial screen.
 
 To do this, the database_use_custom_db parameter in the pipeline.ini can be set to True. The query sequences should be stored as FASTA files of amino acid sequences, with one file per retroviral gene. Only gag, pol and env genes are currently supported. Very short sequences (less than ~100 amino acids) should be avoided where possible.
@@ -209,8 +209,11 @@ NB: Where `GENE` is specified in a file path one file will be created for each g
 
 
 #### initiate
+
 **Input Files** `pipeline.ini`
+
 **Output Files** `init.txt`
+
 **Parameters**
 `[genome] file`
 `[paths] path_to_ERVsearch`
@@ -228,9 +231,13 @@ Checks that:
 `init.txt` is a placeholder to show that this step has been completed.
 
 ### Screen
+
 #### genomeToChroms
+
 **Input Files** *genome_file*, `keep_chroms.txt`
+
 **Output Files**  `host_chromosomes.dir/*fasta`
+
 **Parameters**
 `[genome] file`
 `[genomesplits] split`
@@ -252,8 +259,11 @@ An unzipped copy of zipped and gzipped fasta files will be created or a link to 
 This function generates a series of fasta files which are stored in the host_chromosomes.dir directory.
 
 #### prepDBs
+
 **Input Files** None
+
 **Output Files** `gene_databases.dir/GENE.fasta`
+
 **Parameters**
 `[database] use_custom_db`
 `[database] gag`
@@ -266,6 +276,7 @@ This function generates a series of fasta files which are stored in the host_chr
 
 
 #### runExonerate
+
 **Input Files** `gene_databases.dir/GENE.fasta`, `host_chromosomes.dir/*fasta`
 **Output Files** `raw_exonerate_output.dir/GENE_*.tsv`
 
@@ -281,7 +292,9 @@ This step is carried out with low stringency as results are later filtered using
     
   
 #### cleanExonerate
+
 **Input Files** `raw_exonerate_output.dir/GENE_*.tsv`
+
 **Output_Files**
 `clean_exonerate_output.dir/GENE_*_unfiltered.tsv`
 `clean_exonerate_output.dir/GENE_*_filtered.tsv`
@@ -298,8 +311,11 @@ Filters and cleans up the Exonerate output.
 	* Converts this to bed format and outputs this to GENE.bed
 
 #### mergeOverlaps
+
 **Input Files** `clean_exonerate_output.dir/GENE_*.bed`
+
 **Output_Files** `gene_bed_files.dir/GENE_all.bed`, `gene_bed_files.dir/GENE_merged.bed`
+
 **Parameters**
 `[exonerate] overlap`
 
@@ -311,36 +327,50 @@ If there is a gap of less than `exonerate_overlap` between the regions they will
 
 
 #### makeFastas
+
 **Input Files** `gene_bed_files.dir/GENE_merged.bed`, `genome.fa`
+
 **Output Files** `gene_fasta_files.dir/GENE_merged.fasta`
+
 **Parameters** None
+
 Fasta files are generated containing the sequences of the merged regions of the genome identified using mergeOverlaps.
 These are extracted from the host chromosomes using bedtools getfasta https://bedtools.readthedocs.io/en/latest/content/tools/getfasta.html.
 
 
 #### renameFastas
+
 **Input Files** `gene_fasta_files.dir/GENE_merged.fasta`
+
 **Output Files** `gene_fasta_files.dir/GENE_merged_renamed.fasta`
+
 **Parameters** None
 
  Renames the sequences in the fasta files of ERV-like regions identified with Exonerate so each record has a numbered unique ID (gag1, gag2 etc). Also removes ":" from sequence names as this causes problems later.
  
 
 #### makeUBLASTDb
+
 **Input Files** `gene_databases.dir/GENE.fasta`
+
 **Output Files** `UBLAST_db.dir/GENE_db.udb`
+
 **Parameters** `[paths] path_to_ublast`
+
 USEARCH requires an indexed database of query sequences to run. This function generates this database for the three gene amino acid fasta files used to screen the genome.
 
 
 #### runUBLASTCheck
+
 **Input Files**
 `UBLAST_db.dir/GENE_db.udb`
 `gene_fasta_files.dir/GENE_merged.fasta`
+
 **Output Files**
 `ublast.dir/GENE_UBLAST_alignments.txt`
 `ublast.dir/GENE_UBLAST.tsv`
 `ublast.dir/GENE_filtered_UBLAST.fasta`
+
 **Parameters**
 `[paths] path_to_usearch`
 `[usearch] min_id`
@@ -355,6 +385,7 @@ The raw output of running UBLAST against the target sequences is saved in GENE_U
 
 
 #### classifyWithExonerate
+
 **Input Files**
 `ublast.dir/GENE_filtered_UBLAST.fasta`
 `ERVsearch/ERV_db/all_ERVs_nt.fasta`
@@ -363,6 +394,7 @@ The raw output of running UBLAST against the target sequences is saved in GENE_U
 `exonerate_classification.dir/GENE_all_matches_exonerate.tsv`
 `exonerate_classification.dir/GENE_best_matches_exonerate.tsv`
 `exonerate_classification.dir/GENE_refiltered_matches_exonerate.fasta`
+
 **Parameters**
 `[paths] path_to_exonerate`
 `[exonerate] min_score`
@@ -376,12 +408,15 @@ against one of the genes of the same type (*gag*, *pol* or *env*) in the databas
 
 
 #### getORFs
+
 **Input Files**
 `exonerate_classification.dir/GENE_refiltered_matches_exonerate.fasta`
+
 **Output Files**
 `ORFs.dir/GENE_orfs_raw.fasta`
 `ORFs.dir/GENE_orfs_nt.fasta`
 `ORFs.dir/GENE_orfs_aa.fasta`
+
 **Parameters**
 `[orfs] translation_table`
 `[orfs] min_orf_len`
@@ -396,14 +431,17 @@ The positions of the ORFs are also convered so that they can be extracted direct
 
 The raw transeq output, the nucleotide sequences of the ORFs and the amino acid sequences of the ORFs are written to the output FASTA files.
 
-#### checkORFsuBLAST
+#### checkORFsUBLAST
+
 **Input Files**
 `ORFs.dir/GENE_orfs_nt.fasta`
 `UBLAST_dbs.dir/GENE_db.udb`
+
 **Output Files**
 `ublast_orfs.dir/GENE_UBLAST_alignments.txt`
 `ublast_orfs.dir/GENE_UBLAST.tsv`
 `ublast_orfs.dir/GENE_filtered_UBLAST.fasta`
+
 **Parameters**
 `[paths] path_to_usearch`
 `[usearch] min_id`
@@ -419,39 +457,270 @@ The raw output of running UBLAST against the target sequences is saved in GENE_U
 
 
 #### assignGroups
+
 **Input Files**
 `ublast_orfs.dir/GENE_UBLAST.tsv`
 `ERVsearch/ERV_db/convert.tsv`
+
 **Output Files**
 `grouped.dir/GENE_groups.tsv`
+
 **Parameters**
 `[paths] path_to_ERVsearch`
+
 Many of the retroviruses in the input database all_ERVs_nt.fasta have been classified into groups based on sequence similarity, prior knowledge and phylogenetic clustering.  Some sequences don't fall into any well defined group, in these cases they are just assigned to a genus, usually based on prior knowledge. The information about these groups is stored in the provided file ERVsearch/ERV_db/convert.tsv.
 
 Each sequence in the filtered fasta file of newly identified ORFs is assigned to one of these groups based on the sequence identified as the most similar in the classifyWithExonerate step. 
 
 The output table is also  tidied up to include the UBLAST output, chromosome, ORF start and end positions, genus and group.
-    '''
 
 
 #### summariseScreen
+
+**Input Files**
+
+**Output Files**
+
+**Parameters**
+
+
 #### Screen
+
+**Input Files** None
+
+**Output Files** None
+
+**Parameters** None
+
+Helper function to run all screening functions (all functions prior to this point).
+
+
+
 ### Classify
+
 #### makeGroupFastas
+
+**Input Files**
+`grouped.dir/GENE_groups.tsv`
+`ERVsearch/phylogenies/group_phylogenies/*fasta`
+`ERVsearch/phylogenies/summary_phylogenies/*fasta`
+`ERVsearch/phylogenies/outgroups.tsv`
+
+**Output Files**
+`group_fastas.dir/GENE_(.*)_GENUS.fasta`
+`group_fastas.dir/GENE_(.*)_GENUS_A.fasta`
+
+**Parameters**
+`[paths] path_to_ERVsearch`
+
+Two sets of reference fasta files are available (files are stored in `ERVsearch/phylogenies/group_phylogenies` and `ERVsearch/phylogenies/summary_phylogenies`)
+
+	* group_phylogenies - groups of closely related ERVs for fine classification of sequences
+	* summary_phylogenies - groups of most distant ERVs for broad classification of sequences
+
+Sequences have been assigned to groups based on the most similar sequence in the provided ERV database, based on the score using the Exonerate ungapped algorithm.
+Where the most similar sequence is not part of a a well defined group, it has been assigned to a genus.
+
+Fasta files are generated containing all members of the group from the group_phylogenies file (plus an outgroup) where possible and using representative sequences from the same genus, using the summary_phylogenies file, where only a genus has been assigned, plus all the newly identified ERVs in the group. These files are saved as GENE_(group_name_)GENUS.fasta.
+
+A "~" is added to all new sequence names so they can be searched for easily.
+
+The files are aligned using the MAFFT fftns algorithm https://mafft.cbrc.jp/alignment/software/manual/manual.html to generate the GENE_(group_name_)GENUS_A.fasta aligned output files.
+
+
 #### makeGroupTrees
+
+**Input Files**
+`group_fastas.dir/GENE_(.*_)GENUS_A.fasta`
+
+**Output Files**
+`group_trees.dir/GENE_(.*_)GENUS.tre`
+
+**Parameters**
+None
+
+Builds a phylogenetic tree, using the FastTree2 algorithm (http://www.microbesonline.org/fasttree) with the default settings plus the GTR model, for the aligned group FASTA files generated by the makeGroupFastas function.
+
+
 #### drawGroupTrees
+
+**Input Files**
+`group_trees.dir/GENE_(.*_)GENUS.tre`
+
+**Output Files**
+`group_trees.dir/GENE_(.*_)GENUS.FMT` (png, svg, pdf or jpg)
+
+**Parameters**
+`[plots] gag_colour`
+`[plots] pol_colour`
+`[plots] env_colour`
+`[trees] use_gene_colour`
+`[trees] maincolour`
+`[trees] highlightcolour`
+`[trees] outgroupcolour`
+`[trees] dpi`
+`[trees] format`
+
+Generates an image file for each file generated in the makeGroupTrees step, using ete3 (http://etetoolkit.org). Newly identified sequences are labelled as "~" and shown in a different colour.
+
+By default, newly identified sequences are shown in the colours specified in `plots_gag_colour`, `plots_pol_colour` and `plots_env_colour` - to do this then `trees_use_gene_colour` should be set to True in the `pipeline.ini`. Alternatively, a fixed colour can be used by setting `trees_use_gene_colour` to False and settings `trees_highlightcolour`. The text colour of the reference sequences (default black) can be set using `trees_maincolour` and the outgroup using `trees_outgroupcolour`.
+
+The output file DPI can be specified using `trees_dpi` and the format (which can be png, svg, pdf or jpg) using `trees_format`.
+
+
 #### makeSummaryFastas
+
+**Input Files**
+`group_fastas.dir/GENE_(.*_)GENUS.fasta`
+`group_trees.dir/GENE_(*_)GENUS.tre`
+`ERVsearch/phylogenies/summary_phylogenies/GENE_GENUS.fasta`
+`ERVsearch/phylogenies/group_phylogenies/(.*)_GENUS_GENE.fasta`
+
+**Output Files**
+`summary_fastas.dir/GENE_GENUS.fasta`
+`summary_fastas.dir/GENE_GENUS.tre`
+
+**Parameters**
+`[paths] path_to_ERVsearch`
+
+Based on the group phylogenetic trees generated in makeGroupTrees, monophyletic groups of newly idenified ERVs are identified. For each of these groups, a single sequence (the longest) is selected as representative. The representative sequences are combined with the FASTA files in `ERVsearch/phylogenies/summary_phylogenies`, which contain representative sequences for each retroviral gene and genus. These are extended to include further reference sequences from the same small group as the newly identified sequences.
+
+For example, if one MLV-like pol and one HERVF-like pol was identified in the gamma genus, the gamma_pol.fasta summary fasta would contain:
+* The new MLV-like pol sequence
+* The new HERVF-like pol sequence
+* The reference sequences from `ERVsearch/phylogenies/group_phylogenies/MLV-like_gamma_pol.fasta` - highly related sequences from the MLV-like group
+* The reference sequences from `ERVsearch/phylogenies/group_phylogenies/HERVF-like_gamma_pol.fasta` - highly related sequences from the HERVF-like group.
+* The reference sequences from `ERVsearch/phylogenies/summary_phylogenies/gamma_pol.fasta` - a less detailed but more diverse set of gammaretroviral pol ORFs.
+* A epsilonretrovirus outgroup
+ 
+ This ensures sufficient detail in the groups of interest while avoiding excessive detail in groups where nothing new has been identified.
+ 
+ These FASTA files are saved as GENE_GENUS.fasta
+ 
+The files are aligned using the MAFFT fftns algorithm https://mafft.cbrc.jp/alignment/software/manual/manual.html to generate the GENE_GENUS_A.fasta aligned output files.
+
 #### makeSummaryTrees
+
+**Input Files**
+`summary_fastas.dir/GENE_GENUS_A.fasta`
+
+**Output Files**
+`summary_trees.dir/GENE_GENUS.tre`
+
+**Parameters**
+None
+
+Builds a phylogenetic tree, using the FastTree2 algorithm (http://www.microbesonline.org/fasttree) with the default settings plus the GTR model, for the aligned group FASTA files generated by the makeSummaryFastas function.
+
+
 #### drawSummaryTrees
+
+**Input Files**
+`summary_trees.dir/GENE_GENUS.tre`
+
+**Output Files**
+`summary_trees.dir/GENE_GENUS.FMT` (FMT = png, svg, pdf or jpg)
+
+**Parameters**
+`[plots] gag_colour`
+`[plots] pol_colour`
+`[plots] env_colour`
+`[trees] use_gene_colour`
+`[trees] maincolour`
+`[trees] highlightcolour`
+`[trees] outgroupcolour`
+`[trees] dpi`
+`[trees] format`
+
+Generates an image file for each file generated in the makeSummaryTrees step, using ete3 (http://etetoolkit.org). Newly identified sequences are labelled as "~" and shown in a different colour. Monophyletic groups of newly identified ERVs have been collapsed (by choosing a single representative sequence) and the number of sequences in the group is added to the label and represented by the size of the node tip.
+
+By default, newly identified sequences are shown in the colours specified in `plots_gag_colour`, `plots_pol_colour` and `plots_env_colour` - to do this then `trees_use_gene_colour` should be set to True in the `pipeline.ini`. Alternatively, a fixed colour can be used by setting `trees_use_gene_colour` to False and settings `trees_highlightcolour`. The text colour of the reference sequences (default black) can be set using `trees_maincolour` and the outgroup using `trees_outgroupcolour`.
+
+The output file DPI can be specified using `trees_dpi` and the format (which can be png, svg, pdf or jpg) using `trees_format`.
+
 #### summariseClassify
+
+**Input Files**
+
+**Output Files**
+
+**Parameters**
+
+
 #### Classify
+
+**Input Files** None
+
+**Output Files** None
+
+**Parameters** None
+
+Helper function to run all screening functions and classification functions (all functions prior to this point).
+
+
 ### ERVRegions
-#### makeCleanBeads
+
+**Input Files**
+
+**Output Files**
+
+**Parameters**
+
+
+#### makeCleanBeds
+
+**Input Files**
+
+**Output Files**
+
+**Parameters**
+
+
 #### makeCleanFastas
+
+**Input Files**
+
+**Output Files**
+
+**Parameters**
+
+
 #### findERVRegions
+
+**Input Files**
+
+**Output Files**
+
+**Parameters**
+
+
 #### makeRegionTables
+
+**Input Files**
+
+**Output Files**
+
+**Parameters**
+
+
 #### summariseERVRegions
+
+**Input Files**
+
+**Output Files**
+
+**Parameters**
+
+
 #### ERVRegions
+
+**Input Files**
+
+**Output Files**
+
+**Parameters**
+
+
 #### Full
 
 

@@ -15,7 +15,10 @@ def getOutgroup(phylopath, gene, genus):
     '''
     Uses the provided reference file to identify an appropriate outgroup
     for a particular gene and genus of ERVs.
+    Returns the outgroup sequence name.
     '''
+    # The outgroups file is just a list of sequences to use as outgroups
+    # for each gene and genus
     outgdict = [tuple(line.strip().split("\t"))
                 for line in open(
                         "%s/outgroups.tsv" % phylopath).readlines()]
@@ -28,61 +31,95 @@ def getOutgroup(phylopath, gene, genus):
 def makeGroupFasta(grouptable, fastaf, path, log):
     '''
     Builds a fasta file representing each small group of ERVs using
-    the output table from the assignGroups function in pipeline_ERVs.
+    the output table from the assignGroups function in the main ERVsearch
+    pipeline, an existing FASTA file of sequences in the group of interest
+    and the newly identified ERV-like sequences.
     '''
     # make a dictionary of all reference ERVs - this is just used
-    # to find the outgroup
+    # to find the outgroup sequence
     allfasta = Fasta.makeFastaDict("%s/ERV_db/all_ERVs_nt.fasta" % path)
+
+    # make a dictionary of the new ERVs
     fasta = Fasta.makeFastaDict(fastaf)
+
+    # find all the groups any sequences have been assigned to
     allgroups = set(grouptable['group'])
     db_path = "%s/phylogenies" % path
 
     exists = dict()
+    # for each group any sequence has been assigned to
     for group in allgroups:
         log.info("Making FASTA file for group %s" % group)
 
         f_group = dict()
 
+        # get the names of all the new sequences in the group
         subtab = grouptable[grouptable['group'] == group]
         new = set(subtab['name'])
 
+        # put the new sequences into the dictionary
         for nam in new:
+            # Add "~" to the new sequence names so they are easy to find
             f_group['%s~' % nam] = fasta[nam]
 
+        # get the gene and genus
         genus, gene = group.split("_")[-2:]
+
+        # find an appropriate outgroup
         outgroup = getOutgroup(db_path, gene, genus)
+
+        # put the outgroup in the dictionary
         f_group['outgroup_%s' % outgroup] = allfasta[outgroup]
 
+        # paths to the reference fasta files
         group_path = "%s/group_phylogenies/%s.fasta" % (db_path, group)
         summary_path = "%s/summary_phylogenies/%s_%s.fasta" % (db_path,
                                                                gene, genus)
+
+        # if there is a reference file for this group, put the sequences in
+        # dictionary
         if os.path.exists(group_path):
             f_group.update(Fasta.makeFastaDict(group_path))
             groupstem = "_".join(group.split("_")[:-1])
             newnam = "%s_%s" % (gene, groupstem)
+            # store the dictionary for the group
             exists[newnam] = f_group
+        # otherwise use the reference file for the genus
         else:
             f_group.update(Fasta.makeFastaDict(summary_path))
             exists.setdefault("%s_%s" % (gene, genus), dict())
+            # store the dictionary for the group
             exists["%s_%s" % (gene, genus)].update(f_group)
 
     for group in exists:
+        # unaligned output file
         raw_out = "group_fastas.dir/%s.fasta" % (group)
+        # aligned output file
         ali_out = "group_fastas.dir/%s_A.fasta" % (group)
 
+        log.info("Writing output FASTA for group %s" % group)
+
+        # write the sequences to the output file
         out = open(raw_out, "w")
         for nam, seq in exists[group].items():
             out.write(">%s\n%s\n" % (nam, seq))
         out.close()
+        # align them
         align(raw_out, ali_out, group, log)
 
 
 def align(infile, outfile, nam, log):
+    '''
+    Aligns a FASTA file using the default settings of the MAFFT fftns
+    algorithm (https://mafft.cbrc.jp/alignment/software/manual/manual.html)
+    '''
+    # Build the MAFFT statement
     statement = ['fftns', "--quiet", infile]
-
     log.info("Aligning %s with FFTNS: %s %s" % (infile,
                                                 " ".join(statement),
                                                 outfile))
+
+    # Run MAFFT
     P = subprocess.run(statement, stdin=open(infile, "r"),
                        stdout=open(outfile, "w"))
     if P.returncode != 0:
@@ -91,9 +128,18 @@ def align(infile, outfile, nam, log):
 
 
 def buildTree(infile, outfile, log):
+    '''
+    Builds a phylogenetic tree using the FastTree2 algorithm
+    (http://www.microbesonline.org/fasttree) for a nucleotide
+    input file, using the default settings plus the GTR model.
+    '''
+    # Build the FastTree statement
+    # Quote is used because of the punctuation in the names
     statement = ["FastTree", "-nt", "-gtr", "-quiet", '-quote',
                  infile]
     log.info("Building phylogeny of %s: %s" % (infile, " ".join(statement)))
+
+    # Run FastTree
     P = subprocess.run(statement, stdout=open(outfile, "w"),
                        stderr=subprocess.PIPE)
     if P.returncode != 0:
@@ -102,8 +148,19 @@ def buildTree(infile, outfile, log):
 
 
 def getGroupSizes(group_names):
+    '''
+    Determines the sizes of the groups used to scale the nodes in the
+    phylogenetic tree image files.
+
+    The sizes are found by counting how many sequences are in the relevant
+    file in group_lists.dir.
+
+    A dictionary is returned where keys are group names and values are
+    relative sizes.
+    '''
     gD = dict()
     for group in group_names:
+        # used to mark newly identified sequences
         if "~" in group:
             size = len(open("group_lists.dir/%s.txt" % group[:-1]).readlines())
             gD[group] = size
@@ -113,43 +170,70 @@ def getGroupSizes(group_names):
 def drawTree(tree, outfile, maincolour, highlightcolour,
              outgroupcolour, dpi, sizenodes=False):
     '''
-    Create an image file of a phylogenetic tree
+    Create an image file of a phylogenetic tree.
+    Leaf names are in maincolour unless the leaf name contains a "~" in which
+    case they are in highlightcolour. The outgroup (which has outgroup in the
+    name) is labelled in outgroupcolour.
+    The output file dpi is determined using the dpi parameter.
+
+    If sizenodes is True, the nodes are scaled by the numer of sequences they
+    represent. If it is False all the nodes are the same size.
     '''
+    # Read the tree into ete3
     T = ete.Tree(tree, quoted_node_names=True)
     if sizenodes:
+        # The node sizes are established by counting how many sequences
+        # are in the group in the group_lists.dir directory.
         sizeD = getGroupSizes(T.get_leaf_names())
+        # This scaling seems to make the nodes an appropriate size to fit
+        # on the page
         scale = 20 / max(sizeD.values())
+
     for item in T.get_leaves():
+        # Look for the outgroup and set it as the outgroup
         if "outgroup" in item.name:
             T.set_outgroup(item)
+            # set the outgroup colour
             col = outgroupcolour
             text = item.name
         elif "~" in item.name:
             col = highlightcolour
             if sizenodes:
+                # scale the nodes if needed
                 countn = round(sizeD[item.name] * scale, 0)
+                # Write the sequence name and the number of sequences it
+                # is representing
                 text = "%s (%i sequences)" % (item.name, sizeD[item.name])
                 item.add_face(ete.CircleFace(radius=countn, color=col),
                               column=0)
             else:
+                # Otherwise just put the name
                 text = item.name
         else:
             col = maincolour
             text = item.name
+
+        # Add the text to the node
         TF = ete.TextFace(text)
         item.add_face(TF, column=1)
         TF.fgcolor = col
 
+    # This stops the default behaviour in ete3 to have every node (including
+    # internal nodes) to be marked with a dot.
     NS = ete.NodeStyle()
     NS['size'] = 0
     for node in T.traverse():
         if not node.is_leaf():
             f = ete.TextFace(node.support)
+            # This sets the position of the branch support
             node.add_face(f, column=0, position="branch-top")
         node.set_style(NS)
 
     TS = ete.TreeStyle()
+    # Hide the original leaf names because we have reassigned them
     TS.show_leaf_name = False
+
+    # Make the output file
     T.render(outfile, tree_style=TS, dpi=int(dpi))
 
 
