@@ -1200,6 +1200,22 @@ def summariseClassify(infiles, outfiles):
 @follows(drawGroupTrees)
 @follows(drawSummaryTrees)
 def Classify():
+    '''
+    Helper function to run all screening functions and classification
+    functions (all functions prior to this point).
+
+    Input Files
+    -----------
+    None
+
+    Output Files
+    ------------
+    None
+
+    Parameters
+    ----------
+    None
+    '''
     pass
 
 
@@ -1207,8 +1223,27 @@ def Classify():
 @transform(assignGroups, regex("grouped.dir/(.*)_groups.tsv"),
            r"clean_beds.dir/\1.bed")
 def makeCleanBeds(infile, outfile):
+    '''
+    Generates a bed file for each gene which contains the co-ordinates of the
+    ORFs which have passed all filtering criteria in the Screen section.
+
+    Input_Files
+    -----------
+    grouped.dir/GENE_groups.tsv
+
+    Output_Files
+    ------------
+    clean_beds.dir/GENE.bed
+
+    Parameters
+    ----------
+    None
+    '''
     df = pd.read_csv(infile, sep="\t")
     cols = HelperFunctions.getBedColumns()
+    log.info("Generating a clean bed file of filtered ORF positions for %s\
+              with %i rows" % (infile, len(df)))
+    # subtract one to correct for 0-based vs 1-based systems
     df['start'][df['strand'] == "+"] -= 1
     df = df[cols]
     df.to_csv(outfile, sep="\t", header=None, index=None)
@@ -1218,6 +1253,27 @@ def makeCleanBeds(infile, outfile):
 @transform(makeCleanBeds, regex("clean_beds.dir/(.*).bed"),
            r"clean_fastas.dir/\1.fasta")
 def makeCleanFastas(infile, outfile):
+    '''
+    Fasta files are generated containing the sequences of the regions
+    listed by makeCleanBeds.
+
+    These are extracted from the host chromosomes using bedtools getfasta
+    https://bedtools.readthedocs.io/en/latest/content/tools/getfasta.html
+
+    Input Files
+    -----------
+    clean_beds.dir/GENE.bed
+    genome.fa
+
+    Output Files
+    ------------
+    clean_fastas.dir/GENE.fasta
+
+    Parameters
+    ----------
+    None
+    '''
+    # Check the input file isn't empty
     if os.stat(infile).st_size == 0:
         pathlib.Path(outfile).touch()
     else:

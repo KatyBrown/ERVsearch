@@ -240,7 +240,9 @@ def drawTree(tree, outfile, maincolour, highlightcolour,
 def monophyleticERVgroups(tree, allfasta):
     '''
     Based on a phylogenetic tree, finds monophyletic groups containing only
-    novel sequences (defined by containing "~".
+    novel sequences (defined by containing "~").
+
+    Only the largest monophyletic group containing each ERV is returned.
     '''
     sets = []
     done = set()
@@ -253,6 +255,7 @@ def monophyleticERVgroups(tree, allfasta):
         for leaf in leafnames:
             if "~" in leaf and leaf not in done:
                 count += 1
+            # also keep the names of the reference sequences
             elif "outgroup" not in leaf and leaf not in done:
                 F[leaf] = allfasta[leaf]
         if count == len(leafnames):
@@ -263,13 +266,14 @@ def monophyleticERVgroups(tree, allfasta):
 
 def makeRepFastas(fastas, trees, path, outfiles, log):
     '''
-    Takes a single representative for each monophyletic group of ERVs
-    for monophyletic groups and builds a summary tree for each genus and gene.
+    Takes matched pairs of FASTA files and trees and choses a single
+    representative sequence (the longest) for each monophyletic group
+    of newly identified ERVs.
 
-    The summary tree has the summary_phylogenies sequences for the appropriate
-    gene and genus, more specific reference sequences for groups where ERVs
-    were identifed and a representative sequence for each new monophyletic
-    ERV cluster found.
+    A summary fasta file is then generated containing the summary_phylogenies
+    sequences for the appropriate gene and genus, more specific reference
+    sequences for groups where ERVs were identifed and a representative
+    sequence for each new monophyletic ERV cluster found.
     '''
     # store sequences
     seqD = dict()
@@ -277,10 +281,15 @@ def makeRepFastas(fastas, trees, path, outfiles, log):
     k = 1
     # store representaive sequences used
     repD = dict()
+
+    # path to the phylogenies directory
     phylopath = "%s/phylogenies" % path
     bn = os.path.basename(fastas[0])
     gene = bn[0:3]
     genus = os.path.splitext(bn)[0].split("_")[-1]
+
+    # put all ERV sequences into a dictionary - this is just used
+    # to get the outgroup sequence
     allfasta = Fasta.makeFastaDict("%s/ERV_db/all_ERVs_nt.fasta" % path)
 
     for fasta, tree in zip(fastas, trees):

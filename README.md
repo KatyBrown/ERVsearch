@@ -660,30 +660,37 @@ Helper function to run all screening functions and classification functions (all
 
 ### ERVRegions
 
-**Input Files**
-
-**Output Files**
-
-**Parameters**
-
-
 #### makeCleanBeds
 
 **Input Files**
+`grouped.dir/GENE_groups.tsv`
 
 **Output Files**
+`clean_beds.dir/GENE.bed`
 
 **Parameters**
+None
+
+Generates a bed file for each gene which contains the co-ordinates of the ORFs which have passed all filtering criteria in the Screen section.
 
 
 #### makeCleanFastas
 
 **Input Files**
+`clean_beds.dir/GENE.bed`
+`genome.fa`
 
 **Output Files**
+`clean_fastas.dir/GENE.fasta`
 
 **Parameters**
+None
+ 
+Fasta files are generated containing the sequences of the regions listed by makeCleanBeds. These are extracted from the host chromosomes using bedtools getfasta (https://bedtools.readthedocs.io/en/latest/content/tools/getfasta.html).
 
+
+
+   
 
 #### findERVRegions
 
