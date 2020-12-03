@@ -1,8 +1,7 @@
-#ERVsearch
+# ERVsearch
 
 Full documentation is available via [ReadTheDocs](http://ervsearch.readthedocs.io).
 
-## Introduction
 ERVsearch is a pipeline for identification of endogenous retrovirus like regions in a host genome, based on sequence similarity to known retroviruses.
 
 ERVsearch screens for endogenous retrovirus (ERV) like regions in any FASTA file using the Exonerate algorithm (Slater and Birney, 2005, doi:[10.1186/1471-2105-6-31](https://doi.org/10.1186/1471-2105-6-31)). 
