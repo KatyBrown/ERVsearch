@@ -1,0 +1,23 @@
+# Functions
+##Pipeline Schematic
+![](pipeline.png) 
+NB: Where `GENE` is specified in a file path one file will be created for each gene - *gag*, *pol* and *env* (unless otherwise specified by the user).
+
+## Function Descriptions
+### Screen
+[Function Descriptions](screen.html)
+* Screens the genome for ERV like regions by comparing the genome to a set of known retroviral ORFs using Exonerate.
+* Confirms the Exonerate regions using UBLAST
+* Finds and confirms ORFs within these regions
+* Finds the most similar known retroviral ORF in the database to each of the newly identified ORFs
+
+### Classify
+[Function Descriptions](classify.html)
+* Classifies the newly identified ORFs into groups based on the most similar known ORF
+* Aligns the newly identified ORFs with reference sequences within these groups and builds a phylogenetic tree for each group.
+* Finds clusters of newly identified ORFs within these trees
+* Incorporates representative sequences from these clusters into a summary tree for each retroviral gene and genus  (based on classification into *gamma*, *beta*, *spuma*, *alpha*, *lenti*, *epsilon* and *delta* retroviruses as definied by the ICTV (https://talk.ictvonline.org/taxonomy).
+
+### ERVregions
+[Function Descriptions](ERVregions.html)
+* Identifies regions of the genome containing ORFs resembling more than one different retroviral gene within a certain distance

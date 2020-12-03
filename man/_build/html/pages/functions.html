@@ -1,0 +1,146 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Functions &#8212; ERVsearch 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Parameters" href="parameters.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="functions">
+<h1>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="pipeline-schematic">
+<h2>Pipeline Schematic<a class="headerlink" href="#pipeline-schematic" title="Permalink to this headline">¶</a></h2>
+<p><img alt="pages/pipeline.png" src="pages/pipeline.png" />
+NB: Where <code class="docutils literal notranslate"><span class="pre">GENE</span></code> is specified in a file path one file will be created for each gene - <em>gag</em>, <em>pol</em> and <em>env</em> (unless otherwise specified by the user).</p>
+</div>
+<div class="section" id="screen">
+<h2>Screen<a class="headerlink" href="#screen" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="screen.html">Screen Function Descriptions</a></p>
+<ul class="simple">
+<li><p>Screens the genome for ERV like regions by comparing the genome to a set of known retroviral ORFs using Exonerate.</p></li>
+<li><p>Confirms the Exonerate regions using UBLAST</p></li>
+<li><p>Finds and confirms ORFs within these regions</p></li>
+<li><p>Finds the most similar known retroviral ORF in the database to each of the newly identified ORFs</p></li>
+</ul>
+</div>
+<div class="section" id="classify">
+<h2>Classify<a class="headerlink" href="#classify" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="classify.html">Classify Function Descriptions</a></p>
+<ul class="simple">
+<li><p>Classifies the newly identified ORFs into groups based on the most similar known ORF</p></li>
+<li><p>Aligns the newly identified ORFs with reference sequences within these groups and builds a phylogenetic tree for each group.</p></li>
+<li><p>Finds clusters of newly identified ORFs within these trees</p></li>
+<li><p>Incorporates representative sequences from these clusters into a summary tree for each retroviral gene and genus  (based on classification into <em>gamma</em>, <em>beta</em>, <em>spuma</em>, <em>alpha</em>, <em>lenti</em>, <em>epsilon</em> and <em>delta</em> retroviruses as definied by the ICTV (https://talk.ictvonline.org/taxonomy).</p></li>
+</ul>
+</div>
+<div class="section" id="ervregions">
+<h2>ERVregions<a class="headerlink" href="#ervregions" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="ERVregions.html">ERVregions Function Descriptions</a></p>
+<ul class="simple">
+<li><p>Identifies regions of the genome containing ORFs resembling more than one different retroviral gene within a certain distance</p></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">ERVsearch</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">ERVsearch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameters</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pipeline-schematic">Pipeline Schematic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#screen">Screen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#classify">Classify</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ervregions">ERVregions</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="parameters.html" title="previous chapter">Parameters</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Katy Brown.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/pages/functions.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

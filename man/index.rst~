@@ -1,0 +1,11 @@
+ERVsearch Documentation
+=======================
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   pages/introduction.md
+   pages/parameters.md
+   pages/functions.md

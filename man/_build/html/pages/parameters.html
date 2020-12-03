@@ -1,0 +1,364 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Parameters &#8212; ERVsearch 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Functions" href="functions.html" />
+    <link rel="prev" title="ERVsearch" href="introduction.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="parameters">
+<h1>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h1>
+<p>All parameters should be specified in the <code class="docutils literal notranslate"><span class="pre">pipeline.ini</span></code> configuration file</p>
+<p>The template file can be found in <code class="docutils literal notranslate"><span class="pre">ERvsearch/templates/pipeline.ini</span></code>.</p>
+<p>Make a copy of this file in your working directory (the directory where you want to run the program and store the output) and change the values of the parameters according to your system and your needs.</p>
+<div class="section" id="required-parameters-no-defaults">
+<h2>Required parameters (no defaults)<a class="headerlink" href="#required-parameters-no-defaults" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="genome">
+<h3><code class="docutils literal notranslate"><span class="pre">genome</span></code><a class="headerlink" href="#genome" title="Permalink to this headline">¶</a></h3>
+<p><em>Input file parameters</em></p>
+<div class="section" id="file">
+<h4><code class="docutils literal notranslate"><span class="pre">file</span></code><a class="headerlink" href="#file" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code></p>
+<p>Path to a single fasta file containing the genome or other sequence you would like to screen for ORFs</p>
+<p>e.g. <code class="docutils literal notranslate"><span class="pre">/home/katy/genomes/hg38.fasta</span></code>
+<br><br></p>
+</div>
+</div>
+<div class="section" id="paths">
+<h3><code class="docutils literal notranslate"><span class="pre">paths</span></code><a class="headerlink" href="#paths" title="Permalink to this headline">¶</a></h3>
+<p><em>Paths to software</em></p>
+<div class="section" id="path-to-ervsearch">
+<h4><code class="docutils literal notranslate"><span class="pre">path_to_ERVsearch</span></code><a class="headerlink" href="#path-to-ervsearch" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code></p>
+<p>Path to ERVsearch root folder</p>
+<p>e.g.  <code class="docutils literal notranslate"><span class="pre">/home/katy/ERVsearch</span></code></p>
+</div>
+<div class="section" id="path-to-usearch">
+<h4><code class="docutils literal notranslate"><span class="pre">path_to_usearch</span></code><a class="headerlink" href="#path-to-usearch" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code></p>
+<p>Path to usearch executable</p>
+<p>e.g. <code class="docutils literal notranslate"><span class="pre">/usr/bin/usearch11.0.667_u86linux32</span></code></p>
+</div>
+<div class="section" id="path-to-exonerate">
+<h4><code class="docutils literal notranslate"><span class="pre">path_to_exonerate</span></code><a class="headerlink" href="#path-to-exonerate" title="Permalink to this headline">¶</a></h4>
+<p>‘string’</p>
+<p>Path to exonerate executable</p>
+<p>e.g. <code class="docutils literal notranslate"><span class="pre">/usr/bin/exonerate</span></code>
+<br><br></p>
+</div>
+</div>
+</div>
+<div class="section" id="optional-parameters">
+<h2>Optional Parameters<a class="headerlink" href="#optional-parameters" title="Permalink to this headline">¶</a></h2>
+<p>The following parameters are optional (as they have default values)</p>
+<div class="section" id="genomesplits">
+<h3><code class="docutils literal notranslate"><span class="pre">genomesplits</span></code><a class="headerlink" href="#genomesplits" title="Permalink to this headline">¶</a></h3>
+<p><em>Parameters for dividing the input genome into batches</em></p>
+<p>If the genome has more than ~100 contigs or scaffolds, it is recommended to batch these rather than running Exonerate on each contig individually, to avoid creating an excessive number of output files</p>
+<p>The default is to split the input into 50 batches, this is a manageable number for most systems.</p>
+<div class="section" id="split">
+<h4><code class="docutils literal notranslate"><span class="pre">split</span></code><a class="headerlink" href="#split" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code> <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code><br>
+Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+<p>If split is True the contigs will be batched, if it is False Exonerate will run once for every gene-contig combination (usually 3x number of contigs). If there are less contigs than batches this will be ignored</p>
+</div>
+<div class="section" id="split-n">
+<h4><code class="docutils literal notranslate"><span class="pre">split_n</span></code><a class="headerlink" href="#split-n" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">integer</span></code><br>
+Default: <code class="docutils literal notranslate"><span class="pre">50</span></code></p>
+<p>Number of batches to split the contigs into</p>
+</div>
+<div class="section" id="force">
+<h4><code class="docutils literal notranslate"><span class="pre">force</span></code><a class="headerlink" href="#force" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code> <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code><br>
+Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+<p>The pipeline will error if running using these genome split settings will run Exonerate more than 500 times. If you want to force the pipeline to run despite this, change force to True.
+<br><br></p>
+</div>
+</div>
+<div class="section" id="output">
+<h3><code class="docutils literal notranslate"><span class="pre">output</span></code><a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
+<p><em>Output file parameters</em></p>
+<div class="section" id="outfile-stem">
+<h4><code class="docutils literal notranslate"><span class="pre">outfile_stem</span></code><a class="headerlink" href="#outfile-stem" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code><br>
+Default: <code class="docutils literal notranslate"><span class="pre">ERVsearch</span></code></p>
+<p>Log files will have this as a prefix (e.g. ERVsearch_log.txt)</p>
+</div>
+</div>
+<div class="section" id="database">
+<h3><code class="docutils literal notranslate"><span class="pre">database</span></code><a class="headerlink" href="#database" title="Permalink to this headline">¶</a></h3>
+<p><em>Parameters concerning the database of reference ERV sequences</em>
+<code class="docutils literal notranslate"><span class="pre">string</span></code> <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code><br></p>
+<div class="section" id="use-custom-db">
+<h4><code class="docutils literal notranslate"><span class="pre">use_custom_db</span></code><a class="headerlink" href="#use-custom-db" title="Permalink to this headline">¶</a></h4>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+<p>When screening using Exonerate, query sequences are used to identify ERV like regions of the genome. It is possible to use the default ERV  database provided with the pipeline (recommended) or to use a custom database.</p>
+<p>False - use the default database</p>
+<p>True - use a custom database</p>
+</div>
+<div class="section" id="gag">
+<h4><code class="docutils literal notranslate"><span class="pre">gag</span></code><a class="headerlink" href="#gag" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code><br>
+Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+<p>Path to a custom fasta file of gag amino acid sequences. To skip this gene use None as this value (only if use_custom_db is True)</p>
+</div>
+<div class="section" id="pol">
+<h4><code class="docutils literal notranslate"><span class="pre">pol</span></code><a class="headerlink" href="#pol" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code><br>
+Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+<p>Path to a custom fasta file of pol amino acid sequences. To skip this gene use None as this value (only if use_custom_db is True).</p>
+</div>
+<div class="section" id="env">
+<h4><code class="docutils literal notranslate"><span class="pre">env</span></code><a class="headerlink" href="#env" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code><br>
+Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+<p>Path to a custom fasta file of env amino acid sequences. To skip this gene use None as this value (only if use_custom_db is True).</p>
+</div>
+</div>
+<div class="section" id="exonerate">
+<h3><code class="docutils literal notranslate"><span class="pre">exonerate</span></code><a class="headerlink" href="#exonerate" title="Permalink to this headline">¶</a></h3>
+<p><em>Exonerate parameters</em></p>
+<div class="section" id="min-hit-length">
+<h4><code class="docutils literal notranslate"><span class="pre">min_hit_length</span></code><a class="headerlink" href="#min-hit-length" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">integer</span></code><br>
+Default: <code class="docutils literal notranslate"><span class="pre">100</span></code></p>
+<p>Minimum Exonerate hit length on the chromosome. Shorter hits are filtered out.</p>
+</div>
+<div class="section" id="overlap">
+<h4><code class="docutils literal notranslate"><span class="pre">overlap</span></code><a class="headerlink" href="#overlap" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">integer</span></code><br>
+Default: <code class="docutils literal notranslate"><span class="pre">30</span></code></p>
+<p>Maximum distance between chromosome regions identified with Exonerate which are merged into single regions.</p>
+</div>
+<div class="section" id="min-score">
+<h4><code class="docutils literal notranslate"><span class="pre">min_score</span></code><a class="headerlink" href="#min-score" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">integer</span></code> <br>
+Default: <code class="docutils literal notranslate"><span class="pre">100</span></code></p>
+<p>Minimum score in the second exonerate pass (with ungapped algorithm).</p>
+</div>
+</div>
+<div class="section" id="usearch">
+<h3><code class="docutils literal notranslate"><span class="pre">usearch</span></code><a class="headerlink" href="#usearch" title="Permalink to this headline">¶</a></h3>
+<p><em>USEARCH parameters</em></p>
+<div class="section" id="min-id">
+<h4><code class="docutils literal notranslate"><span class="pre">min_id</span></code><a class="headerlink" href="#min-id" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">float</span></code><br>
+Default: <code class="docutils literal notranslate"><span class="pre">0.5</span></code></p>
+<p>Percentage identity used by the UBLAST algorithm. Used to set the <code class="docutils literal notranslate"><span class="pre">-id</span></code> UBLAST parameter</p>
+</div>
+<div class="section" id="id1">
+<h4><code class="docutils literal notranslate"><span class="pre">min_hit_length</span></code><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">integer</span></code><br>
+Default: <code class="docutils literal notranslate"><span class="pre">100</span></code></p>
+<p>Minimum hit length for UBLAST. Used to set the <code class="docutils literal notranslate"><span class="pre">-mincols</span></code> UBLAST parameter</p>
+</div>
+<div class="section" id="min-coverage">
+<h4><code class="docutils literal notranslate"><span class="pre">min_coverage</span></code><a class="headerlink" href="#min-coverage" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">float</span></code> <br>
+Default: <code class="docutils literal notranslate"><span class="pre">0.5</span></code></p>
+<p>Minimum proportion of the query sequence which should be covered using UBLAST. Used to set the <code class="docutils literal notranslate"><span class="pre">-query_cov</span></code> UBLAST parameter</p>
+</div>
+</div>
+<div class="section" id="plots">
+<h3><code class="docutils literal notranslate"><span class="pre">plots</span></code><a class="headerlink" href="#plots" title="Permalink to this headline">¶</a></h3>
+<p><em>Plotting parameters</em></p>
+<div class="section" id="dpi">
+<h4><code class="docutils literal notranslate"><span class="pre">dpi</span></code><a class="headerlink" href="#dpi" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">integer</span></code><br>
+Default: <code class="docutils literal notranslate"><span class="pre">300</span></code></p>
+<p>Dots per inch for output plots (from the summarise functions).</p>
+</div>
+<div class="section" id="format">
+<h4><code class="docutils literal notranslate"><span class="pre">format</span></code><a class="headerlink" href="#format" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code> <code class="docutils literal notranslate"><span class="pre">png</span></code>, <code class="docutils literal notranslate"><span class="pre">svg</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code> or <code class="docutils literal notranslate"><span class="pre">jpg</span></code><br></p>
+<p>File format for summary plot files, can be svg, png, pdf or jpg</p>
+</div>
+<div class="section" id="gag-colour">
+<h4><code class="docutils literal notranslate"><span class="pre">gag_colour</span></code><a class="headerlink" href="#gag-colour" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code> (hex colour code with #) <br>
+Default: <code class="docutils literal notranslate"><span class="pre">#f38918</span></code></p>
+<p>Colour for <em>gag</em> gene in summary plots. Default is orange.</p>
+</div>
+<div class="section" id="pol-colour">
+<h4><code class="docutils literal notranslate"><span class="pre">pol_colour</span></code><a class="headerlink" href="#pol-colour" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code> (hex colour code with #) <br>
+Default: <code class="docutils literal notranslate"><span class="pre">#4876f9</span></code></p>
+<p>Colour for <em>pol</em> gene in summary plots. Default is blue.</p>
+</div>
+<div class="section" id="env-colour">
+<h4><code class="docutils literal notranslate"><span class="pre">env_colour</span></code><a class="headerlink" href="#env-colour" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code> (hex colour code with #) <br>
+Default: <code class="docutils literal notranslate"><span class="pre">#d61f54</span></code></p>
+<p>Colour for <em>env</em> gene in summary plots. Default is pink</p>
+</div>
+</div>
+<div class="section" id="orfs">
+<h3><code class="docutils literal notranslate"><span class="pre">ORFs</span></code><a class="headerlink" href="#orfs" title="Permalink to this headline">¶</a></h3>
+<p><em>Parameters for ORF identification</em></p>
+<div class="section" id="min-orf-len">
+<h4><code class="docutils literal notranslate"><span class="pre">min_orf_len</span></code><a class="headerlink" href="#min-orf-len" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">integer</span></code><br>
+Default: <code class="docutils literal notranslate"><span class="pre">100</span></code></p>
+<p>Minimum length of ORFs to characterise.</p>
+</div>
+<div class="section" id="translation-table">
+<h4><code class="docutils literal notranslate"><span class="pre">translation_table</span></code><a class="headerlink" href="#translation-table" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">integer</span></code> <br>
+Default <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+<p>Translation table to use when identifying ORFs - listed here https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi. Usually table 1 is fine - default plus alternative initiation codons</p>
+<p>###<code class="docutils literal notranslate"><span class="pre">trees</span></code>
+<em>Phylogenetic tree parameters</em></p>
+</div>
+<div class="section" id="use-gene-colour">
+<h4><code class="docutils literal notranslate"><span class="pre">use_gene_colour</span></code><a class="headerlink" href="#use-gene-colour" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code> <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code><br>
+Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+<p>Use the colours specified in the plots section for each gene to highlight newly identified ERVs. If this is <code class="docutils literal notranslate"><span class="pre">True</span></code>, <code class="docutils literal notranslate"><span class="pre">highlightcolour</span></code> will be ignored and the gene colours will be used instead.If it is <code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">highlightcolour</span></code> is used to highlight newly identified ERVs.</p>
+</div>
+<div class="section" id="maincolour">
+<h4><code class="docutils literal notranslate"><span class="pre">maincolour</span></code><a class="headerlink" href="#maincolour" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code> (hex colour code with #) <br>
+Default: <code class="docutils literal notranslate"><span class="pre">#000000</span></code></p>
+<p>Main colour for text in tree images. Default is black.</p>
+</div>
+<div class="section" id="highlightcolour">
+<h4><code class="docutils literal notranslate"><span class="pre">highlightcolour</span></code><a class="headerlink" href="#highlightcolour" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code> (hex colour code with #) <br>
+Default : <code class="docutils literal notranslate"><span class="pre">#382bfe</span></code></p>
+<p>Text colour for leaves highlighted in tree images - newly identified ERV-like regions. This is ignored if <code class="docutils literal notranslate"><span class="pre">use_gene_colour</span></code> above is <code class="docutils literal notranslate"><span class="pre">True</span></code>. Default is blue.</p>
+</div>
+<div class="section" id="outgroupcolour">
+<h4><code class="docutils literal notranslate"><span class="pre">outgroupcolour</span></code><a class="headerlink" href="#outgroupcolour" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code> (hex colour code with #) <br>
+Default: <code class="docutils literal notranslate"><span class="pre">#0e954b</span></code></p>
+<p>Text colour for outgroup in tree images. Default is green.</p>
+</div>
+<div class="section" id="id2">
+<h4><code class="docutils literal notranslate"><span class="pre">dpi</span></code><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">integer</span></code><br>
+Default: <code class="docutils literal notranslate"><span class="pre">300</span></code>
+Dots per inch for phylogenetic tree images.</p>
+</div>
+<div class="section" id="id3">
+<h4><code class="docutils literal notranslate"><span class="pre">format</span></code><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code> <code class="docutils literal notranslate"><span class="pre">png</span></code>, <code class="docutils literal notranslate"><span class="pre">svg</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code> or <code class="docutils literal notranslate"><span class="pre">jpg</span></code><br>
+Default: <code class="docutils literal notranslate"><span class="pre">png</span></code></p>
+<p>File format for phylogenetic tree images, can be svg, png, pdf or jpg</p>
+</div>
+</div>
+<div class="section" id="regions">
+<h3><code class="docutils literal notranslate"><span class="pre">regions</span></code><a class="headerlink" href="#regions" title="Permalink to this headline">¶</a></h3>
+<p><em>Parameters for defining regions with ORFs from more than one retroviral gene</em></p>
+<div class="section" id="maxdist">
+<h4><code class="docutils literal notranslate"><span class="pre">maxdist</span></code><a class="headerlink" href="#maxdist" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">integer</span></code><br>
+Default: 3000</p>
+<p>Maximum distance (in nucleotides) between ORFs to be defined as part of the same ERV region.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">ERVsearch</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">ERVsearch</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Parameters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#required-parameters-no-defaults">Required parameters (no defaults)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#optional-parameters">Optional Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="introduction.html" title="previous chapter">ERVsearch</a></li>
+      <li>Next: <a href="functions.html" title="next chapter">Functions</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Katy Brown.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/pages/parameters.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
