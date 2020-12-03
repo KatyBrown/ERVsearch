@@ -7,7 +7,7 @@ ERVsearch screens for endogenous retrovirus (ERV) like regions in any FASTA file
 * In the **Classify** section, these ORFs are classified into groups based on a database of currently classified retroviruses and phylogenetic trees are built.
 * In the **ERVRegions** section, regions with ORFs resembling more than one retroviral gene are identified.
 
-This is a updated version of the pipeline used to identify ERVs in Brown et al. 2014 (doi: [10.1128/JVI.00966-14](https://doi.org/10.1128/JVI.00966-14)) and Brown and Tarlinton 2017 (doi: [10.1111/mam.12079](https://doi.org/10.1111/mam.12079)). The original version is available [here](https://github.com/ADAC-UoN/predict.genes.by.exonerate.pipeline) as a Perl pipeline and was written by Dr Richard Emes.
+This is a updated and expanded version of the pipeline used to identify ERVs in Brown and Tarlinton 2017 (doi: [10.1111/mam.12079](https://doi.org/10.1111/mam.12079), Brown et al. 2014 (doi: [10.1128/JVI.00966-14](https://doi.org/10.1128/JVI.00966-14)), Brown et al. 2012 (doi: [j.virol.2012.07.010](https://doi.org/10.1016/j.virol.2012.07.010)) and Tarlinton et al. 2012 (doi: [10.1016/j.tvjl.2012.08.011](https://doi.org/10.1016/j.tvjl.2012.08.011)). The original version is available [here](https://github.com/ADAC-UoN/predict.genes.by.exonerate.pipeline) as a Perl pipeline and was written by Dr Richard Emes.
 
 
 1. [Prerequisites](#prerequisites)<br>
