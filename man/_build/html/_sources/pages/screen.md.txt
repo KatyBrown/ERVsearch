@@ -91,7 +91,7 @@ None<br>
 `[paths] path_to_exonerate`<br>
 
 
-Runs the `protein2dna` algorithm in the [Exonerate software package] (https://www.ebi.ac.uk/about/vertebrate-genomics/software/exonerate-manual) with the host chromosomes (or other regions) in `host_chromosomes.dir` as target sequences and the FASTA files from prepDBs as the query sequences.
+Runs the `protein2dna` algorithm in the [Exonerate software package](https://www.ebi.ac.uk/about/vertebrate-genomics/software/exonerate-manual) with the host chromosomes (or other regions) in `host_chromosomes.dir` as target sequences and the FASTA files from prepDBs as the query sequences.
 
 The raw output of Exonerate is stored in the raw_exonerate_output directory, one file is created for each combination of query and target sequences.
 
