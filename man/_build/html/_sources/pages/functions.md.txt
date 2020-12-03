@@ -340,7 +340,7 @@ Helper function to run all screening functions (all functions prior to this poin
 * Classifies the newly identified ORFs into groups based on the most similar known ORF
 * Aligns the newly identified ORFs with reference sequences within these groups and builds a phylogenetic tree for each group.
 * Finds clusters of newly identified ORFs within these trees
-* Incorporates representative sequences from these clusters into a summary tree for each retroviral gene and genus  (based on classification into *gamma*, *beta*, *spuma*, *alpha*, *lenti*, *epsilon* and *delta* retroviruses as defined by the ICTV (https://talk.ictvonline.org/taxonomy).
+* Incorporates representative sequences from these clusters into a summary tree for each retroviral gene and genus  (based on classification into *gamma*, *beta*, *spuma*, *alpha*, *lenti*, *epsilon* and *delta* retroviruses as defined by the [ICTV](https://talk.ictvonline.org/taxonomy).
 
 1. [makeGroupFastas](#makegroupfastas)<br>
 2. [makeGroupTrees](#makegrouptrees)<br>
