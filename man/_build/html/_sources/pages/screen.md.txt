@@ -4,9 +4,26 @@
 * Finds and confirms ORFs within these regions
 * Finds the most similar known retroviral ORF in the database to each of the newly identified ORFs
 
-## Functions
 
-### initiate
+# Functions
+1. [initiate](#initiate)<br>
+2. [genomeToChroms](#genomeToChroms)<br>
+3. [prepDBs](#prepDBs)<br>
+4. [runExonerate](#runExonerate)<br>
+5. [cleanExonerate](#cleanExonerate)<br>
+6. [mergeOverlaps](#mergeOverlaps)<br>
+7. [makeFastas](#makeFastas)<br>
+8. [renameFastas](#renameFastas)<br>
+9. [makeUBLASTDb](#makeUBLASTDb)<br>
+10. [runUBLASTCheck](#runUBLASTCheck)<br>
+11. [classifyWithExonerate](#classifyWithExonerate)<br>
+12. [getORFs](#getORFs)<br>
+13. [checkORFsUBLAST](#checkORFsUBLAST)<br>
+14. [assignGroups](#assignGroups)<br>
+15. [summariseScreen](#summariseScreen)<br>
+16. [Screen](#Screen)<br>
+
+## initiate<a name="initiate"></a>
 
 **Input Files** <br>
 `pipeline.ini`<br>
@@ -31,7 +48,7 @@ Checks that:
 `init.txt` is a placeholder to show that this step has been completed.
 
 
-### genomeToChroms
+### genomeToChroms<a name="genomeToChroms"></a>
 
 **Input Files** 
 `[genome] file`<br>
@@ -60,7 +77,7 @@ An unzipped copy of zipped and gzipped fasta files will be created or a link to 
 
 This function generates a series of fasta files which are stored in the host_chromosomes.dir directory.
 
-### prepDBs
+### prepDBs<a name="prepDBs"></a>
 
 **Input Files**<br>
 None<br>
@@ -78,7 +95,7 @@ None<br>
     
  If custom databases are used they are retrieved and named as gag.fasta  pol.fasta, env.fasta so the path doesn't need to be changed every time.
 
-### runExonerate
+### runExonerate<a name="runExonerate"></a>
 
 **Input Files** <br>
 `gene_databases.dir/GENE.fasta`<br>
@@ -97,7 +114,7 @@ The raw output of Exonerate is stored in the raw_exonerate_output directory, one
 
 This step is carried out with low stringency as results are later filtered using UBLAST and Exonerate.
  
-### cleanExonerate
+### cleanExonerate<a name="cleanExonerate"></a>
 
 **Input Files** <br>
 `raw_exonerate_output.dir/GENE_*.tsv`<br>
@@ -117,7 +134,7 @@ Filters and cleans up the Exonerate output.
 * Outputs the filtered regions to GENE_filtered.tsv
 * Converts this to bed format and outputs this to GENE.bed
 
-### mergeOverlaps
+### mergeOverlaps<a name="mergeOverlaps"></a>
 
 **Input Files** <br>
 `clean_exonerate_output.dir/GENE_*.bed`<br>
@@ -135,7 +152,7 @@ Overlapping regions or very close together regions of the genome detected by Exo
 
 If there is a gap of less than `exonerate_overlap` between the regions they will be merged.
 
-### makeFastas
+### makeFastas<a name="makeFastas"></a>
 
 **Input Files**<br>
 `gene_bed_files.dir/GENE_merged.bed`<br>
@@ -150,7 +167,7 @@ None<br>
 Fasta files are generated containing the sequences of the merged regions of the genome identified using mergeOverlaps.
 These are extracted from the host chromosomes using [bedtools getfasta](https://bedtools.readthedocs.io/en/latest/content/tools/getfasta.html).
 
-### renameFastas
+### renameFastas<a name="renameFastas"></a>
 
 **Input Files** <br>
 `gene_fasta_files.dir/GENE_merged.fasta`<br>
@@ -163,7 +180,7 @@ None<br>
 
  Renames the sequences in the fasta files of ERV-like regions identified with Exonerate so each record has a numbered unique ID (gag1, gag2 etc). Also removes ":" from sequence names as this causes problems later.
  
-### makeUBLASTDb
+### makeUBLASTDb<a name="makeUBLASTDb"></a>
 
 **Input Files**<br>
  `gene_databases.dir/GENE.fasta`<br>
@@ -176,7 +193,7 @@ None<br>
 
 [USEARCH](https://www.drive5.com/usearch/) requires an indexed database of query sequences to run. This function generates this database for the three gene amino acid fasta files used to screen the genome.
 
-### runUBLASTCheck
+### runUBLASTCheck<a name="runUBLASTCheck"></a>
 
 **Input Files**<br>
 `UBLAST_db.dir/GENE_db.udb`<br>
@@ -199,7 +216,7 @@ This allows sequences with low similarity to known ERVs to be filtered out.  Sim
 
 The raw output of running UBLAST against the target sequences is saved in GENE_UBLAST_alignments.txt (equivalent to the BLAST default output) and GENE_UBLAST.tsv (equivalent to the BLAST -outfmt 6 tabular output) this is already filtered by passing the appropriate parameters to UBLAST. The regions which passed the filtering and are therefore in these output files are then output to a FASTA file GENE_filtered_UBLAST.fasta.
 
-### classifyWithExonerate
+### classifyWithExonerate<a name="classifyWithExonerate"></a>
 
 **Input Files**<br>
 `ublast.dir/GENE_filtered_UBLAST.fasta`<br>
@@ -222,7 +239,7 @@ First all seqeunces are compared to the database and the raw output is saved as 
 against one of the genes of the same type (*gag*, *pol* or *env*) in the database. The highest scoring result which meets these critera for each sequence is then identified and output to exonerate_classification.dir/GENE_best_matches_exonerate.tsv. The sequences which meet these critera are also output to a FASTA file exonerate_classification.dir/GENE_refiltered_exonerate.fasta.
 
 
-### getORFs
+### getORFs<a name="getORFs"></a>
 
 **Input Files**<br>
 `exonerate_classification.dir/GENE_refiltered_matches_exonerate.fasta`<br>
@@ -246,7 +263,7 @@ The positions of the ORFs are also convered so that they can be extracted direct
 
 The raw transeq output, the nucleotide sequences of the ORFs and the amino acid sequences of the ORFs are written to the output FASTA files.
 
-### checkORFsUBLAST
+### checkORFsUBLAST<a name="checkORFsUBLAST"></a>
 
 **Input Files**<br>
 `ORFs.dir/GENE_orfs_nt.fasta`<br>
@@ -270,7 +287,7 @@ This allows ORFs with low similarity to known ERVs to be filtered out.   Similar
 
 The raw output of running UBLAST against the target sequences is saved in GENE_UBLAST_alignments.txt (equivalent to the BLAST default output) and GENE_UBLAST.tsv (equivalent to the BLAST -outfmt 6 tabular output) this is already filtered by passing the appropriate parameters to UBLAST. The regions which passed the filtering and are therefore in these output files are then output to a FASTA file GENE_filtered_UBLAST.fasta.
 
-### assignGroups
+### assignGroups<a name="assignGroups"></a>
 
 **Input Files**<br>
 `ublast_orfs.dir/GENE_UBLAST.tsv`<br>
@@ -288,7 +305,7 @@ Each sequence in the filtered fasta file of newly identified ORFs is assigned to
 
 The output table is also  tidied up to include the UBLAST output, chromosome, ORF start and end positions, genus and group.
 
-### summariseScreen
+### summariseScreen<a name="summariseScreen"></a>
 
 **Input Files**<br>
 
@@ -296,7 +313,7 @@ The output table is also  tidied up to include the UBLAST output, chromosome, OR
 
 **Parameters**<br>
 
-### Screen
+### Screen<a name="Screen"></a>
 
 **Input Files** <br>
 None<br>
