@@ -217,7 +217,8 @@ Run all the above sections.
 You can also run the pipeline up until any specific [function](functions.html) - any function name can be provided for the `target_tasks` parameter.
 
 For example to run up until the end of the function `classifyWithExonerate`, use the following command.
-```ERVsearch --target_tasks classifyWithExonerate
+```
+ERVsearch --target_tasks classifyWithExonerate
 ```
 All functions prior to this function will run if needed.
 
