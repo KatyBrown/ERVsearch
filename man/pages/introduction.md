@@ -195,7 +195,7 @@ If the pipeline stops or fails at any point, it will restart from after the prev
 Sections of the pipeline can be run as follows:
 
 ```
-ERVsearch --target_tasks Screen`
+ERVsearch --target_tasks Screen
 ```
 Screen with Exonerate and check the results with UBLAST, find ORFs and find the most similar known retroviral ORF.
 
@@ -238,5 +238,5 @@ Ruffus verbosity is set using the `-v` parameter from 1 to 10. The recommended s
 
 e.g.
 ```
-`ERVsearch --target_tasks full -v 5`
+ERVsearch --target_tasks full -v 5
 ```

@@ -355,7 +355,7 @@ The paths to these files are then specified in the database section of the pipel
 </div>
 <p>If the pipeline stops or fails at any point, it will restart from after the previous fully completed step (based on the presence of the output files from this step). If the output of an earlier step in the pipeline has a more recent timestamp than the output of a later step, the later step will be rerun.</p>
 <p>Sections of the pipeline can be run as follows:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>ERVsearch --target_tasks Screen`
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ERVsearch</span> <span class="o">--</span><span class="n">target_tasks</span> <span class="n">Screen</span>
 </pre></div>
 </div>
 <p>Screen with Exonerate and check the results with UBLAST, find ORFs and find the most similar known retroviral ORF.</p>
@@ -392,7 +392,7 @@ e.g.</p>
 <h2>Verbosity<a class="headerlink" href="#verbosity" title="Permalink to this headline">¶</a></h2>
 <p>Ruffus verbosity is set using the <code class="docutils literal notranslate"><span class="pre">-v</span></code> parameter from 1 to 10. The recommended setting for ERvsearch is -v 5, however this needs to be specified to override the ruffus default of 1.</p>
 <p>e.g.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>`ERVsearch --target_tasks full -v 5`
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ERVsearch</span> <span class="o">--</span><span class="n">target_tasks</span> <span class="n">full</span> <span class="o">-</span><span class="n">v</span> <span class="mi">5</span>
 </pre></div>
 </div>
 </div>
