@@ -91,7 +91,7 @@ path_to_exonerate=/home/myname/exonerate/bin/exonerate
 
 * Run the pipeline in your working directory as:
 ```
-`ERVsearch --target_tasks full -v5` 
+ERVsearch --target_tasks full -v5
 ```
 
 
