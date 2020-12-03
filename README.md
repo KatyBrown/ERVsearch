@@ -1,3 +1,6 @@
+#ERVsearch
+Full documentation is available at [ervsearch.readthedocs.io](ervsearch.readthedocs.io).
+
 ## Introduction
 ERVsearch is a pipeline for identification of endogenous retrovirus like regions in a host genome, based on sequence similarity to known retroviruses.
 
