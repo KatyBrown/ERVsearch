@@ -89,6 +89,7 @@
 <li class="toctree-l1"><a class="reference internal" href="introduction.html#pipeline-description">Pipeline Description</a></li>
 <li class="toctree-l1"><a class="reference internal" href="introduction.html#input-files">Input Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="introduction.html#usage">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html#main-output-files">Main Output Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameters</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Functions</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#pipeline-schematic">Pipeline Schematic</a></li>
@@ -127,6 +128,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#makecleanfastas">makeCleanFastas</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#findervregions">findERVRegions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#makeregiontables">makeRegionTables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#plotervregions">plotERVRegions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#summariseervregions">summariseERVRegions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id3">ERVRegions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#full">Full</a></li>
@@ -454,9 +456,105 @@ xs<code class="docutils literal notranslate"><span class="pre">ORFs.dir/GENE_orf
 </div>
 <div class="section" id="summarisescreen">
 <h3>summariseScreen<a class="headerlink" href="#summarisescreen" title="Permalink to this headline">¶</a></h3>
-<p><strong>Input Files</strong><br></p>
-<p><strong>Output Files</strong><br></p>
-<p><strong>Parameters</strong><br></p>
+<p><strong>Input Files</strong><br>
+gene_bed_files.dir/GENE_merged.bed
+ublast.dir/GENE_UBLAST.tsv
+ORFs.dir/GENE_orfs_aa.fasta
+ublast_orfs.dir/GENE_UBLAST.tsv</p>
+<p><strong>Output Files</strong><br>
+FMT can be png, svg, pdf, jpg depending on the <code class="docutils literal notranslate"><span class="pre">plot_format</span></code> parameter</p>
+<p><code class="docutils literal notranslate"><span class="pre">summary_tables.dir/exonerate_initial_summary.txt</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_tables.dir/ublast_hits_initial_summary.txt</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_tables.dir/orfs_initial_summary.txt</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_tables.dir/ublast_orfs_initial_summary.txt</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_lengths.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_scores.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_strands.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_by_sequence.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_counts_per_gene.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_hits_alignment_length.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_hits_perc_similarity.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_hits_by_match.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_hits_per_gene.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/orfs_lengths.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/orfs_strands.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/orfs_by_gene.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_alignment_length.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_perc_similarity.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_bit_score.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_by_match.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_per_gene.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">screen_results.dir/results.tsv</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_length.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_genus.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_group.FMT</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_gene.FMT</span></code><br></p>
+<p><strong>Parameters</strong><br>
+<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">dpi</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">format</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">gag_colour</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">pol_colour</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">env_colour</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">other_colour</span></code><br></p>
+<p>Generates a series of summary plots and tables showing the results of running the screening functions.</p>
+<p>The major outputs of this function are stored in the screen_results.dir directory. Further details of these files are provided in the <a class="reference external" href="introduction.html#main-output-files">Main Output Files</a> section.</p>
+<p>The other files show the output of the intermediate steps.<br></p>
+<p><strong>Exonerate Initial</strong><br></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_tables.dir/exonerate_initial_summary.txt</span></code><br>
+Summary of the output of the initial Exonerate screening step. Note that these are unfiltered and many will not be true ERVs.<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_tables.dir/ublast_hits_initial_summary.txt</span></code><br>
+Summary of the results of running UBLAST on the initial Exonerate output.<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_tables.dir/orfs_initial_summary.txt</span></code><br>
+Summary of the results of the initial ORF identification.<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_tables.dir/ublast_orfs_initial_summary.txt</span></code><br>
+Summary of the results of running UBLAST on these ORFs.<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_lengths.FMT</span></code><br>
+Histogram showing the lengths of the initial Exonerate regions for each gene.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_scores.FMT</span></code><br>
+Histogram showing the Exonerate score of the initial Exonerate regions for each gene.<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_strands.FMT</span></code><br>
+Bar chart showing the number of regions identified on each strand in the initial Exonerate screen.<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_by_sequence.FMT</span></code><br>
+Histogram showing the number of ERV-like regions identified on each sequence in the reference genome being screened.<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_counts_per_gene.FMT</span></code><br>
+Bar chart showing the number of ERV regions identified per gene in the initial Exonerate screen.<br></p></li>
+</ul>
+<p><strong>UBLAST</strong><br></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_hits_alignment_length.FMT</span></code><br>
+Histogram showing the lengths of the alignments of the UBLAST filtered Exonerate regions and the most similar reference ORF, based on the UBLAST output.<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_hits_perc_similarity.FMT</span></code><br>
+Histogram showing the percentage identity between the UBLAST filtered Exonerate regions and the most similar reference ORF, based on the UBLAST output.<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_hits_perc_similarity.FMT</span></code><br>
+Histogram showing the UBLAST bit score between the UBLAST filtered Exonerate regions and the most similar reference ORF, based on the UBLAST output.<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_hits_by_match.FMT</span></code><br>
+Bar chart showing the number of UBLAST filtered Exonerate regions most similar to each reference ORF in the ERVsearch/ERV_db database.<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_hits_per_gene.FMT</span></code><br>
+Bar chart showing the number of UBLAST filtered Exonerate regions identified per gene.<br></p></li>
+</ul>
+<p><strong>ORFs</strong><br></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/orfs_lengths.FMT</span></code><br>
+Histogram of the lengths of ORFs identified in the ERV regions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/orfs_strands.FMT</span></code><br>
+Bar chart of the strand (positive (+) or negative (-) sense) of the ORFs identified in the ERV regions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/orfs_by_gene.FMT</span></code><br>
+Bar chart of the number of ORFs identified for each gene.<br></p></li>
+</ul>
+<p><strong>UBLAST ORFs</strong><br></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_alignment_length.FMT</span></code><br>
+Histogram showing the lengths of the alignments of the ERV-like ORFs and the most similar reference ORF, based on the UBLAST output.<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_perc_similarity.FMT</span></code><br>
+Histogram showing the percentage identity between the ERV-like ORFs and the most similar reference ORF, based on the UBLAST output.<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_bit_score.FMT</span></code><br>
+Histogram showing the UBLAST bit score between the ERV-like ORFs and the most similar reference ORF, based on the UBLAST output.<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_by_match.FMT</span></code><br>
+Bar chart showing the number of ERV-like ORFs most similar to each reference ORF in the ERVsearch/ERV_db database.<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_per_gene.FMT</span></code><br>
+Bar chart showing the number of ERV-like ORFs identified per gene.</p></li>
+</ul>
 </div>
 <div class="section" id="id1">
 <h3>Screen<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
@@ -596,9 +694,15 @@ None<br></p>
 </div>
 <div class="section" id="summariseclassify">
 <h3>summariseClassify<a class="headerlink" href="#summariseclassify" title="Permalink to this headline">¶</a></h3>
-<p><strong>Input Files</strong><br></p>
-<p><strong>Output Files</strong><br></p>
-<p><strong>Parameters</strong><br></p>
+<p><strong>Input Files</strong><br>
+<code class="docutils literal notranslate"><span class="pre">summary_fastas.dir/GENE_GENUS.fasta</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">summary_trees.dir/GENE_GENUS.tre</span></code><br></p>
+<p><strong>Output Files</strong><br>
+<code class="docutils literal notranslate"><span class="pre">classify_results.dir/results.tsv</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">classify_results.dir/by_gene_genus.FMT</span></code> (png, svg, pdf or jpg)<br></p>
+<p><strong>Parameters</strong><br>
+None</p>
+<p>Combines the results of the classify steps to generate additional summary files. The <code class="docutils literal notranslate"><span class="pre">results.tsv</span></code> output file lists the number of genes which have been collapsed into each group in the trees in the <code class="docutils literal notranslate"><span class="pre">summary_trees.dir</span></code> directory. The by_gene_genus.FMT plot is a bar chart of the same information, organised by gene and genus.</p>
 </div>
 <div class="section" id="id2">
 <h3>Classify<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
@@ -698,20 +802,77 @@ regions.</p>
 <p>If not all genes are screened for the table will not have the columns for this gene.</p>
 <p>A bed file (<code class="docutils literal notranslate"><span class="pre">ERV_regions_final.bed</span></code>) is generated with the co-ordinates of the identified regions and a FASTA file (<code class="docutils literal notranslate"><span class="pre">ERV_regions_final.fasta</span></code>) containing their sequences.</p>
 </div>
+<div class="section" id="plotervregions">
+<h3>plotERVRegions<a class="headerlink" href="#plotervregions" title="Permalink to this headline">¶</a></h3>
+<p><strong>Input_Files</strong><br>
+<code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/ERV_regions_final.tsv</span></code><br></p>
+<p><strong>Output_Files</strong><br>
+<code class="docutils literal notranslate"><span class="pre">ERV_region_plots.dir/*FMT</span></code><br></p>
+<p><strong>Parameters</strong><br>
+<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">format</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">dpi</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">gag_colour</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">pol_colour</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">env_colour</span></code><br></p>
+<p>For each region containing ORFs resembling more than one retroviral gene, a plot is generated showing how these ORFs are distributed on the genome relative to each other.</p>
+<p>Each gene is shown on a different line on the y axis, the x axis is chromosome co-ordinates.</p>
+</div>
 <div class="section" id="summariseervregions">
 <h3>summariseERVRegions<a class="headerlink" href="#summariseervregions" title="Permalink to this headline">¶</a></h3>
-<p><strong>Input Files</strong></p>
-<p><strong>Output Files</strong></p>
-<p><strong>Parameters</strong></p>
+<p><strong>Input Files</strong><br>
+<code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/ERV_regions_final.tsv</span></code><br></p>
+<p><strong>Output Files</strong><br>
+<code class="docutils literal notranslate"><span class="pre">erv_regions_results.dir/results.tsv</span></code><br>
+<code class="docutils literal notranslate"><span class="pre">erv_regions_results.dir/erv_regions.FMT</span></code><br></p>
+<p><strong>Parameters</strong><br>
+<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">other_colour</span></code><br></p>
+<p>Combines the results of the ERVregions steps to generate additional summary files.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">results.tsv</span></code> output file is a copy of the output of the makeRegionTables functions.
+This will usually have 37 columns:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> - the final ID of the ERV region - the genes found plus an integer  e.g. gag_pol_12<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">chrom</span></code> - chromosome<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start</span></code> - start position of the ERV region<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">end</span></code> - end position of the ERV region<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">strand</span></code> - strand of the ERv region<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">genus</span></code> - genus of the ERV region, can be multiple genera delimted by “|” if different genes had different genera<br></p></li>
+<li><p>for each gene screened for (usually gag, pol and env)<br></p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">GENE_name</span></code> - the names of the ORFs for this gene in this region<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GENE_ID</span></code> - the original IDs of the ORFs for this gene in this region<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GENE_start</span></code> - the start position of this gene in this region (genome co-ordinates)<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GENE_relative_start</span></code> - the start position of this gene in this region (relative to the start of the region)<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GENE_end</span></code> - the end position of this gene in this region (genome co-ordinates)<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GENE_relative_end</span></code> - the end position of this gene in this region (relative to the start of the region)<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GENE_strand</span></code> - the strand for this gene in this region<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GENE_match</span></code> - the closest reference retrovirus to this gene in this region<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GENE_group</span></code> - the group of the closest reference retrovirus to this gene in this region<br></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GENE_genus</span></code> - the genus of the closest reference retrovirus to this gene in this region<br></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">orig_name</span></code> - the name of the region in the input table<br></p></li>
+</ul>
+<p>A bar chart - <code class="docutils literal notranslate"><span class="pre">erv_regions_results.dir/erv_regions.FMT</span></code> is also generated showing the number of ERV regions found with each combination of genes.</p>
 </div>
 <div class="section" id="id3">
 <h3>ERVRegions<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
-<p><strong>Input Files</strong></p>
-<p><strong>Output Files</strong></p>
-<p><strong>Parameters</strong></p>
+<p><strong>Input Files</strong>
+None</p>
+<p><strong>Output Files</strong>
+None</p>
+<p><strong>Parameters</strong>
+None</p>
+<p>Helper function to run all screening functions and ERVRegions functions.</p>
 </div>
 <div class="section" id="full">
 <h3>Full<a class="headerlink" href="#full" title="Permalink to this headline">¶</a></h3>
+<p><strong>Input Files</strong>
+None</p>
+<p><strong>Output Files</strong>
+None</p>
+<p><strong>Parameters</strong>
+None</p>
+<p>Helper function to run all functions.</p>
 </div>
 </div>
 </div>

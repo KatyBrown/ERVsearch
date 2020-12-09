@@ -317,10 +317,107 @@ The output table is also  tidied up to include the UBLAST output, chromosome, OR
 ### summariseScreen
 
 **Input Files**<br>
+gene_bed_files.dir/GENE_merged.bed
+ublast.dir/GENE_UBLAST.tsv
+ORFs.dir/GENE_orfs_aa.fasta
+ublast_orfs.dir/GENE_UBLAST.tsv
 
 **Output Files**<br>
+FMT can be png, svg, pdf, jpg depending on the `plot_format` parameter
+
+
+`summary_tables.dir/exonerate_initial_summary.txt`<br>
+`summary_tables.dir/ublast_hits_initial_summary.txt`<br>
+`summary_tables.dir/orfs_initial_summary.txt`<br>
+`summary_tables.dir/ublast_orfs_initial_summary.txt`<br>
+`summary_plots.dir/exonerate_initial_lengths.FMT`<br>
+`summary_plots.dir/exonerate_initial_scores.FMT`<br>
+`summary_plots.dir/exonerate_initial_strands.FMT`<br>
+`summary_plots.dir/exonerate_initial_by_sequence.FMT`<br>
+`summary_plots.dir/exonerate_initial_counts_per_gene.FMT`<br>
+`summary_plots.dir/ublast_hits_alignment_length.FMT`<br>
+`summary_plots.dir/ublast_hits_perc_similarity.FMT`<br>
+`summary_plots.dir/ublast_hits_by_match.FMT`<br>
+`summary_plots.dir/ublast_hits_per_gene.FMT`<br>
+`summary_plots.dir/orfs_lengths.FMT`<br>
+`summary_plots.dir/orfs_strands.FMT`<br>
+`summary_plots.dir/orfs_by_gene.FMT`<br>
+`summary_plots.dir/ublast_orfs_alignment_length.FMT`<br>
+`summary_plots.dir/ublast_orfs_perc_similarity.FMT`<br>
+`summary_plots.dir/ublast_orfs_bit_score.FMT`<br>
+`summary_plots.dir/ublast_orfs_by_match.FMT`<br>
+`summary_plots.dir/ublast_orfs_per_gene.FMT`<br>
+`screen_results.dir/results.tsv`<br>
+`screen_results.dir/by_length.FMT`<br>
+`screen_results.dir/by_genus.FMT`<br>
+`screen_results.dir/by_group.FMT`<br>
+`screen_results.dir/by_gene.FMT`<br>
 
 **Parameters**<br>
+`[plots] dpi`<br>
+`[plots] format`<br>
+`[plots] gag_colour`<br>
+`[plots] pol_colour`<br>
+`[plots] env_colour`<br>
+`[plots] other_colour`<br>
+
+Generates a series of summary plots and tables showing the results of running the screening functions.
+
+The major outputs of this function are stored in the screen_results.dir directory. Further details of these files are provided in the [Main Output Files](introduction.html#main-output-files) section.
+
+The other files show the output of the intermediate steps.<br>
+
+**Exonerate Initial**<br>
+* `summary_tables.dir/exonerate_initial_summary.txt`<br>
+  Summary of the output of the initial Exonerate screening step. Note that these are unfiltered and many will not be true ERVs.<br>
+* `summary_tables.dir/ublast_hits_initial_summary.txt`<br>
+  Summary of the results of running UBLAST on the initial Exonerate output.<br>
+* `summary_tables.dir/orfs_initial_summary.txt`<br>
+  Summary of the results of the initial ORF identification.<br>
+* `summary_tables.dir/ublast_orfs_initial_summary.txt`<br>
+  Summary of the results of running UBLAST on these ORFs.<br>
+* `summary_plots.dir/exonerate_initial_lengths.FMT`<br>
+  Histogram showing the lengths of the initial Exonerate regions for each gene.
+* `summary_plots.dir/exonerate_initial_scores.FMT`<br>
+  Histogram showing the Exonerate score of the initial Exonerate regions for each gene.<br>
+* `summary_plots.dir/exonerate_initial_strands.FMT`<br>
+  Bar chart showing the number of regions identified on each strand in the initial Exonerate screen.<br>
+* `summary_plots.dir/exonerate_initial_by_sequence.FMT`<br>
+  Histogram showing the number of ERV-like regions identified on each sequence in the reference genome being screened.<br>
+* `summary_plots.dir/exonerate_initial_counts_per_gene.FMT`<br>
+  Bar chart showing the number of ERV regions identified per gene in the initial Exonerate screen.<br>
+
+**UBLAST**<br>
+* `summary_plots.dir/ublast_hits_alignment_length.FMT`<br>
+  Histogram showing the lengths of the alignments of the UBLAST filtered Exonerate regions and the most similar reference ORF, based on the UBLAST output.<br>
+* `summary_plots.dir/ublast_hits_perc_similarity.FMT`<br>
+  Histogram showing the percentage identity between the UBLAST filtered Exonerate regions and the most similar reference ORF, based on the UBLAST output.<br>
+* `summary_plots.dir/ublast_hits_perc_similarity.FMT`<br>
+  Histogram showing the UBLAST bit score between the UBLAST filtered Exonerate regions and the most similar reference ORF, based on the UBLAST output.<br>
+* `summary_plots.dir/ublast_hits_by_match.FMT`<br>
+  Bar chart showing the number of UBLAST filtered Exonerate regions most similar to each reference ORF in the ERVsearch/ERV_db database.<br>
+* `summary_plots.dir/ublast_hits_per_gene.FMT`<br>
+  Bar chart showing the number of UBLAST filtered Exonerate regions identified per gene.<br>
+
+**ORFs**<br>
+* `summary_plots.dir/orfs_lengths.FMT`<br>
+  Histogram of the lengths of ORFs identified in the ERV regions.
+* `summary_plots.dir/orfs_strands.FMT`<br>
+  Bar chart of the strand (positive (+) or negative (-) sense) of the ORFs identified in the ERV regions.
+* `summary_plots.dir/orfs_by_gene.FMT`<br>
+  Bar chart of the number of ORFs identified for each gene.<br>
+
+**UBLAST ORFs**<br>
+* `summary_plots.dir/ublast_orfs_alignment_length.FMT`<br>
+  Histogram showing the lengths of the alignments of the ERV-like ORFs and the most similar reference ORF, based on the UBLAST output.<br>
+* `summary_plots.dir/ublast_orfs_perc_similarity.FMT`<br>
+  Histogram showing the percentage identity between the ERV-like ORFs and the most similar reference ORF, based on the UBLAST output.<br>
+* `summary_plots.dir/ublast_orfs_bit_score.FMT`<br>
+  Histogram showing the UBLAST bit score between the ERV-like ORFs and the most similar reference ORF, based on the UBLAST output.<br>
+* `summary_plots.dir/ublast_orfs_by_match.FMT`<br>
+  Bar chart showing the number of ERV-like ORFs most similar to each reference ORF in the ERVsearch/ERV_db database.<br>
+* `summary_plots.dir/ublast_orfs_per_gene.FMT`<br>
+  Bar chart showing the number of ERV-like ORFs identified per gene.
 
 ### Screen
 
@@ -492,10 +589,18 @@ The output file DPI can be specified using `trees_dpi` and the format (which can
 ### summariseClassify
 
 **Input Files**<br>
+`summary_fastas.dir/GENE_GENUS.fasta`<br>
+`summary_trees.dir/GENE_GENUS.tre`<br>
 
 **Output Files**<br>
+`classify_results.dir/results.tsv`<br>
+`classify_results.dir/by_gene_genus.FMT` (png, svg, pdf or jpg)<br>
 
 **Parameters**<br>
+None
+
+Combines the results of the classify steps to generate additional summary files. The `results.tsv` output file lists the number of genes which have been collapsed into each group in the trees in the `summary_trees.dir` directory. The by_gene_genus.FMT plot is a bar chart of the same information, organised by gene and genus.
+
 
 ### Classify
 
@@ -611,22 +716,87 @@ If not all genes are screened for the table will not have the columns for this g
 A bed file (`ERV_regions_final.bed`) is generated with the co-ordinates of the identified regions and a FASTA file (`ERV_regions_final.fasta`) containing their sequences.
 
 
+### plotERVRegions
+**Input_Files**<br>
+`ERV_regions.dir/ERV_regions_final.tsv`<br>
+
+**Output_Files**<br>
+`ERV_region_plots.dir/*FMT`<br>
+
+**Parameters**<br>
+`[plots] format`<br>
+`[plots] dpi`<br>
+`[plots] gag_colour`<br>
+`[plots] pol_colour`<br>
+`[plots] env_colour`<br>
+
+For each region containing ORFs resembling more than one retroviral gene, a plot is generated showing how these ORFs are distributed on the genome relative to each other.
+
+Each gene is shown on a different line on the y axis, the x axis is chromosome co-ordinates.
+  
 ### summariseERVRegions
 
-**Input Files**
+**Input Files**<br>
+`ERV_regions.dir/ERV_regions_final.tsv`<br>
 
-**Output Files**
 
-**Parameters**
+**Output Files**<br>
+`erv_regions_results.dir/results.tsv`<br>
+`erv_regions_results.dir/erv_regions.FMT`<br>
+	
+**Parameters**<br>
+`[plots] other_colour`<br>
+
+
+Combines the results of the ERVregions steps to generate additional summary files.
+
+The `results.tsv` output file is a copy of the output of the makeRegionTables functions.
+This will usually have 37 columns:
+* `name` - the final ID of the ERV region - the genes found plus an integer  e.g. gag_pol_12<br>
+* `chrom` - chromosome<br>
+* `start` - start position of the ERV region<br>
+* `end` - end position of the ERV region<br>
+* `strand` - strand of the ERv region<br>
+* `genus` - genus of the ERV region, can be multiple genera delimted by "|" if different genes had different genera<br>
+* for each gene screened for (usually gag, pol and env)<br>
+    * `GENE_name` - the names of the ORFs for this gene in this region<br>
+    * `GENE_ID` - the original IDs of the ORFs for this gene in this region<br>
+    * `GENE_start` - the start position of this gene in this region (genome co-ordinates)<br>
+    * `GENE_relative_start` - the start position of this gene in this region (relative to the start of the region)<br>
+    * `GENE_end` - the end position of this gene in this region (genome co-ordinates)<br>
+    * `GENE_relative_end` - the end position of this gene in this region (relative to the start of the region)<br>
+    * `GENE_strand` - the strand for this gene in this region<br>
+    * `GENE_match` - the closest reference retrovirus to this gene in this region<br>
+    * `GENE_group` - the group of the closest reference retrovirus to this gene in this region<br>
+    * `GENE_genus` - the genus of the closest reference retrovirus to this gene in this region<br>
+* `orig_name` - the name of the region in the input table<br>
+
+A bar chart - `erv_regions_results.dir/erv_regions.FMT` is also generated showing the number of ERV regions found with each combination of genes.
 
 
 ### ERVRegions
 
 **Input Files**
+None
 
 **Output Files**
+None
 
 **Parameters**
+None
+
+Helper function to run all screening functions and ERVRegions functions.
 
 
 ### Full
+
+**Input Files**
+None
+
+**Output Files**
+None
+
+**Parameters**
+None
+
+Helper function to run all functions.

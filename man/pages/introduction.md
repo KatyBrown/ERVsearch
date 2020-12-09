@@ -18,6 +18,7 @@ This is a updated and expanded version of the pipeline used to identify ERVs in 
 6. [Usage](#usage)
 7. [Parameters](parameters.html)
 8. [Functions](functions.html)
+9. [Main Output Files](#main-output-files)
 
 ## Prerequisites
 
@@ -240,3 +241,81 @@ e.g.
 ```
 ERVsearch --target_tasks full -v 5
 ```
+
+## Main Output Files
+The main output files produced are as follows:
+
+### Screen
+`screen_results.dir/results.tsv`<br>
+Table showing the ORFs identified with Exonerate and verified with UBLAST which meet the requirements specified in the `pipeline.ini` file.
+Columns are as follows:
+* **name**<br>
+  Name assigned to the region consisting of the ID, chromosome, start and end positions
+* **match**<br>
+  The most similar reference ORF to this ORF identified in the `ERVsearch/ERV_db` database using the ungapped Exonerate algorithm. 
+* **perc_identity**<br>
+  The percentage identity between this sequence and the most similar reference ORF, based on the UBLAST output.
+* **alignment_length*<br>
+  The length of the alignment of this sequence and the most similar reference ORF, based on the UBLAST output. 
+* **evalue**<br>
+  The UBLAST e-value of the alignment of this sequence and the most similar reference ORF.
+* **bit_score**<br>
+  The UBLAST bit score of the alignment of this sequence and the most similar reference ORF.
+* **ID**<br>
+ID assigned to this ORF
+* **chrom**<br>
+  Chromosome (or scaffold, contig or sequence) on which this ORF was identified.
+* **start**<br>
+  Start position of this ORF on the chromosome.
+* **end**<br>
+  End position of this ORF on the chromosome.
+* **strand**<br>
+  Positive sense (+) or negative sense (+)
+* **group**<br>
+  Local group to which the most similar reference ORF belongs. If the reference ORF is not in a group, this is genus_gene.
+* **genus**<br>
+  Genus to which the most similar reference ORF belongs.
+* **length** <br>
+  ORF length in nucleotides.
+* **gene**<br>
+  Retroviral gene - gag, pol or env.
+<br><br>
+
+
+`screen_results.dir/by_length.FMT`<br>
+Histograms of ORF lengths (in nucleotides) based on the results.tsv table, for the gag, pol and env genes.<br>
+
+`screen_results.dir/by_genus.FMT`<br>
+Bar charts showing the number of ORFs identified for each genus and gene based on the results.tsv table.
+
+`screen_results.dir/by_group.FMT`<br>
+Bar charts showing the number of ORFs identified in each small subgroup of reference sequences for each retroviral gene. ORFs assigned as genus_gene were related to a reference sequence which is not in a smaller subgroup, based on the results.tsv table.
+
+`screen_results.dir/by_gene.FMT`<br>
+Bar chart showing the number of ORFs identified for each gene, based on the results.tsv table.
+
+### Classify
+
+### ERVRegions
+`erv_regions_results.dir/results.tsv`<br>
+Table summarising regions identified containing retrovirus-like ORFs from more than one gene.
+Columns:
+* **name** - the final ID of the ERV region - the genes found plus an integer  e.g. gag_pol_12<br>
+* **chrom** - chromosome<br>
+* **start** - start position of the ERV region<br>
+* **end** - end position of the ERV region<br>
+* **strand** - strand of the ERv region<br>
+* **genus** - genus of the ERV region, can be multiple genera delimted by "|" if different genes had different genera<br>
+* for each gene screened for (usually gag, pol and env)<br>
+    * **GENE_name** - the names of the ORFs for this gene in this region<br>
+    * **GENE_ID** - the original IDs of the ORFs for this gene in this region<br>
+    * **GENE_start** - the start position of this gene in this region (genome co-ordinates)<br>
+    * **GENE_relative_start** - the start position of this gene in this region (relative to the start of the region)<br>
+    * **GENE_end** - the end position of this gene in this region (genome co-ordinates)<br>
+    * **GENE_relative_end** - the end position of this gene in this region (relative to the start of the region)<br>
+    * **GENE_strand** - the strand for this gene in this region<br>
+    * **GENE_match** - the closest reference retrovirus to this gene in this region<br>
+    * **GENE_group** - the group of the closest reference retrovirus to this gene in this region<br>
+    * **GENE_genus** - the genus of the closest reference retrovirus to this gene in this region<br>
+* `orig_name` - the name of the region in the input table<br>
+

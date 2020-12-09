@@ -1,232 +1,62 @@
-# Functions
-1.[Pipeline Schematic](#pipeline-schematic)<br>
-2.[Screen](#screen)<br>
-3.[Classify](#classify)<br>
-4.[ERVRegions](#ervregions)<br>
 
-## Pipeline Schematic
-[large version](../_images/pipeline.png)
-![../images/pipeline.png](../images/pipeline.png) 
-NB: Where `GENE` is specified in a file path one file will be created for each gene - *gag*, *pol* and *env* (unless otherwise specified by the user).
-
-## Screen
-* Screens the genome for ERV like regions by comparing the genome to a set of known retroviral ORFs using Exonerate.
-* Confirms the Exonerate regions using UBLAST
-* Finds and confirms ORFs within these regions
-* Finds the most similar known retroviral ORF in the database to each of the newly identified ORFs
-
-1. [initiate](#initiate)<br>
-2. [genomeToChroms](#genometochroms)<br>
-3. [prepDBs](#prepdbs)<br>
-4. [runExonerate](#runexonerate)<br>
-5. [cleanExonerate](#cleanexonerate)<br>
-6. [mergeOverlaps](#mergeoverlaps)<br>
-7. [makeFastas](#makefastas)<br>
-8. [renameFastas](#renamefastas)<br>
-9. [makeUBLASTDb](#makeublastdb)<br>
-10. [runUBLASTCheck](#runublastcheck)<br>
-11. [classifyWithExonerate](#classifywithexonerate)<br>
-12. [getORFs](#getorfs)<br>
-13. [checkORFsUBLAST](#checkorfsublast)<br>
-14. [assignGroups](#assigngroups)<br>
-15. [summariseScreen](#summarisescreen)<br>
-16. [Screen](#id1)<br>
 
 ### initiate
-
-**Input Files** <br>
-`pipeline.ini`<br>
 
 **Output Files**<br>
 `init.txt`<br>
 
-**Parameters**<br>
-`[genome] file`<br>
-`[paths] path_to_ERVsearch`<br>
-`[paths] path_to_usearch`<br>
-`[paths] path_to_exonerate`<br>
-
-Initialises the pipeline and checks that the required parameters in the pipeline.ini are set and valid and that the required software is in your $PATH.
-
-Checks that:
-* The input genome file exists.
-* The correct path to ERVsearch is provided.
-* samtools, bedtools, FastTree and mafft are in the $PATH
-* The correct paths to usearch and exonerate are provided.
- 
-`init.txt` is a placeholder to show that this step has been completed.
-
-
 ### genomeToChroms
 
-**Input Files** 
-`[genome] file`<br>
-`keep_chroms.txt`<br>
 
 **Output Files**<br>
 `host_chromosomes.dir/*fasta`<br>
 
-**Parameters**<br>
-`[genome] file`<br>
-`[genomesplits] split`<br>
-`[genomesplits] split_n`<br>
-`[genomesplits] force`<br>
-
-Splits the host genome provided by the user into FASTA files of a suitable size to run Exonerate efficiently.
-
-If `genomesplits_split` in the pipeline.ini is False, the genome is split into one fasta file for each sequence - each chromosome, scaffold or contig.
-
-If `genomesplits_split` in the pipeline.ini is True, the genome is split into the number of batches specified by the `genomesplits_splitn` parameter, unless the total number of sequences in the input file is less than this number.
-
-The pipeline will fail if the number of sequences which would result from the genomesplits settings would result in >500 Exonerate runs, however it is possible to force the pipeline to run despite this by setting `genomesplits_force` to True.
-
-If the file keep_chroms.txt exists in the working directory only chromosomes listed in this file will be kept.
-
-An unzipped copy of zipped and gzipped fasta files will be created or a link to the file if it is already unzipped. this will be named `genome.fa` and be in the working directory.
-
-This function generates a series of fasta files which are stored in the host_chromosomes.dir directory.
-
 ### prepDBs
-
-**Input Files**<br>
-None<br>
 
 **Output Files** <br>
 `gene_databases.dir/GENE.fasta`<br>
-
-**Parameters**<br>
-`[database] use_custom_db`<br>
-`[database] gag`<br>
-`[database] pol`<br>
-`[database] env`<br>
-
- Retrieves the gag, pol and env amino acid sequence database fasta files and puts a copy of each gene_databases.dir directory.
-    
- If custom databases are used they are retrieved and named as gag.fasta  pol.fasta, env.fasta so the path doesn't need to be changed every time.
 
 ### runExonerate
 
-**Input Files** <br>
-`gene_databases.dir/GENE.fasta`<br>
-`host_chromosomes.dir/*fasta`<br>
-
 **Output Files** <br>
 `raw_exonerate_output.dir/GENE_*.tsv`<br>
 
-**Parameters**<br>
-`[paths] path_to_exonerate`<br>
-
-
-Runs the `protein2dna` algorithm in the [Exonerate software package](https://www.ebi.ac.uk/about/vertebrate-genomics/software/exonerate-manual) with the host chromosomes (or other regions) in `host_chromosomes.dir` as target sequences and the FASTA files from prepDBs as the query sequences.
-
-The raw output of Exonerate is stored in the raw_exonerate_output directory, one file is created for each combination of query and target sequences.
-
-This step is carried out with low stringency as results are later filtered using UBLAST and Exonerate.
- 
 ### cleanExonerate
-
-**Input Files** <br>
-`raw_exonerate_output.dir/GENE_*.tsv`<br>
 
 **Output_Files**<br>
 `clean_exonerate_output.dir/GENE_*_unfiltered.tsv`<br>
 `clean_exonerate_output.dir/GENE_*_filtered.tsv`<br>
 `clean_exonerate_output.dir/GENE_*.bed`<br>
 
-**Parameters**<br>
-`[exonerate] min_hit_length`<br>
-
-Filters and cleans up the Exonerate output.
-* Converts the raw Exonerate output files into dataframes - GENE_unfiltered.tsv
-* Filters out any regions containing introns (as defined by Exonerate)
-* Filters out regions less than `exonerate_min_hit_length` on the host sequence (in nucleotides).
-* Outputs the filtered regions to GENE_filtered.tsv
-* Converts this to bed format and outputs this to GENE.bed
-
 ### mergeOverlaps
-
-**Input Files** <br>
-`clean_exonerate_output.dir/GENE_*.bed`<br>
 
 **Output_Files** <br>
 `gene_bed_files.dir/GENE_all.bed`,<br>
 `gene_bed_files.dir/GENE_merged.bed`<br>
 
-**Parameters**<br>
-`[exonerate] overlap`<br>
-
-Merges the output bed files for individual sections of the input genome into a single bed file.
-
-Overlapping regions or very close together regions of the genome detected by Exonerate with similarity to the same retroviral gene are then merged into single regions.  This is performed using [bedtools merge](https://bedtools.readthedocs.io/en/latest/content/tools/merge.html) on the bed files output by cleanExonerate.
-
-If there is a gap of less than `exonerate_overlap` between the regions they will be merged.
-
 ### makeFastas
-
-**Input Files**<br>
-`gene_bed_files.dir/GENE_merged.bed`<br>
-`genome.fa`<br>
-
 **Output Files** <br>
 `gene_fasta_files.dir/GENE_merged.fasta`<br>
 
-**Parameters**<br>
-None<br>
-
-Fasta files are generated containing the sequences of the merged regions of the genome identified using mergeOverlaps.
-These are extracted from the host chromosomes using [bedtools getfasta](https://bedtools.readthedocs.io/en/latest/content/tools/getfasta.html).
-
 ### renameFastas
-
-**Input Files** <br>
-`gene_fasta_files.dir/GENE_merged.fasta`<br>
 
 **Output Files** <br>
 `gene_fasta_files.dir/GENE_merged_renamed.fasta`<br>
 
-**Parameters**<br>
-None<br>
-
- Renames the sequences in the fasta files of ERV-like regions identified with Exonerate so each record has a numbered unique ID (gag1, gag2 etc). Also removes ":" from sequence names as this causes problems later.
  
 ### makeUBLASTDb
-
-**Input Files**<br>
- `gene_databases.dir/GENE.fasta`<br>
-
 **Output Files** <br>
 `UBLAST_db.dir/GENE_db.udb`<br>
 
-**Parameters**<br>
-`[paths] path_to_ublast`<br>
-
-[USEARCH](https://www.drive5.com/usearch/) requires an indexed database of query sequences to run. This function generates this database for the three gene amino acid fasta files used to screen the genome.
-
 ### runUBLASTCheck
-
-**Input Files**<br>
-`UBLAST_db.dir/GENE_db.udb`<br>
-`gene_fasta_files.dir/GENE_merged.fasta`<br>
 
 **Output Files**<br>
 `ublast.dir/GENE_UBLAST_alignments.txt`<br>
 `ublast.dir/GENE_UBLAST.tsv`<br>
 `ublast.dir/GENE_filtered_UBLAST.fasta`<br>
 
-**Parameters**<br>
-`[paths] path_to_usearch`<br>
-`[usearch] min_id`<br>
-`[usearch] min_hit_length`<br>
-`[usearch] min_coverage`<br>
-
- ERV regions in the fasta files generated by makeFasta are compared to the ERV amino acid database files for a second time, this time using USEARCH (https://www.drive5.com/usearch/). Using both of these tools reduces the number of false positives.
-
-This allows sequences with low similarity to known ERVs to be filtered out.  Similarity thresholds can be set in the pipeline.ini file (`usearch_min_id,` - minimum identity between query and target -  `usearch_min_hit_length` - minimum length of hit on target sequence -  and `usearch_min_coverage` - minimum proportion of the query sequence the hit should cover).
-
-The raw output of running UBLAST against the target sequences is saved in GENE_UBLAST_alignments.txt (equivalent to the BLAST default output) and GENE_UBLAST.tsv (equivalent to the BLAST -outfmt 6 tabular output) this is already filtered by passing the appropriate parameters to UBLAST. The regions which passed the filtering and are therefore in these output files are then output to a FASTA file GENE_filtered_UBLAST.fasta.
 
 ### classifyWithExonerate
-
 **Input Files**<br>
 `ublast.dir/GENE_filtered_UBLAST.fasta`<br>
 `ERVsearch/ERV_db/all_ERVs_nt.fasta`<br>
@@ -589,18 +419,10 @@ The output file DPI can be specified using `trees_dpi` and the format (which can
 ### summariseClassify
 
 **Input Files**<br>
-`summary_fastas.dir/GENE_GENUS.fasta`<br>
-`summary_trees.dir/GENE_GENUS.tre`<br>
 
 **Output Files**<br>
-`classify_results.dir/results.tsv`<br>
-`classify_results.dir/by_gene_genus.FMT` (png, svg, pdf or jpg)<br>
 
 **Parameters**<br>
-None
-
-Combines the results of the classify steps to generate additional summary files. The `results.tsv` output file lists the number of genes which have been collapsed into each group in the trees in the `summary_trees.dir` directory. The by_gene_genus.FMT plot is a bar chart of the same information, organised by gene and genus.
-
 
 ### Classify
 
@@ -716,87 +538,22 @@ If not all genes are screened for the table will not have the columns for this g
 A bed file (`ERV_regions_final.bed`) is generated with the co-ordinates of the identified regions and a FASTA file (`ERV_regions_final.fasta`) containing their sequences.
 
 
-### plotERVRegions
-**Input_Files**<br>
-`ERV_regions.dir/ERV_regions_final.tsv`<br>
-
-**Output_Files**<br>
-`ERV_region_plots.dir/*FMT`<br>
-
-**Parameters**<br>
-`[plots] format`<br>
-`[plots] dpi`<br>
-`[plots] gag_colour`<br>
-`[plots] pol_colour`<br>
-`[plots] env_colour`<br>
-
-For each region containing ORFs resembling more than one retroviral gene, a plot is generated showing how these ORFs are distributed on the genome relative to each other.
-
-Each gene is shown on a different line on the y axis, the x axis is chromosome co-ordinates.
-  
 ### summariseERVRegions
 
-**Input Files**<br>
-`ERV_regions.dir/ERV_regions_final.tsv`<br>
+**Input Files**
 
+**Output Files**
 
-**Output Files**<br>
-`erv_regions_results.dir/results.tsv`<br>
-`erv_regions_results.dir/erv_regions.FMT`<br>
-	
-**Parameters**<br>
-`[plots] other_colour`<br>
-
-
-Combines the results of the ERVregions steps to generate additional summary files.
-
-The `results.tsv` output file is a copy of the output of the makeRegionTables functions.
-This will usually have 37 columns:
-* `name` - the final ID of the ERV region - the genes found plus an integer  e.g. gag_pol_12<br>
-* `chrom` - chromosome<br>
-* `start` - start position of the ERV region<br>
-* `end` - end position of the ERV region<br>
-* `strand` - strand of the ERv region<br>
-* `genus` - genus of the ERV region, can be multiple genera delimted by "|" if different genes had different genera<br>
-* for each gene screened for (usually gag, pol and env)<br>
-    * `GENE_name` - the names of the ORFs for this gene in this region<br>
-    * `GENE_ID` - the original IDs of the ORFs for this gene in this region<br>
-    * `GENE_start` - the start position of this gene in this region (genome co-ordinates)<br>
-    * `GENE_relative_start` - the start position of this gene in this region (relative to the start of the region)<br>
-    * `GENE_end` - the end position of this gene in this region (genome co-ordinates)<br>
-    * `GENE_relative_end` - the end position of this gene in this region (relative to the start of the region)<br>
-    * `GENE_strand` - the strand for this gene in this region<br>
-    * `GENE_match` - the closest reference retrovirus to this gene in this region<br>
-    * `GENE_group` - the group of the closest reference retrovirus to this gene in this region<br>
-    * `GENE_genus` - the genus of the closest reference retrovirus to this gene in this region<br>
-* `orig_name` - the name of the region in the input table<br>
-
-A bar chart - `erv_regions_results.dir/erv_regions.FMT` is also generated showing the number of ERV regions found with each combination of genes.
+**Parameters**
 
 
 ### ERVRegions
 
 **Input Files**
-None
 
 **Output Files**
-None
 
 **Parameters**
-None
-
-Helper function to run all screening functions and ERVRegions functions.
 
 
 ### Full
-
-**Input Files**
-None
-
-**Output Files**
-None
-
-**Parameters**
-None
-
-Helper function to run all functions.

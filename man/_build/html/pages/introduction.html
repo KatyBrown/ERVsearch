@@ -108,6 +108,12 @@
 <li class="toctree-l2"><a class="reference internal" href="#verbosity">Verbosity</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="#main-output-files">Main Output Files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Screen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Classify</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">ERVRegions</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a></li>
 </ul>
@@ -194,6 +200,7 @@
 <li><p><a class="reference external" href="#usage">Usage</a></p></li>
 <li><p><a class="reference external" href="parameters.html">Parameters</a></p></li>
 <li><p><a class="reference external" href="functions.html">Functions</a></p></li>
+<li><p><a class="reference external" href="#main-output-files">Main Output Files</a></p></li>
 </ol>
 </div>
 <div class="section" id="prerequisites">
@@ -395,6 +402,89 @@ e.g.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ERVsearch</span> <span class="o">--</span><span class="n">target_tasks</span> <span class="n">full</span> <span class="o">-</span><span class="n">v</span> <span class="mi">5</span>
 </pre></div>
 </div>
+</div>
+</div>
+<div class="section" id="main-output-files">
+<h1>Main Output Files<a class="headerlink" href="#main-output-files" title="Permalink to this headline">¶</a></h1>
+<p>The main output files produced are as follows:</p>
+<div class="section" id="id1">
+<h2>Screen<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">screen_results.dir/results.tsv</span></code><br>
+Table showing the ORFs identified with Exonerate and verified with UBLAST which meet the requirements specified in the <code class="docutils literal notranslate"><span class="pre">pipeline.ini</span></code> file.
+Columns are as follows:</p>
+<ul class="simple">
+<li><p><strong>name</strong><br>
+Name assigned to the region consisting of the ID, chromosome, start and end positions</p></li>
+<li><p><strong>match</strong><br>
+The most similar reference ORF to this ORF identified in the <code class="docutils literal notranslate"><span class="pre">ERVsearch/ERV_db</span></code> database using the ungapped Exonerate algorithm.</p></li>
+<li><p><strong>perc_identity</strong><br>
+The percentage identity between this sequence and the most similar reference ORF, based on the UBLAST output.</p></li>
+<li><p>*<em>alignment_length</em><br>
+The length of the alignment of this sequence and the most similar reference ORF, based on the UBLAST output.</p></li>
+<li><p><strong>evalue</strong><br>
+The UBLAST e-value of the alignment of this sequence and the most similar reference ORF.</p></li>
+<li><p><strong>bit_score</strong><br>
+The UBLAST bit score of the alignment of this sequence and the most similar reference ORF.</p></li>
+<li><p><strong>ID</strong><br>
+ID assigned to this ORF</p></li>
+<li><p><strong>chrom</strong><br>
+Chromosome (or scaffold, contig or sequence) on which this ORF was identified.</p></li>
+<li><p><strong>start</strong><br>
+Start position of this ORF on the chromosome.</p></li>
+<li><p><strong>end</strong><br>
+End position of this ORF on the chromosome.</p></li>
+<li><p><strong>strand</strong><br>
+Positive sense (+) or negative sense (+)</p></li>
+<li><p><strong>group</strong><br>
+Local group to which the most similar reference ORF belongs. If the reference ORF is not in a group, this is genus_gene.</p></li>
+<li><p><strong>genus</strong><br>
+Genus to which the most similar reference ORF belongs.</p></li>
+<li><p><strong>length</strong> <br>
+ORF length in nucleotides.</p></li>
+<li><p><strong>gene</strong><br>
+Retroviral gene - gag, pol or env.
+<br><br></p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_length.FMT</span></code><br>
+Histograms of ORF lengths (in nucleotides) based on the results.tsv table, for the gag, pol and env genes.<br></p>
+<p><code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_genus.FMT</span></code><br>
+Bar charts showing the number of ORFs identified for each genus and gene based on the results.tsv table.</p>
+<p><code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_group.FMT</span></code><br>
+Bar charts showing the number of ORFs identified in each small subgroup of reference sequences for each retroviral gene. ORFs assigned as genus_gene were related to a reference sequence which is not in a smaller subgroup, based on the results.tsv table.</p>
+<p><code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_gene.FMT</span></code><br>
+Bar chart showing the number of ORFs identified for each gene, based on the results.tsv table.</p>
+</div>
+<div class="section" id="id2">
+<h2>Classify<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="id3">
+<h2>ERVRegions<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">erv_regions_results.dir/results.tsv</span></code><br>
+Table summarising regions identified containing retrovirus-like ORFs from more than one gene.
+Columns:</p>
+<ul class="simple">
+<li><p><strong>name</strong> - the final ID of the ERV region - the genes found plus an integer  e.g. gag_pol_12<br></p></li>
+<li><p><strong>chrom</strong> - chromosome<br></p></li>
+<li><p><strong>start</strong> - start position of the ERV region<br></p></li>
+<li><p><strong>end</strong> - end position of the ERV region<br></p></li>
+<li><p><strong>strand</strong> - strand of the ERv region<br></p></li>
+<li><p><strong>genus</strong> - genus of the ERV region, can be multiple genera delimted by “|” if different genes had different genera<br></p></li>
+<li><p>for each gene screened for (usually gag, pol and env)<br></p>
+<ul>
+<li><p><strong>GENE_name</strong> - the names of the ORFs for this gene in this region<br></p></li>
+<li><p><strong>GENE_ID</strong> - the original IDs of the ORFs for this gene in this region<br></p></li>
+<li><p><strong>GENE_start</strong> - the start position of this gene in this region (genome co-ordinates)<br></p></li>
+<li><p><strong>GENE_relative_start</strong> - the start position of this gene in this region (relative to the start of the region)<br></p></li>
+<li><p><strong>GENE_end</strong> - the end position of this gene in this region (genome co-ordinates)<br></p></li>
+<li><p><strong>GENE_relative_end</strong> - the end position of this gene in this region (relative to the start of the region)<br></p></li>
+<li><p><strong>GENE_strand</strong> - the strand for this gene in this region<br></p></li>
+<li><p><strong>GENE_match</strong> - the closest reference retrovirus to this gene in this region<br></p></li>
+<li><p><strong>GENE_group</strong> - the group of the closest reference retrovirus to this gene in this region<br></p></li>
+<li><p><strong>GENE_genus</strong> - the genus of the closest reference retrovirus to this gene in this region<br></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">orig_name</span></code> - the name of the region in the input table<br></p></li>
+</ul>
 </div>
 </div>
 
