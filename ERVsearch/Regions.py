@@ -5,6 +5,46 @@ Functions to identify regions with multiple ERV-like ORFs
 import pandas as pd
 import HelperFunctions
 import ORFs
+import matplotlib
+import matplotlib.pyplot as plt
+
+
+def plotERVRegions(table, genes, plotparams, log):
+    dpi = int(plotparams['dpi'])
+    for ind in table.index.values:
+        f = plt.figure(figsize=(10, 3), dpi=dpi)
+        a = f.add_subplot(111)
+        row = table.loc[ind]
+        a.hlines(1.5, row['start'], row['end'], zorder=0)
+        length = row['end'] - row['start']
+        a.set_xlim((row['start'] - (length * 0.01)),
+                   (row['end'] + (length * 0.01)))
+        a.set_ylim(0, len(genes) + 1)
+        a.ticklabel_format(useOffset=False, style='plain')
+        ticks = []
+        for j, gene in enumerate(genes):
+            if isinstance(row['%s_ID' % gene], str):
+                gene_start = row['%s_start' % gene]
+                gene_end = row['%s_end' % gene]
+                gene_length = gene_end - gene_start
+                gene_colour = plotparams['%s_colour' % gene]
+                gene_name = row['%s_ID' % gene]
+                pos = gene_end - (gene_length / 2)
+                a.add_patch(matplotlib.patches.Rectangle((gene_start, 1+j),
+                                                         gene_length,
+                                                         1, color=gene_colour))
+                a.text(pos, 1.5+j, gene_name, ha='center', va='center')
+                ticks.append(int(gene_start))
+                ticks.append(int(gene_end))
+
+        a.set_xticks(ticks)
+        a.set_xticklabels(ticks, rotation='vertical')
+        a.set_title("%s, %s nts (%s)" % (row['name'], length, row['strand']))
+        a.set_yticks([])
+        f.savefig("ERV_region_plots.dir/%s.%s" % (row['name'],
+                                                  plotparams['format']),
+                  dpi=dpi, bbox_inches='tight')
+        plt.close()
 
 
 def getDicts(genes, mergecols):

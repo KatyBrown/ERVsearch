@@ -15,6 +15,7 @@ import subprocess
 import configparser
 import pathlib
 import math
+import shutil
 import HelperFunctions
 import Fasta
 import Bed
@@ -85,6 +86,13 @@ PARAMS.write(open("%s_parameters.txt" % outstem, "w"))
 
 # Store the plot format (as this is used in the ruffus calls)
 plot_format = PARAMS['plots']['format']
+
+screen_output = Summary.allScreenOutfiles(plot_format)
+screen_output.append(["screen_results.dir/results.tsv",
+                      "screen_results.dir/by_length.%s" % plot_format,
+                      "screen_results.dir/by_genus.%s" % plot_format,
+                      "screen_results.dir/by_group.%s" % plot_format,
+                      "screen_results.dir/by_gene.%s" % plot_format])
 
 
 @originate("init.txt")
@@ -871,7 +879,7 @@ def assignGroups(infiles, outfile):
     # this table has the group information - read it and put it into
     # a dictionary
     convert = pd.read_csv("%s/ERV_db/convert.tsv"
-                          % PARAMS['path']['path_to_ERVsearch'],
+                          % PARAMS['paths']['path_to_ERVsearch'],
                           sep="\t")
     D = dict(zip(convert['id'], convert['match']))
 
@@ -914,18 +922,45 @@ def assignGroups(infiles, outfile):
 
 @follows(mkdir("summary_tables.dir"))
 @follows(mkdir("summary_plots.dir"))
-@merge(assignGroups,
-       [r"summary_tables.dir/exonerate_initial_summary.txt",
-        r"summary_plots.dir/exonerate_initial_lengths.%s" % plot_format,
-        r"summary_plots.dir/exonerate_initial_by_sequence.%s" % plot_format])
+@follows(mkdir("screen_results.dir"))
+@merge((mergeOverlaps, runUBLASTCheck,
+        getORFs, checkORFsUBLAST, assignGroups),
+       screen_output)
 def summariseScreen(infiles, outfiles):
-    Summary.summariseExonerateInitial(infiles, outfiles, log, genes,
+    '''
+    * `exonerate_initial_lengths.png` - histograms of lengths of
+      the initial regions identified by Exonerate.
+    * `exonerate_initial_by_sequence.png`- histograms of the number of
+      sequences identified by exonerate in each input sequence.
+    '''
+    funcs = ['gene_bed_files', 'ublast', 'orfs',
+             'ublast_orfs', "grouped"]
+    inD = dict()
+    outD = dict()
+    j = 0
+    for i in np.arange(0, (len(infiles) - 2), 3):
+        inD[funcs[j]] = infiles[i: i+3]
+        outD[funcs[j]] = outfiles[j]
+        j += 1
+    Summary.summariseExonerateInitial(inD['gene_bed_files'],
+                                      outD['gene_bed_files'],
+                                      log, genes,
                                       PARAMS['plots'])
-    Summary.summariseUBLAST(infiles, outfiles, log, genes,
+    Summary.summariseUBLAST(inD['ublast'],
+                            outD['ublast'], log, genes,
                             PARAMS['plots'])
+    Summary.summariseORFs(inD['orfs'],
+                          outD['orfs'],
+                          log, genes, PARAMS['plots'])
+    Summary.summariseUBLAST(inD['ublast_orfs'],
+                            outD['ublast_orfs'],
+                            log, genes, PARAMS['plots'])
+    Summary.summariseGroups(inD['grouped'],
+                            outD['grouped'],
+                            log, genes, PARAMS['plots'])
 
 
-@follows(assignGroups)
+@follows(summariseScreen)
 def Screen():
     '''
     Helper function to run all screening functions (all functions prior to
@@ -1191,14 +1226,36 @@ def drawSummaryTrees(infile, outfile):
                    PARAMS['trees']['dpi'], sizenodes=True)
 
 
-@merge(drawSummaryTrees,
-       [r"summary_tables.dir/trees_summary.txt"])
+@follows(mkdir("classify_results.dir"))
+@merge((makeSummaryFastas, makeSummaryTrees),
+       ['classify_results.dir/results.tsv',
+        'classify_results.dir/by_gene_genus.%s' % plot_format])
 def summariseClassify(infiles, outfiles):
-    pass
+    '''
+    * `exonerate_initial_lengths.png` - histograms of lengths of
+      the initial regions identified by Exonerate.
+    * `exonerate_initial_by_sequence.png`- histograms of the number of
+      sequences identified by exonerate in each input sequence.
+    '''
+    inD = dict()
+    for infile in infiles:
+        if isinstance(infile, str):
+            direc = infile.split(".dir")[0]
+            inD.setdefault(direc, [])
+            if not infile.split(".")[-2].endswith("_A"):
+                inD[direc].append(infile)
+        else:
+            for inf in infile:
+                direc = inf.split(".dir")[0]
+                inD.setdefault(direc, [])
+                if not inf.split(".")[-2].endswith("_A"):
+                    inD[direc].append(inf)
+    Summary.summariseClassify(inD['summary_fastas'], inD['summary_trees'],
+                              outfiles, genes, PARAMS['plots'], log)
 
 
 @follows(drawGroupTrees)
-@follows(drawSummaryTrees)
+@follows(summariseClassify)
 def Classify():
     '''
     Helper function to run all screening functions and classification
@@ -1303,7 +1360,7 @@ def findERVRegions(infiles, outfiles):
     contain multiple ORFs, `regions.fasta` is the sequence of these region
     in FASTA format. At this point this includes regions with multiple ORFs
     from the same gene (e.g. two *pol* ORFs).
-
+lt
     Input Files
     -----------
     clean_fastas.dir/*.fasta
@@ -1403,28 +1460,32 @@ def makeRegionTables(infiles, outfiles):
     Bed.getFasta(outfiles[1], outfiles[2], log)
 
 
+@follows(mkdir("ERV_region_plots.dir"))
+@split(makeRegionTables, "ERV_region_plots.dir/*%s" % plot_format)
+def plotERVRegions(infiles, outfiles):
+    infile = infiles[0]
+    tab = pd.read_csv(infile, sep="\t")
+    Regions.plotERVRegions(tab, genes, PARAMS['plots'], log)
+
+
+@follows(mkdir("erv_regions_results.dir"))
 @merge(makeRegionTables,
-       [r"summary_tables.dir/erv)regions_summary.txt"])
+       [r"erv_regions_results.dir/results.tsv",
+        r"erv_regions_results.dir/erv_regions.png"])
 def summariseERVRegions(infiles, outfiles):
-    pass
+    shutil.copy(infiles[0], outfiles[0])
+    Summary.summariseERVRegions(infiles, outfiles, genes, PARAMS['plots'], log)
 
 
-@follows(makeRegionTables)
-def ERVRegions():
-    pass
-
-
-@follows(summariseScreen)
-@follows(summariseClassify)
 @follows(summariseERVRegions)
-def Summarise():
+@follows(plotERVRegions)
+def ERVRegions():
     pass
 
 
 @follows(Screen)
 @follows(Classify)
 @follows(ERVRegions)
-@follows(Summarise)
 def full():
     pass
 

@@ -55,7 +55,7 @@ def quickCheck(PARAMS, log):
 
     pathD = {'ERVsearch':
              '%s/ERVsearch/ERVsearch.py' % (
-                 PARAMS['database']['path_to_ERVsearch']),
+                 PARAMS['paths']['path_to_ERVsearch']),
              'usearch': PARAMS['paths']['path_to_usearch'],
              'exonerate': PARAMS['paths']['path_to_exonerate']}
 
