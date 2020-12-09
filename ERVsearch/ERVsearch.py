@@ -928,13 +928,132 @@ def assignGroups(infiles, outfile):
        screen_output)
 def summariseScreen(infiles, outfiles):
     '''
-    * `exonerate_initial_lengths.png` - histograms of lengths of
-      the initial regions identified by Exonerate.
-    * `exonerate_initial_by_sequence.png`- histograms of the number of
-      sequences identified by exonerate in each input sequence.
-    '''
-    funcs = ['gene_bed_files', 'ublast', 'orfs',
-             'ublast_orfs', "grouped"]
+    Generates a series of summary plots and tables showing the results of
+    running the screening functions.
+
+    The major outputs of this function are stored in the screen_results.dir
+    directory. Further details of these files are provided in
+    the [Main Output Files](introduction.html#main-output-files) section.
+
+    The other files show the output of the intermediate steps.<br>
+
+    **Exonerate Initial**<br>
+    * `summary_tables.dir/exonerate_initial_summary.txt`
+      Summary of the output of the initial Exonerate screening step. Note that
+      these are unfiltered and many will not be true ERVs.
+    * `summary_tables.dir/ublast_hits_initial_summary.txt`
+      Summary of the results of running UBLAST on the initial Exonerate output.
+    * `summary_tables.dir/orfs_initial_summary.txt`
+      Summary of the results of the initial ORF identification.
+    * `summary_tables.dir/ublast_orfs_initial_summary.txt`
+      Summary of the results of running UBLAST on these ORFs.
+    * `summary_plots.dir/exonerate_initial_lengths.FMT`
+      Histogram showing the lengths of the initial Exonerate regions for each
+      gene.
+    * `summary_plots.dir/exonerate_initial_scores.FMT`
+      Histogram showing the Exonerate score of the initial Exonerate regions
+      for each gene.
+    * `summary_plots.dir/exonerate_initial_strands.FMT`
+      Bar chart showing the number of regions identified on each strand
+      in the initial Exonerate screen.
+    * `summary_plots.dir/exonerate_initial_by_sequence.FMT`
+      Histogram showing the number of ERV-like regions identified on each
+      sequence in the reference genome being screened.
+    * `summary_plots.dir/exonerate_initial_counts_per_gene.FMT`
+      Bar chart showing the number of ERV regions identified per gene in
+      the initial Exonerate screen.
+
+    **UBLAST**
+    * `summary_plots.dir/ublast_hits_alignment_length.FMT`
+      Histogram showing the lengths of the alignments of the UBLAST filtered
+      Exonerate regions and the most similar reference ORF, based on the
+      UBLAST output.
+    * `summary_plots.dir/ublast_hits_perc_similarity.FMT`
+      Histogram showing the percentage identity between the UBLAST filtered
+      Exonerate regions and the most similar reference ORF, based on the
+      UBLAST output.
+    * `summary_plots.dir/ublast_hits_perc_similarity.FMT`
+      Histogram showing the UBLAST bit score between the UBLAST filtered
+      Exonerate regions and the most similar reference ORF, based on the
+      UBLAST output.
+    * `summary_plots.dir/ublast_hits_by_match.FMT`
+      Bar chart showing the number of UBLAST filtered Exonerate regions most
+      similar to each reference ORF in the ERVsearch/ERV_db database.
+    * `summary_plots.dir/ublast_hits_per_gene.FMT`
+      Bar chart showing the number of UBLAST filtered Exonerate regions
+      identified per gene.
+
+    **ORFs**<br>
+    * `summary_plots.dir/orfs_lengths.FMT`
+      Histogram of the lengths of ORFs identified in the ERV regions.
+    * `summary_plots.dir/orfs_strands.FMT`
+      Bar chart of the strand (positive (+) or negative (-) sense) of the ORFs
+      identified in the ERV regions.
+    * `summary_plots.dir/orfs_by_gene.FMT`
+      Bar chart of the number of ORFs identified for each gene.
+
+    **UBLAST ORFs**
+    * `summary_plots.dir/ublast_orfs_alignment_length.FMT`
+      Histogram showing the lengths of the alignments of the ERV-like ORFs
+      and the most similar reference ORF, based on the UBLAST output.
+    * `summary_plots.dir/ublast_orfs_perc_similarity.FMT`
+      Histogram showing the percentage identity between the ERV-like ORFs
+      and the most similar reference ORF, based on the UBLAST output.
+    * `summary_plots.dir/ublast_orfs_bit_score.FMT`
+      Histogram showing the UBLAST bit score between the ERV-like ORFs and
+      the most similar reference ORF, based on the UBLAST output.
+    * `summary_plots.dir/ublast_orfs_by_match.FMT`
+      Bar chart showing the number of ERV-like ORFs most similar to each
+      reference ORF in the ERVsearch/ERV_db database.
+    * `summary_plots.dir/ublast_orfs_per_gene.FMT`
+      Bar chart showing the number of ERV-like ORFs identified per gene.
+
+    Input_Files
+    -----------
+    gene_bed_files.dir/GENE_merged.bed
+    ublast.dir/GENE_UBLAST.tsv
+    ORFs.dir/GENE_orfs_aa.fasta
+    ublast_orfs.dir/GENE_UBLAST.tsv
+    
+    Output_Files
+    ------------
+    `summary_tables.dir/exonerate_initial_summary.txt`<br>
+    `summary_tables.dir/ublast_hits_initial_summary.txt`<br>
+    `summary_tables.dir/orfs_initial_summary.txt`<br>
+    `summary_tables.dir/ublast_orfs_initial_summary.txt`<br>
+    `summary_plots.dir/exonerate_initial_lengths.FMT`<br>
+    `summary_plots.dir/exonerate_initial_scores.FMT`<br>
+    `summary_plots.dir/exonerate_initial_strands.FMT`<br>
+    `summary_plots.dir/exonerate_initial_by_sequence.FMT`<br>
+    `summary_plots.dir/exonerate_initial_counts_per_gene.FMT`<br>
+    `summary_plots.dir/ublast_hits_alignment_length.FMT`<br>
+    `summary_plots.dir/ublast_hits_perc_similarity.FMT`<br>
+    `summary_plots.dir/ublast_hits_by_match.FMT`<br>
+    `summary_plots.dir/ublast_hits_per_gene.FMT`<br>
+    `summary_plots.dir/orfs_lengths.FMT`<br>
+    `summary_plots.dir/orfs_strands.FMT`<br>
+    `summary_plots.dir/orfs_by_gene.FMT`<br>
+    `summary_plots.dir/ublast_orfs_alignment_length.FMT`<br>
+    `summary_plots.dir/ublast_orfs_perc_similarity.FMT`<br>
+    `summary_plots.dir/ublast_orfs_bit_score.FMT`<br>
+    `summary_plots.dir/ublast_orfs_by_match.FMT`<br>
+    `summary_plots.dir/ublast_orfs_per_gene.FMT`<br>
+    `screen_results.dir/results.tsv`<br>
+    `screen_results.dir/by_length.FMT`<br>
+    `screen_results.dir/by_genus.FMT`<br>
+    `screen_results.dir/by_group.FMT`<br>
+    `screen_results.dir/by_gene.FMT`<br>
+
+    Parameters
+    ----------
+    `[plots] dpi`
+    `[plots] format`
+    `[plots] gag_colour`
+    `[plots] pol_colour`
+    `[plots] env_colour`
+    `[plots] other_colour`
+     '''
+    funcs = ['gene_bed_files', 'ublast', 'orfs', 'ublast_orfs', "grouped"]
     inD = dict()
     outD = dict()
     j = 0
@@ -1379,7 +1498,7 @@ lt
     combined = Bed.combineBeds(infiles)
     combined.to_csv(outfiles[0], sep="\t", index=None, header=None)
     merged = Bed.mergeBeds(outfiles[0], overlap=PARAMS['regions']['maxdist'],
-                          log=log, mergenames=False)
+                           log=log, mergenames=False)
     merged.to_csv(outfiles[1], sep="\t", index=None, header=None)
     merged = merged[merged[3].str.find(",") != -1]
     merged.to_csv(outfiles[2], sep="\t", index=None, header=None)
@@ -1463,6 +1582,30 @@ def makeRegionTables(infiles, outfiles):
 @follows(mkdir("ERV_region_plots.dir"))
 @split(makeRegionTables, "ERV_region_plots.dir/*%s" % plot_format)
 def plotERVRegions(infiles, outfiles):
+    '''
+    For each region containing ORFs resembling more than one retroviral
+    gene, a plot is generated showing how these ORFs are distributed
+    on the genome relative to each other.
+
+    Each gene is shown on a different line on the y axis, the x axis is
+    chromosome co-ordinates.
+
+    Input_Files
+    -----------
+    ERV_regions.dir/ERV_regions_final.tsv
+
+    Output_Files
+    ------------
+    ERV_region_plots.dir/*FMT
+
+    Parameters
+    ----------
+    [plots] format
+    [plots] dpi
+    [plots] gag_colour
+    [plots] pol_colour
+    [plots] env_colour
+    '''
     infile = infiles[0]
     tab = pd.read_csv(infile, sep="\t")
     Regions.plotERVRegions(tab, genes, PARAMS['plots'], log)
@@ -1473,6 +1616,60 @@ def plotERVRegions(infiles, outfiles):
        [r"erv_regions_results.dir/results.tsv",
         r"erv_regions_results.dir/erv_regions.png"])
 def summariseERVRegions(infiles, outfiles):
+    """
+    Combines the results of the ERVregions steps to generate additional
+    summary files.
+
+    The `results.tsv` output file is a copy of the output of the
+    makeRegionTables functions.
+
+    This will usually have 37 columns:
+    * `name` - the final ID of the ERV region - the genes found plus an
+      integer  e.g. gag_pol_12
+    * `chrom` - chromosome
+    * `start` - start position of the ERV region
+    * `end` - end position of the ERV region
+    * `strand` - strand of the ERv region
+    * `genus` - genus of the ERV region, can be multiple genera
+      delimted by "|" if different genes had different genera
+    * for each gene screened for (usually gag, pol and env)
+        * `GENE_name` - the names of the ORFs for this gene in this
+           region
+        * `GENE_ID` - the original IDs of the ORFs for this gene in this
+           region
+        * `GENE_start` - the start position of this gene in this region
+           (genome co-ordinates)
+        * `GENE_relative_start` - the start position of this gene in this
+           region (relative to the start of the region)
+        * `GENE_end` - the end position of this gene in this region (genome
+           co-ordinates)
+        * `GENE_relative_end` - the end position of this gene in this region
+           (relative to the start of the region)
+        * `GENE_strand` - the strand for this gene in this region
+        * `GENE_match` - the closest reference retrovirus to this gene in this
+           region
+        * `GENE_group` - the group of the closest reference retrovirus to this
+           gene in this region
+        * `GENE_genus` - the genus of the closest reference retrovirus to this
+           gene in this region
+    * `orig_name` - the name of the region in the input table
+
+    A bar chart - `erv_regions_results.dir/erv_regions.FMT` is also
+    generated showing the number of ERV regions found with each combination
+    of genes.
+
+    Input Files
+    -----------
+    ERV_regions.dir/ERV_regions_final.tsv
+    Output Files
+    ------------
+    erv_regions_results.dir/results.tsv
+    erv_regions_results.dir/erv_regions.FMT
+
+    Parameters
+    ----------
+    [plots] other_colour
+    """
     shutil.copy(infiles[0], outfiles[0])
     Summary.summariseERVRegions(infiles, outfiles, genes, PARAMS['plots'], log)
 
@@ -1480,6 +1677,21 @@ def summariseERVRegions(infiles, outfiles):
 @follows(summariseERVRegions)
 @follows(plotERVRegions)
 def ERVRegions():
+    '''
+    Helper function to run all screening functions and ERVRegions functions.
+
+    Input_Files
+    -----------
+    None
+
+    Output_Files
+    ------------
+    None
+
+    Parameters
+    ----------
+    None
+    '''
     pass
 
 
@@ -1487,6 +1699,21 @@ def ERVRegions():
 @follows(Classify)
 @follows(ERVRegions)
 def full():
+    """
+    Helper function to run all functions.
+
+    Input_Files
+    -----------
+    None
+
+    Output_Files
+    ------------
+    None
+
+    Parameters
+    ----------
+    None
+    """
     pass
 
 
