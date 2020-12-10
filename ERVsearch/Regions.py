@@ -261,33 +261,48 @@ def checkOverlaps(row, genes, max_overlap):
     of either gene - for some of the reference sequences there's not a clear
     delineation between especially between gag and pol.
     '''
+    # maximum overlap parameter
     max_overlap = float(max_overlap)
     keep_genes = []
     # relative positions of start and end in the columns for each gene
     start_pos = 2
     end_pos = 3
+
+    # look at the overlap between every combiantion of genes
     for i, j in itertools.combinations(np.arange(len(genes)), 2):
+        # find the part of the row referring to this gene
         section1 = [((i * 8) + 1), ((i+1) * 8) + 1]
         section2 = [((j * 8) + 1), ((j+1) * 8) + 1]
 
+        # extract the start and end positions
         gene1_start = row[section1[0] + start_pos]
         gene1_end = row[section1[0] + end_pos]
         gene2_start = row[section2[0] + start_pos]
         gene2_end = row[section2[0] + end_pos]
 
+        # if both genes were present
         if not np.isnan(gene1_start) and not np.isnan(gene2_start):
+            # if gene1 is on the left
             if gene1_start < gene2_start:
+                # gap between the two genes
                 overlap = gene2_start - gene1_end
+            # if gene1 is on the right
             else:
                 overlap = gene1_start - gene2_end
+
+            # if there is no gap between the genes
             if overlap <= 0:
+                # find the proportion of the ORF which is inside the overlap
                 p1 = np.abs(overlap) / (gene1_end - gene1_start)
                 p2 = np.abs(overlap) / (gene2_end - gene2_start)
                 if p1 > p2 and p1 > max_overlap:
+                    # if a proportion of gene1 > max_overlap is within
+                    # the overlap exclude this gene from the row
                     row_left = row[:section1[0]]
                     row_right = row[section1[1]:]
                     row = row_left + ['NA', 'NA', float('nan'), float('nan'),
                                       "NA", "NA", "NA", "NA"] + row_right
+                    # keep track of genes which were not removed
                     keep_genes.append(genes[j])
                 elif p2 >= p1 and p2 > max_overlap:
                     row_left = row[:section2[0]]
@@ -296,9 +311,11 @@ def checkOverlaps(row, genes, max_overlap):
                                       "NA", "NA", "NA", "NA"] + row_right
                     keep_genes.append(genes[i])
                 else:
+                    # if the overlap is less than max_overlap don't do anything
                     keep_genes.append(genes[i])
                     keep_genes.append(genes[j])
             else:
+                # if they dont overlap keep both
                 keep_genes.append(genes[i])
                 keep_genes.append(genes[j])
     keep_genes = set(keep_genes)
@@ -386,24 +403,40 @@ def getRegions(infile, genes, max_overlap, log):
                 # row about this region
                 gene_results = processRegion(region, gene, merge_cols, geneD)
                 row += gene_results
+            # check none of the genes overlap by more than max_overlap
             new_row, new_genes = checkOverlaps(row, genes, max_overlap)
+            # only keep going if there is still > 1 gene left after checking
+            # overlaps
             if len(new_genes) > 1:
+                # if there are still the same number of genes as before
                 if len(new_genes) == len(region_genes):
                     row.append(region)
                     rows.append(new_row)
                 else:
+                    # if there are less genes now the index of the new region
+                    # needs to be adjusted
+
+                    # make a list of genes which are present in the right
+                    # order
                     region_genes2 = []
                     for g in region_genes:
                         if g in new_genes:
                             region_genes2.append(g)
+                    # the region will be named with these genes as a prefix
                     new_region_gene_ID = "_".join(region_genes2)
+
+                    # subtract 1 from the index for the original prefix
                     regionD[region_gene_ID] -= 1
+
+                    # add 1 to the index for the new prefix
                     regionD.setdefault(new_region_gene_ID, 0)
                     regionD[new_region_gene_ID] += 1
+
+                    # assign the new ID
                     new_region_ID = "%s_%i" % (new_region_gene_ID,
                                                regionD[new_region_gene_ID])
+                    # replace the new ID in the row
                     row[0] = new_region_ID
-                    print ("help")
             else:
                 regionD[region_gene_ID] -= 1
     # make a data frame of all the rows
