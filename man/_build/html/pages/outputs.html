@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Output Files &mdash; ERVsearch 1.0.0 documentation</title>
+  <title>Minor Output Files &mdash; ERVsearch 1.0.0 documentation</title>
   
 
   
@@ -35,7 +35,8 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Functions" href="functions.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -80,7 +81,7 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="introduction.html#prerequisites">Prerequisites</a></li>
 <li class="toctree-l1"><a class="reference internal" href="introduction.html#installation">Installation</a></li>
@@ -91,6 +92,46 @@
 <li class="toctree-l1"><a class="reference internal" href="introduction.html#main-output-files">Main Output Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Minor Output Files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#screen">Screen</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#initiate">initiate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#genometochroms">genomeToChroms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#prepdbs">prepDBs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#runexonerate">runExonerate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cleanexonerate">cleanExonerate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeoverlaps">mergeOverlaps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#makefastas">makeFastas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#renamefastas">renameFastas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#makeublastdb">makeUBLASTDb</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#runublastcheck">runUBLASTCheck</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#classifywithexonerate">classifyWithExonerate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getorfs">getORFs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#checkorfsublast">checkORFsUBLAST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#assigngroups">assignGroups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#summarisescreen">summariseScreen</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#classify">Classify</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#makegroupfastas">makeGroupFastas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#makegrouptrees">makeGroupTrees</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#drawgrouptrees">drawGroupTrees</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#makesummaryfastas">makeSummaryFastas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#makesummarytrees">makeSummaryTrees</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#drawsummarytrees">drawSummaryTrees</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#summariseclassify">summariseClassify</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ervregions">ERVRegions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#makecleanbeds">makeCleanBeds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#makecleanfastas">makeCleanFastas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#findervregions">findERVRegions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#makeregiontables">makeRegionTables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#plotervregions">plotERVRegions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#summariseervregions">summariseERVRegions</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
             
@@ -137,7 +178,7 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Output Files</li>
+      <li>Minor Output Files</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -156,8 +197,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="output-files">
-<h1>Output Files<a class="headerlink" href="#output-files" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="minor-output-files">
+<h1>Minor Output Files<a class="headerlink" href="#minor-output-files" title="Permalink to this headline">¶</a></h1>
 <p>1.<a class="reference external" href="#screen">Screen</a><br>
 2.<a class="reference external" href="#classify">Classify</a><br>
 3.<a class="reference external" href="#ervregions">ERVRegions</a><br></p>
@@ -415,6 +456,17 @@ Images files of the phylogenetic trees for each retroviral gene and genus. Diffe
 </div>
 <div class="section" id="summariseclassify">
 <h3>summariseClassify<a class="headerlink" href="#summariseclassify" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">classify_results.dir/results.tsv</span></code><br>
+Table listing the number of genes which have been collapsed into each monophyletic group in the trees in the <code class="docutils literal notranslate"><span class="pre">summary_trees.dir</span></code> directory.<br>
+Columns:</p>
+<ul class="simple">
+<li><p><strong>gene</strong> Retroviral gene for this group</p></li>
+<li><p><strong>genus</strong> Retroviral genus for this group</p></li>
+<li><p><strong>group</strong> Group ID</p></li>
+<li><p><strong>count</strong> Number of sequences in this group</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">classify_results.dir/by_gene_genus.png</span></code><br>
+Bar chart showing the number of genes which have been collapsed into each monophyletic group, organised by gene and genus.</p>
 </div>
 </div>
 <div class="section" id="ervregions">
@@ -425,6 +477,7 @@ Images files of the phylogenetic trees for each retroviral gene and genus. Diffe
 <li><p><a class="reference external" href="#findervregions">findERVRegions</a></p></li>
 <li><p><a class="reference external" href="#makeregiontables">makeRegionTables</a></p></li>
 <li><p><a class="reference external" href="#summariseervregions">summariseERVRegions</a></p></li>
+<li><p><a class="reference external" href="#plotervregions">plotERVRegions</a></p></li>
 <li><p><a class="reference external" href="#id3">ERVRegions</a></p></li>
 <li><p><a class="reference external" href="#full">Full</a></p></li>
 </ol>
@@ -458,8 +511,17 @@ Bed file with the co-ordinates of the identified regions.</p>
 <p><code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/ERV_regions_final.fasta</span></code><br>
 FASTA file of the regions in the bed file above.</p>
 </div>
+<div class="section" id="plotervregions">
+<h3>plotERVRegions<a class="headerlink" href="#plotervregions" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">ERV_region_plots.dir/*.FMT</span></code><br>
+Plots showing the distributions of ORFs resembling each retroviral gene on the genome. Each gene is shown on a different line on the y axis, the x axis is chromosome co-ordinates. One plot is generated for each multi-gene region.</p>
+</div>
 <div class="section" id="summariseervregions">
 <h3>summariseERVRegions<a class="headerlink" href="#summariseervregions" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">erv_region_results.dir/results.tsv</span></code><br>
+Table showing the overall results for regions with ORFs resembling multiple retroviral genes. This table is described in full in the <a class="reference external" href="introduction.html#main-output-files">Main Output Files</a> section.</p>
+<p><code class="docutils literal notranslate"><span class="pre">erv_region_results.dir/erv_regions.png</span></code><br>
+Bar chart showing the number of ERV regions identified with each combination of retroviral genes.</p>
 </div>
 </div>
 </div>
@@ -469,6 +531,13 @@ FASTA file of the regions in the bed file above.</p>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="functions.html" class="btn btn-neutral float-left" title="Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

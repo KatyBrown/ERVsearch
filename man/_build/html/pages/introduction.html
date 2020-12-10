@@ -102,6 +102,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="#databases">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#usage">Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#running-the-pipeline">Running the Pipeline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#parallelisation">Parallelisation</a></li>
@@ -116,6 +117,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="outputs.html">Minor Output Files</a></li>
 </ul>
 
             
@@ -201,6 +203,7 @@
 <li><p><a class="reference external" href="parameters.html">Parameters</a></p></li>
 <li><p><a class="reference external" href="functions.html">Functions</a></p></li>
 <li><p><a class="reference external" href="#main-output-files">Main Output Files</a></p></li>
+<li><p><a class="reference external" href="outputs.html">Minor Output Files</a></p></li>
 </ol>
 </div>
 <div class="section" id="prerequisites">
@@ -351,6 +354,23 @@ The paths to these files are then specified in the database section of the pipel
 </div>
 </div>
 </div>
+<div class="section" id="databases">
+<h1>Databases<a class="headerlink" href="#databases" title="Permalink to this headline">¶</a></h1>
+<p>Several sets of reference sequences are provided as part of this package.</p>
+<p>For each retroviral gene (gag, pol and env), a representative set of retroviral open reading frames has been selected from NCBI Genbank and various publications.</p>
+<p>These files are provided as:</p>
+<p><code class="docutils literal notranslate"><span class="pre">ERVsearch/ERV_db/gag.fasta</span></code> - <em>gag</em> gene amino acid sequences<br>
+<code class="docutils literal notranslate"><span class="pre">ERVsearch/ERV_db/pol.fasta</span></code> - <em>pol</em> gene amino acid sequences<br>
+<code class="docutils literal notranslate"><span class="pre">ERVsearch/ERV_db/env.fasta</span></code> - <em>env</em> gene amino acid sequences<br>
+<code class="docutils literal notranslate"><span class="pre">ERVsearch/ERV_db/all_ERVs_nt.fasta</span></code> - all ORFs as nucleotide sequences
+<code class="docutils literal notranslate"><span class="pre">ERVsearch/ERV_db/all_ERVs_aa.fasta</span></code> - all ORFs as amino acid sequences</p>
+<p>A number of subsets of sequences are also provided to use in phylogenetic analysis.</p>
+<p>These are:</p>
+<p><code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/group_phylogenies/*fasta</span></code></p>
+<p>Small groups of nucleotide sequences from the ORF database which are closely related, selected manually as representatives of these groups based on prior knowledge, sequence similarity and phylogenetic analysis. Newly identified sequences are assigned to these groups where possible.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/summary_phylogenies/*fasta</span></code>
+Broader groups of nucleotide sequences from the ORF database for each gene (gag, pol and env) and each genus (gamma, beta, delta, alpha, epsilon, lenti and spuma). Newly identified sequences are incorporated into phylogenetic trees based on these sequences, plus more closely related sequences from the <code class="docutils literal notranslate"><span class="pre">group_phylogenies</span></code> fasta files.</p>
+</div>
 <div class="section" id="usage">
 <h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="running-the-pipeline">
@@ -406,7 +426,7 @@ e.g.</p>
 </div>
 <div class="section" id="main-output-files">
 <h1>Main Output Files<a class="headerlink" href="#main-output-files" title="Permalink to this headline">¶</a></h1>
-<p>The main output files produced are as follows:</p>
+<p>The main output files produced are as follows. Many additional output files are generated, these are described <a class="reference external" href="outputs.html">here</a>.</p>
 <div class="section" id="id1">
 <h2>Screen<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">screen_results.dir/results.tsv</span></code><br>
@@ -450,12 +470,16 @@ Histograms of ORF lengths (in nucleotides) based on the results.tsv table, for t
 <p><code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_genus.FMT</span></code><br>
 Bar charts showing the number of ORFs identified for each genus and gene based on the results.tsv table.</p>
 <p><code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_group.FMT</span></code><br>
-Bar charts showing the number of ORFs identified in each small subgroup of reference sequences for each retroviral gene. ORFs assigned as genus_gene were related to a reference sequence which is not in a smaller subgroup, based on the results.tsv table.</p>
+Bar charts showing the number of ORFs identified in each small subgroup of reference sequences for each retroviral gene. ORFs assigned as genus_gene were related to a reference sequence which is not in a smaller subgroup, based on the results.tsv table.<br></p>
 <p><code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_gene.FMT</span></code><br>
-Bar chart showing the number of ORFs identified for each gene, based on the results.tsv table.</p>
+Bar chart showing the number of ORFs identified for each gene, based on the results.tsv table.<br></p>
 </div>
 <div class="section" id="id2">
 <h2>Classify<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">summary_trees.dir/*FMT</span></code> (can be png, jpg, svg or pdf depending on the <a class="reference external" href="parameters.html#format">plots_format</a> parameter).<br>
+Image files of the phylogenetic trees for each retroviral gene and genus. Different sized circles are used to show the relative size of collapsed monophyletic groups. Newly identified ERVs are highlighted.<br></p>
+<p><code class="docutils literal notranslate"><span class="pre">summary_trees.dir/*tre</span></code><br>
+Tree files in Newick format for each retroviral gene and genus combining reference and newly identified sequences. Monophyletic groups of newly identified ORF sequences are represented by a single sequence.<br></p>
 </div>
 <div class="section" id="id3">
 <h2>ERVRegions<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
@@ -483,7 +507,7 @@ Columns:</p>
 <li><p><strong>GENE_genus</strong> - the genus of the closest reference retrovirus to this gene in this region<br></p></li>
 </ul>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">orig_name</span></code> - the name of the region in the input table<br></p></li>
+<li><p><strong>orig_name</strong> - the name of the region in the input table<br></p></li>
 </ul>
 </div>
 </div>

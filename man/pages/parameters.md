@@ -260,6 +260,21 @@ Default: `#d61f54`
 Colour for *env* gene in summary plots. Default is pink
 
 
+#### other_colour
+`string` (hex colour code with #) <br>
+Default: `#33b54d`<br>
+
+
+Colour for anything which doesn't relate to a specific gene in summary plots. Default is green.
+
+
+#### match_axes
+`string` `True` or `False`<br>
+Default: `False`
+
+
+If True, when gag, pol and env are shown as subplots on the same figure they should all have the same axis limits. If they do some can be very small but they are more comparable.
+
 ### ORFs
 *Parameters for ORF identification*
 
@@ -323,6 +338,7 @@ Dots per inch for phylogenetic tree images.
 `string` `png`, `svg`, `pdf` or `jpg`<br>
 Default: `png`
 
+
 File format for phylogenetic tree images, can be svg, png, pdf or jpg
 
 
@@ -333,4 +349,12 @@ File format for phylogenetic tree images, can be svg, png, pdf or jpg
 `integer`<br>
 Default: 3000
 
+
 Maximum distance (in nucleotides) between ORFs to be defined as part of the same ERV region.
+
+##### maxoverlap
+`float`<br>
+Default: 0.5
+
+
+Maximum proportion of an ORF which can overlap with an ORF from another gene before they are filtered out.

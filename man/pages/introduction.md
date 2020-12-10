@@ -19,7 +19,7 @@ This is a updated and expanded version of the pipeline used to identify ERVs in 
 7. [Parameters](parameters.html)
 8. [Functions](functions.html)
 9. [Main Output Files](#main-output-files)
-
+10. [Minor Output Files](outputs.html)
 ## Prerequisites
 
 The pipeline is currently available for Unix-based systems only.
@@ -182,6 +182,31 @@ Currently, custom databases are only used for the initial Exonerate screen and U
 A list of chromosome names to include. The names should the names in the fasta file cropped at the first space,  e.g. "NW_006711271.1 Panthera tigris altaica isolate TaeGuk unplaced genomic scaffold" should just be listed as NW_006711271.1. The names should be listed with one name per line, are case sensitive and need to be identical to those in the fasta file. This file needs to be named keep_chroms.txt and in the working directory.
 
 
+## Databases
+Several sets of reference sequences are provided as part of this package.
+
+For each retroviral gene (gag, pol and env), a representative set of retroviral open reading frames has been selected from NCBI Genbank and various publications.
+
+These files are provided as:
+
+`ERVsearch/ERV_db/gag.fasta` - *gag* gene amino acid sequences<br>
+`ERVsearch/ERV_db/pol.fasta` - *pol* gene amino acid sequences<br>
+`ERVsearch/ERV_db/env.fasta` - *env* gene amino acid sequences<br>
+`ERVsearch/ERV_db/all_ERVs_nt.fasta` - all ORFs as nucleotide sequences
+`ERVsearch/ERV_db/all_ERVs_aa.fasta` - all ORFs as amino acid sequences
+
+A number of subsets of sequences are also provided to use in phylogenetic analysis.
+
+These are:
+
+`ERVsearch/phylogenies/group_phylogenies/*fasta`
+
+Small groups of nucleotide sequences from the ORF database which are closely related, selected manually as representatives of these groups based on prior knowledge, sequence similarity and phylogenetic analysis. Newly identified sequences are assigned to these groups where possible.
+
+`ERVsearch/phylogenies/summary_phylogenies/*fasta`
+Broader groups of nucleotide sequences from the ORF database for each gene (gag, pol and env) and each genus (gamma, beta, delta, alpha, epsilon, lenti and spuma). Newly identified sequences are incorporated into phylogenetic trees based on these sequences, plus more closely related sequences from the `group_phylogenies` fasta files.
+
+
 ## Usage
 ### Running the Pipeline
 The pipeline is implemented using the pipeline development package [ruffus](http://www.ruffus.org.uk/), (Goodstadt 2010, doi:[10.1093/bioinformatics/btq524](https://doi.org/10.1093/bioinformatics/btq524)).
@@ -243,7 +268,7 @@ ERVsearch --target_tasks full -v 5
 ```
 
 ## Main Output Files
-The main output files produced are as follows:
+The main output files produced are as follows. Many additional output files are generated, these are described [here](outputs.html).
 
 ### Screen
 `screen_results.dir/results.tsv`<br>
@@ -289,12 +314,17 @@ Histograms of ORF lengths (in nucleotides) based on the results.tsv table, for t
 Bar charts showing the number of ORFs identified for each genus and gene based on the results.tsv table.
 
 `screen_results.dir/by_group.FMT`<br>
-Bar charts showing the number of ORFs identified in each small subgroup of reference sequences for each retroviral gene. ORFs assigned as genus_gene were related to a reference sequence which is not in a smaller subgroup, based on the results.tsv table.
+Bar charts showing the number of ORFs identified in each small subgroup of reference sequences for each retroviral gene. ORFs assigned as genus_gene were related to a reference sequence which is not in a smaller subgroup, based on the results.tsv table.<br>
 
 `screen_results.dir/by_gene.FMT`<br>
-Bar chart showing the number of ORFs identified for each gene, based on the results.tsv table.
+Bar chart showing the number of ORFs identified for each gene, based on the results.tsv table.<br>
 
 ### Classify
+`summary_trees.dir/*FMT` (can be png, jpg, svg or pdf depending on the [plots_format](parameters.html#format) parameter).<br>
+Image files of the phylogenetic trees for each retroviral gene and genus. Different sized circles are used to show the relative size of collapsed monophyletic groups. Newly identified ERVs are highlighted.<br>
+
+`summary_trees.dir/*tre`<br>
+Tree files in Newick format for each retroviral gene and genus combining reference and newly identified sequences. Monophyletic groups of newly identified ORF sequences are represented by a single sequence.<br>
 
 ### ERVRegions
 `erv_regions_results.dir/results.tsv`<br>
@@ -317,5 +347,4 @@ Columns:
     * **GENE_match** - the closest reference retrovirus to this gene in this region<br>
     * **GENE_group** - the group of the closest reference retrovirus to this gene in this region<br>
     * **GENE_genus** - the genus of the closest reference retrovirus to this gene in this region<br>
-* `orig_name` - the name of the region in the input table<br>
-
+* **orig_name** - the name of the region in the input table<br>

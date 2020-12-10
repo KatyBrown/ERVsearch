@@ -35,16 +35,16 @@ NB: Where `GENE` is specified in a file path one file will be created for each g
 ### initiate
 
 **Input Files** <br>
-`pipeline.ini`<br>
+[`pipeline.ini`](introduction.html#required-input-files)<br>
 
 **Output Files**<br>
-`init.txt`<br>
+[`init.txt`](outputs.html#initiate)<br>
 
 **Parameters**<br>
-`[genome] file`<br>
-`[paths] path_to_ERVsearch`<br>
-`[paths] path_to_usearch`<br>
-`[paths] path_to_exonerate`<br>
+[`[genome] file`](parameters.html#file)<br>
+[`[paths] path_to_ERVsearch`](parameters.html#path-to-ervsearch)<br>
+[`[paths] path_to_usearch`](parameters.html#path-to-usearch)<br>
+[`[paths] path_to_exonerate`](parameters.html#path-to-exonerate)<br>
 
 Initialises the pipeline and checks that the required parameters in the pipeline.ini are set and valid and that the required software is in your $PATH.
 
@@ -59,18 +59,18 @@ Checks that:
 
 ### genomeToChroms
 
-**Input Files** 
-`[genome] file`<br>
-`keep_chroms.txt`<br>
+**Input Files**<br>
+[`[genome] file`](introduction.html#required-input-files)<br>
+[`keep_chroms.txt`](introduction.html#optional-input-files)<br>
 
 **Output Files**<br>
-`host_chromosomes.dir/*fasta`<br>
+[`host_chromosomes.dir/*fasta`](outputs.html#genometochroms)<br>
 
 **Parameters**<br>
-`[genome] file`<br>
-`[genomesplits] split`<br>
-`[genomesplits] split_n`<br>
-`[genomesplits] force`<br>
+[`[genome] file`](parameters.html#file)<br>
+[`[genomesplits] split`](parameters.html#split)<br>
+[`[genomesplits] split_n`](parameters.html#split_n)<br>
+[`[genomesplits] force`](parameters.html#force)<br>
 
 Splits the host genome provided by the user into FASTA files of a suitable size to run Exonerate efficiently.
 
@@ -92,13 +92,13 @@ This function generates a series of fasta files which are stored in the host_chr
 None<br>
 
 **Output Files** <br>
-`gene_databases.dir/GENE.fasta`<br>
+[`gene_databases.dir/GENE.fasta`](outputs.html#prepdbs)<br>
 
 **Parameters**<br>
-`[database] use_custom_db`<br>
-`[database] gag`<br>
-`[database] pol`<br>
-`[database] env`<br>
+[`[database] use_custom_db`](parameters.html#use-custom-db)<br>
+[`[database] gag`](parameters.html#gag)<br>
+[`[database] pol`](parameters.html#pol)<br>
+[`[database] env`](parameters.html#env)<br>
 
  Retrieves the gag, pol and env amino acid sequence database fasta files and puts a copy of each gene_databases.dir directory.
     
@@ -107,14 +107,14 @@ None<br>
 ### runExonerate
 
 **Input Files** <br>
-`gene_databases.dir/GENE.fasta`<br>
-`host_chromosomes.dir/*fasta`<br>
+[`gene_databases.dir/GENE.fasta`](outputs.html#prepdbs)<br>
+[`host_chromosomes.dir/*fasta`](outputs.html#genometochroms)<br>
 
 **Output Files** <br>
-`raw_exonerate_output.dir/GENE_*.tsv`<br>
+[`raw_exonerate_output.dir/GENE_*.tsv`](outputs.html#runexonerate)<br>
 
 **Parameters**<br>
-`[paths] path_to_exonerate`<br>
+[`[paths] path_to_exonerate`](parameters.html#path-to-exonerate)<br>
 
 
 Runs the `protein2dna` algorithm in the [Exonerate software package](https://www.ebi.ac.uk/about/vertebrate-genomics/software/exonerate-manual) with the host chromosomes (or other regions) in `host_chromosomes.dir` as target sequences and the FASTA files from prepDBs as the query sequences.
@@ -126,15 +126,15 @@ This step is carried out with low stringency as results are later filtered using
 ### cleanExonerate
 
 **Input Files** <br>
-`raw_exonerate_output.dir/GENE_*.tsv`<br>
+[`raw_exonerate_output.dir/GENE_*.tsv`](outputs.html#runexonerate)<br>
 
 **Output_Files**<br>
-`clean_exonerate_output.dir/GENE_*_unfiltered.tsv`<br>
-`clean_exonerate_output.dir/GENE_*_filtered.tsv`<br>
-`clean_exonerate_output.dir/GENE_*.bed`<br>
+[`clean_exonerate_output.dir/GENE_*_unfiltered.tsv`](outputs.html#cleanexonerate)<br>
+[`clean_exonerate_output.dir/GENE_*_filtered.tsv`](outputs.html#cleanexonerate)<br>
+[`clean_exonerate_output.dir/GENE_*.bed`](outputs.html#cleanexonerate)<br>
 
 **Parameters**<br>
-`[exonerate] min_hit_length`<br>
+[`[exonerate] min_hit_length`](parameters.html#min-hit-length)<br>
 
 Filters and cleans up the Exonerate output.
 * Converts the raw Exonerate output files into dataframes - GENE_unfiltered.tsv
@@ -146,14 +146,14 @@ Filters and cleans up the Exonerate output.
 ### mergeOverlaps
 
 **Input Files** <br>
-`clean_exonerate_output.dir/GENE_*.bed`<br>
+[`clean_exonerate_output.dir/GENE_*.bed`](outputs.html#cleanexonerate)<br>
 
 **Output_Files** <br>
-`gene_bed_files.dir/GENE_all.bed`,<br>
-`gene_bed_files.dir/GENE_merged.bed`<br>
+[`gene_bed_files.dir/GENE_all.bed`](outputs.html#mergeoverlaps)<br>
+[`gene_bed_files.dir/GENE_merged.bed`](outputs.html#mergeoverlaps)<br>
 
 **Parameters**<br>
-`[exonerate] overlap`<br>
+[`[exonerate] overlap`](parameters.html#overlap)<br>
 
 Merges the output bed files for individual sections of the input genome into a single bed file.
 
@@ -164,11 +164,11 @@ If there is a gap of less than `exonerate_overlap` between the regions they will
 ### makeFastas
 
 **Input Files**<br>
-`gene_bed_files.dir/GENE_merged.bed`<br>
-`genome.fa`<br>
+[`gene_bed_files.dir/GENE_merged.bed`](outputs.html#mergeoverlaps)<br>
+[`genome.fa`](introduction.html#required-input-files)<br>
 
 **Output Files** <br>
-`gene_fasta_files.dir/GENE_merged.fasta`<br>
+[`gene_fasta_files.dir/GENE_merged.fasta`](outputs.html#makefastas)<br>
 
 **Parameters**<br>
 None<br>
@@ -179,10 +179,10 @@ These are extracted from the host chromosomes using [bedtools getfasta](https://
 ### renameFastas
 
 **Input Files** <br>
-`gene_fasta_files.dir/GENE_merged.fasta`<br>
+[`gene_fasta_files.dir/GENE_merged.fasta`](outputs.html#makefastas)<br>
 
 **Output Files** <br>
-`gene_fasta_files.dir/GENE_merged_renamed.fasta`<br>
+[`gene_fasta_files.dir/GENE_merged_renamed.fasta`](outputs.html#renamefastas)<br>
 
 **Parameters**<br>
 None<br>
@@ -192,32 +192,32 @@ None<br>
 ### makeUBLASTDb
 
 **Input Files**<br>
- `gene_databases.dir/GENE.fasta`<br>
+[`gene_databases.dir/GENE.fasta`](outputs.html#prepdbs)<br>
 
 **Output Files** <br>
-`UBLAST_db.dir/GENE_db.udb`<br>
+[`UBLAST_db.dir/GENE_db.udb`](outputs.html#makeublastdb)<br>
 
 **Parameters**<br>
-`[paths] path_to_ublast`<br>
+[`[paths] path_to_usearch`](parameters.html#path-to-usearch)<br>
 
 [USEARCH](https://www.drive5.com/usearch/) requires an indexed database of query sequences to run. This function generates this database for the three gene amino acid fasta files used to screen the genome.
 
 ### runUBLASTCheck
 
 **Input Files**<br>
-`UBLAST_db.dir/GENE_db.udb`<br>
-`gene_fasta_files.dir/GENE_merged.fasta`<br>
+[`UBLAST_db.dir/GENE_db.udb`](outputs.html#makeublastdb)<br>
+[`gene_fasta_files.dir/GENE_merged_renamed.fasta`](outputs.html#renamefastas)<br>
 
 **Output Files**<br>
-`ublast.dir/GENE_UBLAST_alignments.txt`<br>
-`ublast.dir/GENE_UBLAST.tsv`<br>
-`ublast.dir/GENE_filtered_UBLAST.fasta`<br>
+[`ublast.dir/GENE_UBLAST_alignments.txt`](outputs.html#runublastcheck)<br>
+[`ublast.dir/GENE_UBLAST.tsv`](outputs.html#runublastcheck)<br>
+[`ublast.dir/GENE_filtered_UBLAST.fasta`](outputs.html#runublastcheck)<br>
 
 **Parameters**<br>
-`[paths] path_to_usearch`<br>
-`[usearch] min_id`<br>
-`[usearch] min_hit_length`<br>
-`[usearch] min_coverage`<br>
+[`[paths] path_to_usearch`](parameters.html#path-to-usearch)<br>
+[`[usearch] min_id`](parameters.html#min-id)<br>
+[`[usearch] min_hit_length`](parameters.html#min-hit-length)<br>
+[`[usearch] min_coverage`](parameters.html#min-coverage)<br>
 
  ERV regions in the fasta files generated by makeFasta are compared to the ERV amino acid database files for a second time, this time using USEARCH (https://www.drive5.com/usearch/). Using both of these tools reduces the number of false positives.
 
@@ -228,17 +228,17 @@ The raw output of running UBLAST against the target sequences is saved in GENE_U
 ### classifyWithExonerate
 
 **Input Files**<br>
-`ublast.dir/GENE_filtered_UBLAST.fasta`<br>
-`ERVsearch/ERV_db/all_ERVs_nt.fasta`<br>
+[`ublast.dir/GENE_filtered_UBLAST.fasta`](outputs.html#runublastcheck)<br>
+[`ERVsearch/ERV_db/all_ERVs_nt.fasta`](introduction.html#databases)<br>
 
 **Output Files**<br>
-`exonerate_classification.dir/GENE_all_matches_exonerate.tsv`<br>
-`exonerate_classification.dir/GENE_best_matches_exonerate.tsv`<br>
-`exonerate_classification.dir/GENE_refiltered_matches_exonerate.fasta`<br>
+[`exonerate_classification.dir/GENE_all_matches_exonerate.tsv`](outputs.html#classifywithexonerate)<br>
+[`exonerate_classification.dir/GENE_best_matches_exonerate.tsv`](outputs.html#classifywithexonerate)<br>
+[`exonerate_classification.dir/GENE_refiltered_matches_exonerate.fasta`](outputs.html#classifywithexonerate)<br>
 
 **Parameters**<br>
-`[paths] path_to_exonerate`<br>
-`[exonerate] min_score`<br>
+[`[paths] path_to_exonerate`](parameters.html#path-to-exonerate)<br>
+[`[exonerate] min_score`](parameters.html#min-score)<br>
 
 Runs the Exonerate ungapped algorithm with each ERV region in the fasta files generated by makeFasta as queries and the all_ERVs_nt.fasta fasta file as a target, to detect which known retrovirus is most similar to each newly identified ERV region. Regions which don't meet a minimum score threshold (`exonerate_min_score`) are filtered out.
 
@@ -251,16 +251,16 @@ against one of the genes of the same type (*gag*, *pol* or *env*) in the databas
 ### getORFs
 
 **Input Files**<br>
-`exonerate_classification.dir/GENE_refiltered_matches_exonerate.fasta`<br>
+[`exonerate_classification.dir/GENE_refiltered_matches_exonerate.fasta`]<br>
 
 **Output Files**<br>
-`ORFs.dir/GENE_orfs_raw.fasta`<br>
-xs`ORFs.dir/GENE_orfs_nt.fasta`<br>
-`ORFs.dir/GENE_orfs_aa.fasta`<br>
+[`ORFs.dir/GENE_orfs_raw.fasta`]<br>
+[`ORFs.dir/GENE_orfs_nt.fasta`]<br>
+[`ORFs.dir/GENE_orfs_aa.fasta`]<br>
 
 **Parameters**<br>
-`[orfs] translation_table`<br>
-`[orfs] min_orf_len`<br>
+[`[orfs] translation_table`]<br>
+[`[orfs] min_orf_len`]<br>
 
 Finds the longest open reading frame in each of the ERV regions in the filtered output table.
 
@@ -275,19 +275,19 @@ The raw transeq output, the nucleotide sequences of the ORFs and the amino acid 
 ### checkORFsUBLAST
 
 **Input Files**<br>
-`ORFs.dir/GENE_orfs_nt.fasta`<br>
-`UBLAST_dbs.dir/GENE_db.udb`<br>
+[`ORFs.dir/GENE_orfs_nt.fasta`]<br>
+[`UBLAST_dbs.dir/GENE_db.udb`]<br>
 
 **Output Files**<br>
-`ublast_orfs.dir/GENE_UBLAST_alignments.txt`<br>
-`ublast_orfs.dir/GENE_UBLAST.tsv`<br>
-`ublast_orfs.dir/GENE_filtered_UBLAST.fasta`<br>
+[`ublast_orfs.dir/GENE_UBLAST_alignments.txt`]<br>
+[`ublast_orfs.dir/GENE_UBLAST.tsv`]<br>
+[`ublast_orfs.dir/GENE_filtered_UBLAST.fasta`]<br>
 
 **Parameters**<br>
-`[paths] path_to_usearch`<br>
-`[usearch] min_id`<br>
-`[usearch] min_hit_length`<br>
-`[usearch] min_coverage`<br>
+[`[paths] path_to_usearch`]<br>
+[`[usearch] min_id`]<br>
+[`[usearch] min_hit_length`]<br>
+[`[usearch] min_coverage`]<br>
 
 
 ERV ORFs in the fasta files generated by the ORFs function are compared to the original ERV amino acid files using UBLAST. This allows any remaining sequences with poor similarity to known ERVs to be filtered out.
@@ -299,14 +299,14 @@ The raw output of running UBLAST against the target sequences is saved in GENE_U
 ### assignGroups
 
 **Input Files**<br>
-`ublast_orfs.dir/GENE_UBLAST.tsv`<br>
-`ERVsearch/ERV_db/convert.tsv`<br>
+[`ublast_orfs.dir/GENE_UBLAST.tsv`]<br>
+[`ERVsearch/ERV_db/convert.tsv`]<br>
 
 **Output Files**<br>
-`grouped.dir/GENE_groups.tsv`<br>
+[`grouped.dir/GENE_groups.tsv`]<br>
 
 **Parameters**<br>
-`[paths] path_to_ERVsearch`<br>
+[`[paths] path_to_ERVsearch`]<br>
 
 Many of the retroviruses in the input database all_ERVs_nt.fasta have been classified into groups based on sequence similarity, prior knowledge and phylogenetic clustering.  Some sequences don't fall into any well defined group, in these cases they are just assigned to a genus, usually based on prior knowledge. The information about these groups is stored in the provided file ERVsearch/ERV_db/convert.tsv.
 
@@ -317,49 +317,48 @@ The output table is also  tidied up to include the UBLAST output, chromosome, OR
 ### summariseScreen
 
 **Input Files**<br>
-gene_bed_files.dir/GENE_merged.bed
-ublast.dir/GENE_UBLAST.tsv
-ORFs.dir/GENE_orfs_aa.fasta
-ublast_orfs.dir/GENE_UBLAST.tsv
+[`gene_bed_files.dir/GENE_merged.bed`]<br>
+[`ublast.dir/GENE_UBLAST.tsv`]<br>
+[`ORFs.dir/GENE_orfs_aa.fasta`]<br>
+[`ublast_orfs.dir/GENE_UBLAST.tsv`]<br>
 
 **Output Files**<br>
-FMT can be png, svg, pdf, jpg depending on the `plot_format` parameter
+FMT can be png, svg, pdf, jpg depending on the `plot_format` parameter<br>
 
-
-`summary_tables.dir/exonerate_initial_summary.txt`<br>
-`summary_tables.dir/ublast_hits_initial_summary.txt`<br>
-`summary_tables.dir/orfs_initial_summary.txt`<br>
-`summary_tables.dir/ublast_orfs_initial_summary.txt`<br>
-`summary_plots.dir/exonerate_initial_lengths.FMT`<br>
-`summary_plots.dir/exonerate_initial_scores.FMT`<br>
-`summary_plots.dir/exonerate_initial_strands.FMT`<br>
-`summary_plots.dir/exonerate_initial_by_sequence.FMT`<br>
-`summary_plots.dir/exonerate_initial_counts_per_gene.FMT`<br>
-`summary_plots.dir/ublast_hits_alignment_length.FMT`<br>
-`summary_plots.dir/ublast_hits_perc_similarity.FMT`<br>
-`summary_plots.dir/ublast_hits_by_match.FMT`<br>
-`summary_plots.dir/ublast_hits_per_gene.FMT`<br>
-`summary_plots.dir/orfs_lengths.FMT`<br>
-`summary_plots.dir/orfs_strands.FMT`<br>
-`summary_plots.dir/orfs_by_gene.FMT`<br>
-`summary_plots.dir/ublast_orfs_alignment_length.FMT`<br>
-`summary_plots.dir/ublast_orfs_perc_similarity.FMT`<br>
-`summary_plots.dir/ublast_orfs_bit_score.FMT`<br>
-`summary_plots.dir/ublast_orfs_by_match.FMT`<br>
-`summary_plots.dir/ublast_orfs_per_gene.FMT`<br>
-`screen_results.dir/results.tsv`<br>
-`screen_results.dir/by_length.FMT`<br>
-`screen_results.dir/by_genus.FMT`<br>
-`screen_results.dir/by_group.FMT`<br>
-`screen_results.dir/by_gene.FMT`<br>
+[`summary_tables.dir/exonerate_initial_summary.txt`]<br>
+[`summary_tables.dir/ublast_hits_initial_summary.txt`]<br>
+[`summary_tables.dir/orfs_initial_summary.txt`]<br>
+[`summary_tables.dir/ublast_orfs_initial_summary.txt`]<br>
+[`summary_plots.dir/exonerate_initial_lengths.FMT`]<br>
+[`summary_plots.dir/exonerate_initial_scores.FMT`]<br>
+[`summary_plots.dir/exonerate_initial_strands.FMT`]<br>
+[`summary_plots.dir/exonerate_initial_by_sequence.FMT`]<br>
+[`summary_plots.dir/exonerate_initial_counts_per_gene.FMT`]<br>
+[`summary_plots.dir/ublast_hits_alignment_length.FMT`]<br>
+[`summary_plots.dir/ublast_hits_perc_similarity.FMT`]<br>
+[`summary_plots.dir/ublast_hits_by_match.FMT`]<br>
+[`summary_plots.dir/ublast_hits_per_gene.FMT`]<br>
+[`summary_plots.dir/orfs_lengths.FMT`]<br>
+[`summary_plots.dir/orfs_strands.FMT`]<br>
+[`summary_plots.dir/orfs_by_gene.FMT`]<br>
+[`summary_plots.dir/ublast_orfs_alignment_length.FMT`]<br>
+[`summary_plots.dir/ublast_orfs_perc_similarity.FMT`]<br>
+[`summary_plots.dir/ublast_orfs_bit_score.FMT`]<br>
+[`summary_plots.dir/ublast_orfs_by_match.FMT`]<br>
+[`summary_plots.dir/ublast_orfs_per_gene.FMT`]<br>
+[`screen_results.dir/results.tsv`]<br>
+[`screen_results.dir/by_length.FMT`]<br>
+[`screen_results.dir/by_genus.FMT`]<br>
+[`screen_results.dir/by_group.FMT`]<br>
+[`screen_results.dir/by_gene.FMT`]<br>
 
 **Parameters**<br>
-`[plots] dpi`<br>
-`[plots] format`<br>
-`[plots] gag_colour`<br>
-`[plots] pol_colour`<br>
-`[plots] env_colour`<br>
-`[plots] other_colour`<br>
+[`[plots] dpi`]<br>
+[`[plots] format`]<br>
+[`[plots] gag_colour`]<br>
+[`[plots] pol_colour`]<br>
+[`[plots] env_colour`]<br>
+[`[plots] other_colour`]<br>
 
 Generates a series of summary plots and tables showing the results of running the screening functions.
 
@@ -452,17 +451,17 @@ Helper function to run all screening functions (all functions prior to this poin
 ### makeGroupFastas
 
 **Input Files**<br>
-`grouped.dir/GENE_groups.tsv`<br>
-`ERVsearch/phylogenies/group_phylogenies/*fasta`<br>
-`ERVsearch/phylogenies/summary_phylogenies/*fasta`<br>
-`ERVsearch/phylogenies/outgroups.tsv`<br>
+[`grouped.dir/GENE_groups.tsv`]<br>
+[`ERVsearch/phylogenies/group_phylogenies/*fasta`]<br>
+[`ERVsearch/phylogenies/summary_phylogenies/*fasta`]<br>
+[`ERVsearch/phylogenies/outgroups.tsv`]<br>
 
 **Output Files**<br>
-`group_fastas.dir/GENE_(.*)_GENUS.fasta`<br>
-`group_fastas.dir/GENE_(.*)_GENUS_A.fasta`<br>
+[`group_fastas.dir/GENE_(.*)_GENUS.fasta`]<br>
+[`group_fastas.dir/GENE_(.*)_GENUS_A.fasta`]<br>
 
 **Parameters**<br>
-`[paths] path_to_ERVsearch`<br>
+[`[paths] path_to_ERVsearch`]<br>
 
 Two sets of reference fasta files are available (files are stored in `ERVsearch/phylogenies/group_phylogenies` and `ERVsearch/phylogenies/summary_phylogenies`)
 
@@ -482,10 +481,10 @@ The files are aligned using the MAFFT fftns algorithm https://mafft.cbrc.jp/alig
 ### makeGroupTrees
 
 **Input Files**<br>
-`group_fastas.dir/GENE_(.*_)GENUS_A.fasta`<br>
+[`group_fastas.dir/GENE_(.*_)GENUS_A.fasta`]<br>
 
 **Output Files**<br>
-`group_trees.dir/GENE_(.*_)GENUS.tre`<br>
+[`group_trees.dir/GENE_(.*_)GENUS.tre`]<br>
 
 **Parameters**<br>
 None<br>
@@ -495,21 +494,21 @@ Builds a phylogenetic tree, using the FastTree2 algorithm (http://www.microbeson
 ### drawGroupTrees
 
 **Input Files**<br>
-`group_trees.dir/GENE_(.*_)GENUS.tre`<br>
+[`group_trees.dir/GENE_(.*_)GENUS.tre`]<br>
 
 **Output Files**<br>
-`group_trees.dir/GENE_(.*_)GENUS.FMT` (png, svg, pdf or jpg)<br>
+[`group_trees.dir/GENE_(.*_)GENUS.FMT`] (png, svg, pdf or jpg)<br>
 
 **Parameters**<br>
-`[plots] gag_colour`<br>
-`[plots] pol_colour`<br>
-`[plots] env_colour`<br>
-`[trees] use_gene_colour`<br>
-`[trees] maincolour`<br>
-`[trees] highlightcolour`<br>
-`[trees] outgroupcolour`<br>
-`[trees] dpi`<br>
-`[trees] format`<br>
+[`[plots] gag_colour`]<br>
+[`[plots] pol_colour`]<br>
+[`[plots] env_colour`]<br>
+[`[trees] use_gene_colour`]<br>
+[`[trees] maincolour`]<br>
+[`[trees] highlightcolour`]<br>
+[`[trees] outgroupcolour`]<br>
+[`[trees] dpi`]<br>
+[`[trees] format`]<br>
 
 Generates an image file for each file generated in the makeGroupTrees step, using ete3 (http://etetoolkit.org). Newly identified sequences are labelled as "~" and shown in a different colour.
 
@@ -520,17 +519,17 @@ The output file DPI can be specified using `trees_dpi` and the format (which can
 ### makeSummaryFastas
 
 **Input Files**<br>
-`group_fastas.dir/GENE_(.*_)GENUS.fasta`<br>
-`group_trees.dir/GENE_(*_)GENUS.tre`<br>
-`ERVsearch/phylogenies/summary_phylogenies/GENE_GENUS.fasta`<br>
-`ERVsearch/phylogenies/group_phylogenies/(.*)_GENUS_GENE.fasta`<br>
+[`group_fastas.dir/GENE_(.*_)GENUS.fasta`]<br>
+[`group_trees.dir/GENE_(*_)GENUS.tre`]<br>
+[`ERVsearch/phylogenies/summary_phylogenies/GENE_GENUS.fasta`]<br>
+[`ERVsearch/phylogenies/group_phylogenies/(.*)_GENUS_GENE.fasta`]<br>
 
 **Output Files**<br>
-`summary_fastas.dir/GENE_GENUS.fasta`<br>
-`summary_fastas.dir/GENE_GENUS.tre`<br>
+[`summary_fastas.dir/GENE_GENUS.fasta`]<br>
+[`summary_fastas.dir/GENE_GENUS.tre`]<br>
 
 **Parameters**<br>
-`[paths] path_to_ERVsearch`<br>
+[`[paths] path_to_ERVsearch`]<br>
 
 Based on the group phylogenetic trees generated in makeGroupTrees, monophyletic groups of newly idenified ERVs are identified. For each of these groups, a single sequence (the longest) is selected as representative. The representative sequences are combined with the FASTA files in `ERVsearch/phylogenies/summary_phylogenies`, which contain representative sequences for each retroviral gene and genus. These are extended to include further reference sequences from the same small group as the newly identified sequences.
 
@@ -551,10 +550,10 @@ The files are aligned using the MAFFT fftns algorithm https://mafft.cbrc.jp/alig
 ### makeSummaryTrees
 
 **Input Files**<br>
-`summary_fastas.dir/GENE_GENUS_A.fasta`<br>
+[`summary_fastas.dir/GENE_GENUS_A.fasta`]<br>
 
 **Output Files**<br>
-`summary_trees.dir/GENE_GENUS.tre`<br>
+[`summary_trees.dir/GENE_GENUS.tre`]<br>
 
 **Parameters**<br>
 None<br>
@@ -564,21 +563,21 @@ Builds a phylogenetic tree, using the FastTree2 algorithm (http://www.microbeson
 ### drawSummaryTrees
 
 **Input Files**<br>
-`summary_trees.dir/GENE_GENUS.tre`<br>
+[`summary_trees.dir/GENE_GENUS.tre`]<br>
 
 **Output Files**<br>
-`summary_trees.dir/GENE_GENUS.FMT` (FMT = png, svg, pdf or jpg)<br>
+[`summary_trees.dir/GENE_GENUS.FMT`] (FMT = png, svg, pdf or jpg)<br>
 
 **Parameters**<br>
-`[plots] gag_colour`<br>
-`[plots] pol_colour`<br>
-`[plots] env_colour`<br>
-`[trees] use_gene_colour`<br>
-`[trees] maincolour`<br>
-`[trees] highlightcolour`<br>
-`[trees] outgroupcolour`<br>
-`[trees] dpi`<br>
-`[trees] format`<br>
+[`[plots] gag_colour`]<br>
+[`[plots] pol_colour`]<br>
+[`[plots] env_colour`]<br>
+[`[trees] use_gene_colour`]<br>
+[`[trees] maincolour`]<br>
+[`[trees] highlightcolour`]<br>
+[`[trees] outgroupcolour`]<br>
+[`[trees] dpi`]<br>
+[`[trees] format`]<br>
 
 Generates an image file for each file generated in the makeSummaryTrees step, using ete3 (http://etetoolkit.org). Newly identified sequences are labelled as "~" and shown in a different colour. Monophyletic groups of newly identified ERVs have been collapsed (by choosing a single representative sequence) and the number of sequences in the group is added to the label and represented by the size of the node tip.
 
@@ -589,12 +588,12 @@ The output file DPI can be specified using `trees_dpi` and the format (which can
 ### summariseClassify
 
 **Input Files**<br>
-`summary_fastas.dir/GENE_GENUS.fasta`<br>
-`summary_trees.dir/GENE_GENUS.tre`<br>
+[`summary_fastas.dir/GENE_GENUS.fasta`<br>]
+[`summary_trees.dir/GENE_GENUS.tre`<br>]
 
 **Output Files**<br>
-`classify_results.dir/results.tsv`<br>
-`classify_results.dir/by_gene_genus.FMT` (png, svg, pdf or jpg)<br>
+[`classify_results.dir/results.tsv`]<br>
+[`classify_results.dir/by_gene_genus.FMT`] (png, svg, pdf or jpg)<br>
 
 **Parameters**<br>
 None
@@ -622,17 +621,18 @@ Identifies regions of the genome containing ORFs resembling more than one differ
 2. [makeCleanFastas](#makecleanfastas)
 3. [findERVRegions](#findervregions)
 4. [makeRegionTables](#makeregiontables)
-5. [summariseERVRegions](#summariseervregions)
-6. [ERVRegions](#id3)
-7. [Full](#full)
+5. [plotERVRegions](#plotervregions)
+6. [summariseERVRegions](#summariseervregions)
+7. [ERVRegions](#id3)
+8. [Full](#full)
 
 ### makeCleanBeds
 
 **Input Files**<br>
-`grouped.dir/GENE_groups.tsv`<br>
+[`grouped.dir/GENE_groups.tsv`]<br>
 
 **Output Files**<br>
-`clean_beds.dir/GENE.bed`<br>
+[`clean_beds.dir/GENE.bed`]<br>
 
 **Parameters**<br>
 None<br>
@@ -643,11 +643,11 @@ Generates a bed file for each gene which contains the co-ordinates of the ORFs w
 ### makeCleanFastas
 
 **Input Files**<br>
-`clean_beds.dir/GENE.bed`<br>
-`genome.fa`<br>
+[`clean_beds.dir/GENE.bed`]<br>
+[`genome.fa`]<br>
 
 **Output Files**<br>
-`clean_fastas.dir/GENE.fasta`<br>
+[`clean_fastas.dir/GENE.fasta`]<br>
 
 **Parameters**<br>
 None<br>
@@ -657,16 +657,16 @@ Fasta files are generated containing the sequences of the regions listed by make
 ### findERVRegions
 
 **Input Files**<br>
-`clean_fastas.dir/*.fasta`<br>
+[`clean_fastas.dir/*.fasta`]<br>
 
 **Output Files**<br>
-`ERV_regions.dir/all_ORFs.bed`<br>
-`ERV_regions.dir/all_regions.bed`<br>
-`ERV_regions.dir/multi_gene_regions.bed`<br>
-`ERV_regions.dir/regions.fasta`<br>
+[`ERV_regions.dir/all_ORFs.bed`]<br>
+[`ERV_regions.dir/all_regions.bed`]<br>
+[`ERV_regions.dir/multi_gene_regions.bed`]<br>
+[`ERV_regions.dir/regions.fasta`]<br>
 
 **Parameters**<br>
-`[regions] maxdist`<br>
+[`[regions] maxdist`]<br>
 
 Combines the files containng the ORF regions for the different retroviral genes and merges any regions which are within `regions_maxdist` of each other to find larger regions containing multiple genes.
 The `all_ORFs.bed` output file is the concatenated and sorted bed files, `all_regions.bed `contains the merged regions with any ORFs within regions_maxdist of each other (end to end) combined, plus all regions with a single ORF, generated from all_regions.bed using bedtools merge (https://bedtools.readthedocs.io/en/latest/content/tools/merge.html). The name, strand and score columns are concatenated for merged regions, delimited with a ",".
@@ -675,14 +675,14 @@ The `all_ORFs.bed` output file is the concatenated and sorted bed files, `all_re
 ### makeRegionTables
 
 **Input Files**<br>
-`ERV_regions.dir/multi_gene_regions.bed`<br>
-`grouped.dir/*_groups.tsv`<br>
-`genome.fa`<br>
+[`ERV_regions.dir/multi_gene_regions.bed`]<br>
+[`grouped.dir/*_groups.tsv`]<br>
+[`genome.fa`]<br>
 
 **Output Files**
-`ERV_regions.dir/ERV_regions_final.tsv`<br>
-`ERV_regions.dir/ERV_regions_final.bed`<br>
-`ERV_regions.dir/ERV_regions_final.fasta`<br>
+[`ERV_regions.dir/ERV_regions_final.tsv`]<br>
+[`ERV_regions.dir/ERV_regions_final.bed`]<br>
+[`ERV_regions.dir/ERV_regions_final.fasta`]<br>
 
 **Parameters**<br>
 None<br>
@@ -718,17 +718,17 @@ A bed file (`ERV_regions_final.bed`) is generated with the co-ordinates of the i
 
 ### plotERVRegions
 **Input_Files**<br>
-`ERV_regions.dir/ERV_regions_final.tsv`<br>
+[`ERV_regions.dir/ERV_regions_final.tsv`]<br>
 
 **Output_Files**<br>
-`ERV_region_plots.dir/*FMT`<br>
+[`ERV_region_plots.dir/*FMT`]<br>
 
 **Parameters**<br>
-`[plots] format`<br>
-`[plots] dpi`<br>
-`[plots] gag_colour`<br>
-`[plots] pol_colour`<br>
-`[plots] env_colour`<br>
+[`[plots] format`]<br>
+[`[plots] dpi`]<br>
+[`[plots] gag_colour`]<br>
+[`[plots] pol_colour`]<br>
+[`[plots] env_colour`]<br>
 
 For each region containing ORFs resembling more than one retroviral gene, a plot is generated showing how these ORFs are distributed on the genome relative to each other.
 
@@ -737,15 +737,15 @@ Each gene is shown on a different line on the y axis, the x axis is chromosome c
 ### summariseERVRegions
 
 **Input Files**<br>
-`ERV_regions.dir/ERV_regions_final.tsv`<br>
+[`ERV_regions.dir/ERV_regions_final.tsv`]<br>
 
 
 **Output Files**<br>
-`erv_regions_results.dir/results.tsv`<br>
-`erv_regions_results.dir/erv_regions.FMT`<br>
+[`erv_regions_results.dir/results.tsv`]<br>
+[`erv_regions_results.dir/erv_regions.FMT`]<br>
 	
 **Parameters**<br>
-`[plots] other_colour`<br>
+[`[plots] other_colour`]<br>
 
 
 Combines the results of the ERVregions steps to generate additional summary files.

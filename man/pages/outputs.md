@@ -1,4 +1,4 @@
-# Output Files
+# Minor Output Files
 
 1.[Screen](#screen)<br>
 2.[Classify](#classify)<br>
@@ -239,6 +239,16 @@ Tree files in Newick format for each retroviral gene and genus combining referen
 Images files of the phylogenetic trees for each retroviral gene and genus. Different sized circles are used to show the relative size of collapsed monophyletic groups. Newly identified ERVs are highlighted.<br>
 
 ### summariseClassify
+`classify_results.dir/results.tsv`<br>
+Table listing the number of genes which have been collapsed into each monophyletic group in the trees in the `summary_trees.dir` directory.<br>
+Columns:
+* **gene** Retroviral gene for this group
+* **genus** Retroviral genus for this group
+* **group** Group ID
+* **count** Number of sequences in this group
+
+`classify_results.dir/by_gene_genus.png`<br>
+Bar chart showing the number of genes which have been collapsed into each monophyletic group, organised by gene and genus.
 
 ## ERVRegions
 1. [makeCleanBeds](#makecleanbeds)
@@ -246,8 +256,9 @@ Images files of the phylogenetic trees for each retroviral gene and genus. Diffe
 3. [findERVRegions](#findervregions)
 4. [makeRegionTables](#makeregiontables)
 5. [summariseERVRegions](#summariseervregions)
-6. [ERVRegions](#id3)
-7. [Full](#full)
+6. [plotERVRegions](#plotervregions)
+7. [ERVRegions](#id3)
+8. [Full](#full)
 
 
 ### makeCleanBeds
@@ -281,4 +292,13 @@ Bed file with the co-ordinates of the identified regions.
 `ERV_regions.dir/ERV_regions_final.fasta`<br>
 FASTA file of the regions in the bed file above.
 
+### plotERVRegions
+`ERV_region_plots.dir/*.FMT`<br>
+Plots showing the distributions of ORFs resembling each retroviral gene on the genome. Each gene is shown on a different line on the y axis, the x axis is chromosome co-ordinates. One plot is generated for each multi-gene region.
+
 ### summariseERVRegions
+`erv_region_results.dir/results.tsv`<br>
+Table showing the overall results for regions with ORFs resembling multiple retroviral genes. This table is described in full in the [Main Output Files](introduction.html#main-output-files) section.
+
+`erv_region_results.dir/erv_regions.png`<br>
+Bar chart showing the number of ERV regions identified with each combination of retroviral genes.

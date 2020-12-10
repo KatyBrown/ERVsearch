@@ -260,6 +260,14 @@ Default: `#d61f54`
 Colour for *env* gene in summary plots. Default is pink
 
 
+#### other_colour
+`string` (hex colour code with #) <br>
+Default: `#33b54d`<br>
+
+
+Colour for anything which doesn't relate to a specific gene in summary plots. Default is green.
+
+
 ### ORFs
 *Parameters for ORF identification*
 
