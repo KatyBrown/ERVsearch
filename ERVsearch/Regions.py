@@ -7,6 +7,8 @@ import HelperFunctions
 import ORFs
 import matplotlib
 import matplotlib.pyplot as plt
+import itertools
+import numpy as np
 
 
 def plotERVRegions(table, genes, plotparams, log):
@@ -246,7 +248,64 @@ def cleanTable(results, bed, keep_cols, genes):
     return (results)
 
 
-def getRegions(infile, genes, log):
+def overlap(start1, end1, start2, end2):
+    """
+    Check if the two ranges overlap.
+    """
+    return end1 >= start2 and end2 >= start1
+
+
+def checkOverlaps(row, genes, max_overlap):
+    '''
+    Excludes genes where the overlapping region is a proportion > max_overlap
+    of either gene - for some of the reference sequences there's not a clear
+    delineation between especially between gag and pol.
+    '''
+    max_overlap = float(max_overlap)
+    keep_genes = []
+    # relative positions of start and end in the columns for each gene
+    start_pos = 2
+    end_pos = 3
+    for i, j in itertools.combinations(np.arange(len(genes)), 2):
+        section1 = [((i * 8) + 1), ((i+1) * 8) + 1]
+        section2 = [((j * 8) + 1), ((j+1) * 8) + 1]
+
+        gene1_start = row[section1[0] + start_pos]
+        gene1_end = row[section1[0] + end_pos]
+        gene2_start = row[section2[0] + start_pos]
+        gene2_end = row[section2[0] + end_pos]
+
+        if not np.isnan(gene1_start) and not np.isnan(gene2_start):
+            if gene1_start < gene2_start:
+                overlap = gene2_start - gene1_end
+            else:
+                overlap = gene1_start - gene2_end
+            if overlap <= 0:
+                p1 = np.abs(overlap) / (gene1_end - gene1_start)
+                p2 = np.abs(overlap) / (gene2_end - gene2_start)
+                if p1 > p2 and p1 > max_overlap:
+                    row_left = row[:section1[0]]
+                    row_right = row[section1[1]:]
+                    row = row_left + ['NA', 'NA', float('nan'), float('nan'),
+                                      "NA", "NA", "NA", "NA"] + row_right
+                    keep_genes.append(genes[j])
+                elif p2 >= p1 and p2 > max_overlap:
+                    row_left = row[:section2[0]]
+                    row_right = row[section2[1]:]
+                    row = row_left + ['NA', 'NA', float('nan'), float('nan'),
+                                      "NA", "NA", "NA", "NA"] + row_right
+                    keep_genes.append(genes[i])
+                else:
+                    keep_genes.append(genes[i])
+                    keep_genes.append(genes[j])
+            else:
+                keep_genes.append(genes[i])
+                keep_genes.append(genes[j])
+    keep_genes = set(keep_genes)
+    return (row, keep_genes)
+
+
+def getRegions(infile, genes, max_overlap, log):
     '''
     Takes a merged bed file consisting of regions of the genome identified
     as having more than one ERV-like ORF, finds the regions within this file
@@ -311,6 +370,7 @@ def getRegions(infile, genes, log):
         region_genes = checkRegion(genes, region)
         # if there is more than one different gene in the region
         if len(region_genes) > 1:
+
             # the regions are named with the concatenated names of the
             # genes which are present as a prefix e.g. gag_pol
             region_gene_ID = "_".join(region_genes)
@@ -326,8 +386,26 @@ def getRegions(infile, genes, log):
                 # row about this region
                 gene_results = processRegion(region, gene, merge_cols, geneD)
                 row += gene_results
-            row.append(region)
-            rows.append(row)
+            new_row, new_genes = checkOverlaps(row, genes, max_overlap)
+            if len(new_genes) > 1:
+                if len(new_genes) == len(region_genes):
+                    row.append(region)
+                    rows.append(new_row)
+                else:
+                    region_genes2 = []
+                    for g in region_genes:
+                        if g in new_genes:
+                            region_genes2.append(g)
+                    new_region_gene_ID = "_".join(region_genes2)
+                    regionD[region_gene_ID] -= 1
+                    regionD.setdefault(new_region_gene_ID, 0)
+                    regionD[new_region_gene_ID] += 1
+                    new_region_ID = "%s_%i" % (new_region_gene_ID,
+                                               regionD[new_region_gene_ID])
+                    row[0] = new_region_ID
+                    print ("help")
+            else:
+                regionD[region_gene_ID] -= 1
     # make a data frame of all the rows
     results = pd.DataFrame(rows, columns=all_cols)
     log.info("Identified %i multi-gene regions in %s" % (len(results), infile))

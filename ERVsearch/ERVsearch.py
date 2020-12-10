@@ -1570,7 +1570,8 @@ def makeRegionTables(infiles, outfiles):
     ----------
     None
     '''
-    results = Regions.getRegions(infiles[2], genes, log)
+    results = Regions.getRegions(infiles[2], genes,
+                                 PARAMS['regions']['maxoverlap'], log)
     results.to_csv(outfiles[0], sep="\t", index=None)
     cols = HelperFunctions.getBedColumns()
     # exclude column 5
