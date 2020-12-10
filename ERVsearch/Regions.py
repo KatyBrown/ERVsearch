@@ -12,36 +12,70 @@ import numpy as np
 
 
 def plotERVRegions(table, genes, plotparams, log):
+    '''
+    Plot a figure for each ERV region (region with ORFs resembling >1 gene)
+    showing how the ORFs are distributed on the chromosome. The x axis
+    is chromosome position and each gene has one row, the gene is represented
+    as a coloured rectangle in the appropriate position.
+    '''
     dpi = int(plotparams['dpi'])
+    # iterate through the table
     for ind in table.index.values:
+        # one figure per row
         f = plt.figure(figsize=(10, 3), dpi=dpi)
         a = f.add_subplot(111)
         row = table.loc[ind]
-        a.hlines(1.5, row['start'], row['end'], zorder=0)
+        log.info("Plotting ERV region %s" % row['name'])
+        # calculate the ORF length
         length = row['end'] - row['start']
+
+        # add 1% buffer on either end of the region to the x axis
         a.set_xlim((row['start'] - (length * 0.01)),
                    (row['end'] + (length * 0.01)))
+
+        # one row per gen
         a.set_ylim(0, len(genes) + 1)
+
+        # don't use scientific notation for chromosome position
         a.ticklabel_format(useOffset=False, style='plain')
         ticks = []
+        # for each gene
         for j, gene in enumerate(genes):
+            # if the value is not NA
             if isinstance(row['%s_ID' % gene], str):
+                # find the co-ordinates
                 gene_start = row['%s_start' % gene]
                 gene_end = row['%s_end' % gene]
                 gene_length = gene_end - gene_start
+                # get the gene colour specified by the user
                 gene_colour = plotparams['%s_colour' % gene]
+                # find the ID for this gene in this region
                 gene_name = row['%s_ID' % gene]
+
+                # put the text in the middle of the rectangle
                 pos = gene_end - (gene_length / 2)
+
+                # add the rectangle to the plot
                 a.add_patch(matplotlib.patches.Rectangle((gene_start, 1+j),
                                                          gene_length,
                                                          1, color=gene_colour))
+                # add the label
                 a.text(pos, 1.5+j, gene_name, ha='center', va='center')
+
+                # only put ticks on the x axis at the starts and ends of genes
                 ticks.append(int(gene_start))
                 ticks.append(int(gene_end))
 
+        # add the x ticks and labels
         a.set_xticks(ticks)
         a.set_xticklabels(ticks, rotation='vertical')
+
+        # add the title, including the region length
         a.set_title("%s, %s nts (%s)" % (row['name'], length, row['strand']))
+
+        # there's nothing to label on the y-axis
+
+        # save and close
         a.set_yticks([])
         f.savefig("ERV_region_plots.dir/%s.%s" % (row['name'],
                                                   plotparams['format']),

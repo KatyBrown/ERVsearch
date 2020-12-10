@@ -45,11 +45,17 @@ outstem = PARAMS['output']['outfile_stem']
 # Set up logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
+
+# Name the log file outstem_log.txt
 logfile = "%s_log.txt" % outstem
+
 handler = logging.FileHandler(logfile)
+# Log from INFO level up (INFO, WARN and ERROR but not DEBUG)
 handler.setLevel(logging.INFO)
+
+# Output the time, level and message
 formats = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    '%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formats)
 log.addHandler(handler)
 
@@ -87,6 +93,8 @@ PARAMS.write(open("%s_parameters.txt" % outstem, "w"))
 # Store the plot format (as this is used in the ruffus calls)
 plot_format = PARAMS['plots']['format']
 
+# Set up the output files for the summariseScreen function (because there
+# are lots)
 screen_output = Summary.allScreenOutfiles(plot_format)
 screen_output.append(["screen_results.dir/results.tsv",
                       "screen_results.dir/by_length.%s" % plot_format,
@@ -1014,7 +1022,7 @@ def summariseScreen(infiles, outfiles):
     ublast.dir/GENE_UBLAST.tsv
     ORFs.dir/GENE_orfs_aa.fasta
     ublast_orfs.dir/GENE_UBLAST.tsv
-    
+
     Output_Files
     ------------
     `summary_tables.dir/exonerate_initial_summary.txt`<br>
@@ -1374,6 +1382,7 @@ def summariseClassify(infiles, outfiles):
 
 
 @follows(drawGroupTrees)
+@follows(drawSummaryTrees)
 @follows(summariseClassify)
 def Classify():
     '''
