@@ -381,7 +381,7 @@ def sortkey(x):
 
 
 def makeClassifyPlots(tab, genes, plotparams, outfile):
-    f = plt.figure(figsize=(12, 12))
+    f = plt.figure(figsize=(len(tab) / 10, 12))
     for i, gene in enumerate(genes):
 
         subtab = tab[tab['gene'] == gene]
