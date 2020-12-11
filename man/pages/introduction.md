@@ -68,7 +68,7 @@ No compliation is required, just add the ERVsearch directory to your path or use
 
 After cloning the repository, the program can be used as is (with the above prerequisites installed).
 
-1. Make a copy of the pipeline.ini file (ERVsearch/templates/pipeline.ini) in your working directory (the directory in which you would like to store the output).
+1. Make a copy of the pipeline.ini file (ERVsearch/templates/pipeline.ini or [here](https://raw.githubusercontent.com/KatyBrown/ERVsearch/master/ERVsearch/templates/pipeline.ini)) in your working directory (the directory in which you would like to store the output).
 
 2. Download a local copy of your genome (or other sequence) of interest as a single FASTA file.
 
@@ -146,7 +146,7 @@ It is possible to use a gzipped or zipped file, in which case the filename needs
 This file is a configuration file in [ini format](https://en.wikipedia.org/wiki/INI_file) containing the parmeters you wish to use.
 This file needs to be in your working directory - the folder in which you wish to run ERVsearch.
 
-A template `pipeline.ini` file should be used and edited - this file is available as `ERVsearch/templates/pipeline.ini`.
+A template `pipeline.ini` file should be used and edited - this file is available as `ERVsearch/templates/pipeline.ini` or [here](https://raw.githubusercontent.com/KatyBrown/ERVsearch/master/ERVsearch/templates/pipeline.ini)
 
 Options specified as `!?` are required, all others have a default value.
 
