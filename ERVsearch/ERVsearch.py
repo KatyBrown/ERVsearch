@@ -76,7 +76,7 @@ genes = []
 PARAMS['gene'] = {}
 
 PARAMS['paths']['path_to_ervsearch'] = os.path.split(
-    os.path.realpath(__file__))[0]
+    HelperFunctions.__file__)[0]
 # The default is to use /ERV_db/gag.fasta /ERV_db/pol.fasta and
 # /ERV_db/env.fasta in the pipeline directory but the user can
 # also provide their own FASTA files.
