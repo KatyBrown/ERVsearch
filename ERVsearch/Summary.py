@@ -170,7 +170,7 @@ def makeSummaryD(table_file,
             tab.columns = columns
     # Sometimes the length column isn't there but is needed - make it by
     # subtracting start from end
-    if 'length' in columns_to_plot and 'length' not in columns:
+    if 'length' in columns_to_plot:
         tab['start'] = tab['start'].astype(int)
         tab['end'] = tab['end'].astype(int)
         tab['length'] = tab['end'] - tab['start']
