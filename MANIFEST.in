@@ -1,7 +1,6 @@
 include LICENSE
 include README.md
-recursive-include ERV_db *
+recursive-include ERVsearch/ERV_db *
 recursive-include man *
-recursive-include templates *
-recursive-include phylogenies *
-recursive-include package/templates *
+recursive-include ERVsearch/templates *
+recursive-include ERVsearch/phylogenies *
