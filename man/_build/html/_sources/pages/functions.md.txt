@@ -42,7 +42,6 @@ NB: Where `GENE` is specified in a file path one file will be created for each g
 
 **Parameters**<br>
 [`[genome] file`](parameters.html#file)<br>
-[`[paths] path_to_ERVsearch`](parameters.html#path-to-ervsearch)<br>
 [`[paths] path_to_usearch`](parameters.html#path-to-usearch)<br>
 [`[paths] path_to_exonerate`](parameters.html#path-to-exonerate)<br>
 
@@ -306,7 +305,7 @@ The raw output of running UBLAST against the target sequences is saved in GENE_U
 [`grouped.dir/GENE_groups.tsv`](outputs.html#assigngroups)<br>
 
 **Parameters**<br>
-[`[paths] path_to_ERVsearch`](parameters.html#path-to-ervsearch)<br>
+None
 
 Many of the retroviruses in the input database all_ERVs_nt.fasta have been classified into groups based on sequence similarity, prior knowledge and phylogenetic clustering.  Some sequences don't fall into any well defined group, in these cases they are just assigned to a genus, usually based on prior knowledge. The information about these groups is stored in the provided file ERVsearch/ERV_db/convert.tsv.
 
@@ -462,7 +461,7 @@ Helper function to run all screening functions (all functions prior to this poin
 [`group_fastas.dir/GENE_(.*)_GENUS_A.fasta`](outputs.html#makegroupfastas)<br>
 
 **Parameters**<br>
-[`[paths] path_to_ERVsearch`](parameters.html#path-to-ervsearch)<br>
+None
 
 Two sets of reference fasta files are available (files are stored in `ERVsearch/phylogenies/group_phylogenies` and `ERVsearch/phylogenies/summary_phylogenies`)
 
@@ -530,7 +529,7 @@ The output file DPI can be specified using `trees_dpi` and the format (which can
 [`summary_fastas.dir/GENE_GENUS.tre`](outputs.html#makesummaryfastas)<br>
 
 **Parameters**<br>
-[`[paths] path_to_ERVsearch`](parameters.html#path-to-ervsearch)<br>
+None
 
 Based on the group phylogenetic trees generated in makeGroupTrees, monophyletic groups of newly idenified ERVs are identified. For each of these groups, a single sequence (the longest) is selected as representative. The representative sequences are combined with the FASTA files in `ERVsearch/phylogenies/summary_phylogenies`, which contain representative sequences for each retroviral gene and genus. These are extended to include further reference sequences from the same small group as the newly identified sequences.
 

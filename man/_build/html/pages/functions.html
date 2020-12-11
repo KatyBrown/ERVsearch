@@ -250,7 +250,6 @@ NB: Where <code class="docutils literal notranslate"><span class="pre">GENE</spa
 <a class="reference external" href="outputs.html#initiate"><code class="docutils literal notranslate"><span class="pre">init.txt</span></code></a><br></p>
 <p><strong>Parameters</strong><br>
 <a class="reference external" href="parameters.html#file"><code class="docutils literal notranslate"><span class="pre">[genome]</span> <span class="pre">file</span></code></a><br>
-<a class="reference external" href="parameters.html#path-to-ervsearch"><code class="docutils literal notranslate"><span class="pre">[paths]</span> <span class="pre">path_to_ERVsearch</span></code></a><br>
 <a class="reference external" href="parameters.html#path-to-usearch"><code class="docutils literal notranslate"><span class="pre">[paths]</span> <span class="pre">path_to_usearch</span></code></a><br>
 <a class="reference external" href="parameters.html#path-to-exonerate"><code class="docutils literal notranslate"><span class="pre">[paths]</span> <span class="pre">path_to_exonerate</span></code></a><br></p>
 <p>Initialises the pipeline and checks that the required parameters in the pipeline.ini are set and valid and that the required software is in your $PATH.</p>
@@ -452,7 +451,7 @@ against one of the genes of the same type (<em>gag</em>, <em>pol</em> or <em>env
 <p><strong>Output Files</strong><br>
 <a class="reference external" href="outputs.html#assigngroups"><code class="docutils literal notranslate"><span class="pre">grouped.dir/GENE_groups.tsv</span></code></a><br></p>
 <p><strong>Parameters</strong><br>
-<a class="reference external" href="parameters.html#path-to-ervsearch"><code class="docutils literal notranslate"><span class="pre">[paths]</span> <span class="pre">path_to_ERVsearch</span></code></a><br></p>
+None</p>
 <p>Many of the retroviruses in the input database all_ERVs_nt.fasta have been classified into groups based on sequence similarity, prior knowledge and phylogenetic clustering.  Some sequences don’t fall into any well defined group, in these cases they are just assigned to a genus, usually based on prior knowledge. The information about these groups is stored in the provided file ERVsearch/ERV_db/convert.tsv.</p>
 <p>Each sequence in the filtered fasta file of newly identified ORFs is assigned to one of these groups based on the sequence identified as the most similar in the classifyWithExonerate step.</p>
 <p>The output table is also  tidied up to include the UBLAST output, chromosome, ORF start and end positions, genus and group.</p>
@@ -600,7 +599,7 @@ None<br></p>
 <a class="reference external" href="outputs.html#makegroupfastas"><code class="docutils literal notranslate"><span class="pre">group_fastas.dir/GENE_(.*)_GENUS.fasta</span></code></a><br>
 <a class="reference external" href="outputs.html#makegroupfastas"><code class="docutils literal notranslate"><span class="pre">group_fastas.dir/GENE_(.*)_GENUS_A.fasta</span></code></a><br></p>
 <p><strong>Parameters</strong><br>
-<a class="reference external" href="parameters.html#path-to-ervsearch"><code class="docutils literal notranslate"><span class="pre">[paths]</span> <span class="pre">path_to_ERVsearch</span></code></a><br></p>
+None</p>
 <p>Two sets of reference fasta files are available (files are stored in <code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/group_phylogenies</span></code> and <code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/summary_phylogenies</span></code>)</p>
 <ul class="simple">
 <li><p>group_phylogenies - groups of closely related ERVs for fine classification of sequences</p></li>
@@ -653,7 +652,7 @@ None<br></p>
 <a class="reference external" href="outputs.html#makesummaryfastas"><code class="docutils literal notranslate"><span class="pre">summary_fastas.dir/GENE_GENUS.fasta</span></code></a><br>
 <a class="reference external" href="outputs.html#makesummaryfastas"><code class="docutils literal notranslate"><span class="pre">summary_fastas.dir/GENE_GENUS.tre</span></code></a><br></p>
 <p><strong>Parameters</strong><br>
-<a class="reference external" href="parameters.html#path-to-ervsearch"><code class="docutils literal notranslate"><span class="pre">[paths]</span> <span class="pre">path_to_ERVsearch</span></code></a><br></p>
+None</p>
 <p>Based on the group phylogenetic trees generated in makeGroupTrees, monophyletic groups of newly idenified ERVs are identified. For each of these groups, a single sequence (the longest) is selected as representative. The representative sequences are combined with the FASTA files in <code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/summary_phylogenies</span></code>, which contain representative sequences for each retroviral gene and genus. These are extended to include further reference sequences from the same small group as the newly identified sequences.</p>
 <p>For example, if one MLV-like pol and one HERVF-like pol was identified in the gamma genus, the gamma_pol.fasta summary fasta would contain:
 * The new MLV-like pol sequence

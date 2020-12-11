@@ -12,9 +12,8 @@ These parameters should always be set (there are no default options).
 1. [genome](#genome)<br>
 1.1. [file](#file)<br>
 2. [paths](#paths)<br>
-2.1 [path_to_ERVsearch](#path-to-ervsearch)<br>
-2.2 [path_to_usearch](#path-to-usearch)<br>
-2.3 [path_to_exonerate](#path-to-exonerate)<br>
+2.1 [path_to_usearch](#path-to-usearch)<br>
+2.2 [path_to_exonerate](#path-to-exonerate)<br>
 
 ### genome
 *Input file parameters*
@@ -32,13 +31,6 @@ e.g. `/home/katy/genomes/hg38.fasta`
 
 ### paths
 *Paths to software*
-#### path_to_ERVsearch
-`string`
-
-
-Path to ERVsearch root folder
-
-e.g.  `/home/katy/ERVsearch`
 
 #### path_to_usearch
 `string`

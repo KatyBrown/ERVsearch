@@ -81,11 +81,10 @@ e.g. hg38.fa saved in /home/myname/genome/hg38.fa would require the following op
 file_=/home/myname/genome/hg38.fa
 ```
 
-* Add the paths to ERVsearch, usearch and exonerate to the paths section
+* Add the paths to usearch and exonerate to the paths section
 e.g.<br>
 ```
 [paths]
-path_to_ERVsearch=/home/myname/ERVsearch
 path_to_usearch=/home/myname/usearch/usearch11.0.667_i86linux32
 path_to_exonerate=/home/myname/exonerate/bin/exonerate
 ```
@@ -216,6 +215,9 @@ Table showing the group each reference sequence belongs to.
 `ERVsearch/phylogenies/outgroups.tsv`
 
 Table providing the name of an appropriate outgroup for each phylogeny.
+
+If you want to see these files (ERVsearch will locate them automatically for internal use), then if you are using a clone of the git repository, database files can be found in `ERVsearch/ERV_db` and `ERVsearch/phylogenies`. If you installed using pip, they will be in the same location in the ERVsearch directory in your python site-packages directory.
+
 
 ## Usage
 ### Running the Pipeline
