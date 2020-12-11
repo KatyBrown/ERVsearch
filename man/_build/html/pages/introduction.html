@@ -368,8 +368,13 @@ The paths to these files are then specified in the database section of the pipel
 <p>These are:</p>
 <p><code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/group_phylogenies/*fasta</span></code></p>
 <p>Small groups of nucleotide sequences from the ORF database which are closely related, selected manually as representatives of these groups based on prior knowledge, sequence similarity and phylogenetic analysis. Newly identified sequences are assigned to these groups where possible.</p>
-<p><code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/summary_phylogenies/*fasta</span></code>
-Broader groups of nucleotide sequences from the ORF database for each gene (gag, pol and env) and each genus (gamma, beta, delta, alpha, epsilon, lenti and spuma). Newly identified sequences are incorporated into phylogenetic trees based on these sequences, plus more closely related sequences from the <code class="docutils literal notranslate"><span class="pre">group_phylogenies</span></code> fasta files.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/summary_phylogenies/*fasta</span></code></p>
+<p>Broader groups of nucleotide sequences from the ORF database for each gene (gag, pol and env) and each genus (gamma, beta, delta, alpha, epsilon, lenti and spuma). Newly identified sequences are incorporated into phylogenetic trees based on these sequences, plus more closely related sequences from the <code class="docutils literal notranslate"><span class="pre">group_phylogenies</span></code> fasta files.</p>
+<p>Two addtional files are also provided:</p>
+<p><code class="docutils literal notranslate"><span class="pre">ERVsearch/ERV_db/convert.tsv</span></code></p>
+<p>Table showing the group each reference sequence belongs to.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/outgroups.tsv</span></code></p>
+<p>Table providing the name of an appropriate outgroup for each phylogeny.</p>
 </div>
 <div class="section" id="usage">
 <h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>

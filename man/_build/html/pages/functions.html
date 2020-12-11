@@ -412,14 +412,14 @@ against one of the genes of the same type (<em>gag</em>, <em>pol</em> or <em>env
 <div class="section" id="getorfs">
 <h3>getORFs<a class="headerlink" href="#getorfs" title="Permalink to this headline">¶</a></h3>
 <p><strong>Input Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">exonerate_classification.dir/GENE_refiltered_matches_exonerate.fasta</span></code>]<br></p>
+<a class="reference external" href="outputs.html#classifywithexonerate"><code class="docutils literal notranslate"><span class="pre">exonerate_classification.dir/GENE_refiltered_matches_exonerate.fasta</span></code></a><br></p>
 <p><strong>Output Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">ORFs.dir/GENE_orfs_raw.fasta</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ORFs.dir/GENE_orfs_nt.fasta</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ORFs.dir/GENE_orfs_aa.fasta</span></code>]<br></p>
+<a class="reference external" href="outputs.html#getorfs"><code class="docutils literal notranslate"><span class="pre">ORFs.dir/GENE_orfs_raw.fasta</span></code></a><br>
+<a class="reference external" href="outputs.html#getorfs"><code class="docutils literal notranslate"><span class="pre">ORFs.dir/GENE_orfs_nt.fasta</span></code></a><br>
+<a class="reference external" href="outputs.html#getorfs"><code class="docutils literal notranslate"><span class="pre">ORFs.dir/GENE_orfs_aa.fasta</span></code></a><br></p>
 <p><strong>Parameters</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">[orfs]</span> <span class="pre">translation_table</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[orfs]</span> <span class="pre">min_orf_len</span></code>]<br></p>
+<a class="reference external" href="parameters.html#translation-table"><code class="docutils literal notranslate"><span class="pre">[orfs]</span> <span class="pre">translation_table</span></code></a><br>
+<a class="reference external" href="parameters.html#min-orf-len"><code class="docutils literal notranslate"><span class="pre">[orfs]</span> <span class="pre">min_orf_len</span></code></a><br></p>
 <p>Finds the longest open reading frame in each of the ERV regions in the filtered output table.</p>
 <p>This analysis is performed using <a class="reference external" href="http://emboss.open-bio.org/rel/dev/apps/revseq.html">EMBOSS revseq</a> and <a class="reference external" href="http://emboss.open-bio.org/rel/dev/apps/transeq.html">EMBOSS transeq</a>.</p>
 <p>The sequence is translated in all six frames using the user specified translation table. The longest ORF is then identified. ORFs shorter than orfs_min_orf_length are filtered out.</p>
@@ -429,17 +429,17 @@ against one of the genes of the same type (<em>gag</em>, <em>pol</em> or <em>env
 <div class="section" id="checkorfsublast">
 <h3>checkORFsUBLAST<a class="headerlink" href="#checkorfsublast" title="Permalink to this headline">¶</a></h3>
 <p><strong>Input Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">ORFs.dir/GENE_orfs_nt.fasta</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">UBLAST_dbs.dir/GENE_db.udb</span></code>]<br></p>
+<a class="reference external" href="outputs.html#getorfs"><code class="docutils literal notranslate"><span class="pre">ORFs.dir/GENE_orfs_nt.fasta</span></code></a><br>
+<a class="reference external" href="outputs.html#makeublastdb"><code class="docutils literal notranslate"><span class="pre">UBLAST_dbs.dir/GENE_db.udb</span></code></a><br></p>
 <p><strong>Output Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">ublast_orfs.dir/GENE_UBLAST_alignments.txt</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ublast_orfs.dir/GENE_UBLAST.tsv</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ublast_orfs.dir/GENE_filtered_UBLAST.fasta</span></code>]<br></p>
+<a class="reference external" href="outputs.html#checkorfsublast"><code class="docutils literal notranslate"><span class="pre">ublast_orfs.dir/GENE_UBLAST_alignments.txt</span></code></a><br>
+<a class="reference external" href="outputs.html#checkorfsublast"><code class="docutils literal notranslate"><span class="pre">ublast_orfs.dir/GENE_UBLAST.tsv</span></code></a><br>
+<a class="reference external" href="outputs.html#checkorfsublast"><code class="docutils literal notranslate"><span class="pre">ublast_orfs.dir/GENE_filtered_UBLAST.fasta</span></code></a><br></p>
 <p><strong>Parameters</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">[paths]</span> <span class="pre">path_to_usearch</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[usearch]</span> <span class="pre">min_id</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[usearch]</span> <span class="pre">min_hit_length</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[usearch]</span> <span class="pre">min_coverage</span></code>]<br></p>
+<a class="reference external" href="parameters.html#path-to-usearch"><code class="docutils literal notranslate"><span class="pre">[paths]</span> <span class="pre">path_to_usearch</span></code></a><br>
+<a class="reference external" href="parameters.html#min-id"><code class="docutils literal notranslate"><span class="pre">[usearch]</span> <span class="pre">min_id</span></code></a><br>
+<a class="reference external" href="parameters.html#min-hit-length"><code class="docutils literal notranslate"><span class="pre">[usearch]</span> <span class="pre">min_hit_length</span></code></a><br>
+<a class="reference external" href="parameters.html#min-coverage"><code class="docutils literal notranslate"><span class="pre">[usearch]</span> <span class="pre">min_coverage</span></code></a><br></p>
 <p>ERV ORFs in the fasta files generated by the ORFs function are compared to the original ERV amino acid files using UBLAST. This allows any remaining sequences with poor similarity to known ERVs to be filtered out.</p>
 <p>This allows ORFs with low similarity to known ERVs to be filtered out.   Similarity thresholds can be set in the pipeline.ini file (<code class="docutils literal notranslate"><span class="pre">usearch_min_id,</span></code> - minimum identity between query and target -  <code class="docutils literal notranslate"><span class="pre">usearch_min_hit_length</span></code> - minimum length of hit on target sequence -  and <code class="docutils literal notranslate"><span class="pre">usearch_min_coverage</span></code> - minimum proportion of the query sequence the hit should cover).</p>
 <p>The raw output of running UBLAST against the target sequences is saved in GENE_UBLAST_alignments.txt (equivalent to the BLAST default output) and GENE_UBLAST.tsv (equivalent to the BLAST -outfmt 6 tabular output) this is already filtered by passing the appropriate parameters to UBLAST. The regions which passed the filtering and are therefore in these output files are then output to a FASTA file GENE_filtered_UBLAST.fasta.</p>
@@ -447,12 +447,12 @@ against one of the genes of the same type (<em>gag</em>, <em>pol</em> or <em>env
 <div class="section" id="assigngroups">
 <h3>assignGroups<a class="headerlink" href="#assigngroups" title="Permalink to this headline">¶</a></h3>
 <p><strong>Input Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">ublast_orfs.dir/GENE_UBLAST.tsv</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ERVsearch/ERV_db/convert.tsv</span></code>]<br></p>
+<a class="reference external" href="outputs.html#checkorfsublast"><code class="docutils literal notranslate"><span class="pre">ublast_orfs.dir/GENE_UBLAST.tsv</span></code></a><br>
+<a class="reference external" href="introduction.html#databases"><code class="docutils literal notranslate"><span class="pre">ERVsearch/ERV_db/convert.tsv</span></code></a><br></p>
 <p><strong>Output Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">grouped.dir/GENE_groups.tsv</span></code>]<br></p>
+<a class="reference external" href="outputs.html#assigngroups"><code class="docutils literal notranslate"><span class="pre">grouped.dir/GENE_groups.tsv</span></code></a><br></p>
 <p><strong>Parameters</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">[paths]</span> <span class="pre">path_to_ERVsearch</span></code>]<br></p>
+<a class="reference external" href="parameters.html#path-to-ervsearch"><code class="docutils literal notranslate"><span class="pre">[paths]</span> <span class="pre">path_to_ERVsearch</span></code></a><br></p>
 <p>Many of the retroviruses in the input database all_ERVs_nt.fasta have been classified into groups based on sequence similarity, prior knowledge and phylogenetic clustering.  Some sequences don’t fall into any well defined group, in these cases they are just assigned to a genus, usually based on prior knowledge. The information about these groups is stored in the provided file ERVsearch/ERV_db/convert.tsv.</p>
 <p>Each sequence in the filtered fasta file of newly identified ORFs is assigned to one of these groups based on the sequence identified as the most similar in the classifyWithExonerate step.</p>
 <p>The output table is also  tidied up to include the UBLAST output, chromosome, ORF start and end positions, genus and group.</p>
@@ -460,45 +460,46 @@ against one of the genes of the same type (<em>gag</em>, <em>pol</em> or <em>env
 <div class="section" id="summarisescreen">
 <h3>summariseScreen<a class="headerlink" href="#summarisescreen" title="Permalink to this headline">¶</a></h3>
 <p><strong>Input Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">gene_bed_files.dir/GENE_merged.bed</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ublast.dir/GENE_UBLAST.tsv</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ORFs.dir/GENE_orfs_aa.fasta</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ublast_orfs.dir/GENE_UBLAST.tsv</span></code>]<br></p>
+<a class="reference external" href="outputs.html#mergeoverlaps"><code class="docutils literal notranslate"><span class="pre">gene_bed_files.dir/GENE_merged.bed</span></code></a><br>
+<a class="reference external" href="outputs.html#runublastcheck"><code class="docutils literal notranslate"><span class="pre">ublast.dir/GENE_UBLAST.tsv</span></code></a><br>
+<a class="reference external" href="outputs.html#getorfs"><code class="docutils literal notranslate"><span class="pre">ORFs.dir/GENE_orfs_aa.fasta</span></code></a><br>
+<a class="reference external" href="outputs.html#checkorfsublast"><code class="docutils literal notranslate"><span class="pre">ublast_orfs.dir/GENE_UBLAST.tsv</span></code></a><br></p>
 <p><strong>Output Files</strong><br>
 FMT can be png, svg, pdf, jpg depending on the <code class="docutils literal notranslate"><span class="pre">plot_format</span></code> parameter<br></p>
-<p>[<code class="docutils literal notranslate"><span class="pre">summary_tables.dir/exonerate_initial_summary.txt</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_tables.dir/ublast_hits_initial_summary.txt</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_tables.dir/orfs_initial_summary.txt</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_tables.dir/ublast_orfs_initial_summary.txt</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_lengths.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_scores.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_strands.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_by_sequence.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_counts_per_gene.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_hits_alignment_length.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_hits_perc_similarity.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_hits_by_match.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_hits_per_gene.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/orfs_lengths.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/orfs_strands.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/orfs_by_gene.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_alignment_length.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_perc_similarity.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_bit_score.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_by_match.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_per_gene.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">screen_results.dir/results.tsv</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_length.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_genus.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_group.FMT</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_gene.FMT</span></code>]<br></p>
+<p><a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_tables.dir/exonerate_initial_summary.txt</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_tables.dir/ublast_hits_initial_summary.txt</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_tables.dir/orfs_initial_summary.txt</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_tables.dir/ublast_orfs_initial_summary.txt</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_lengths.FMT</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_scores.FMT</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_strands.FMT</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_by_sequence.FMT</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/exonerate_initial_counts_per_gene.FMT</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_hits_alignment_length.FMT</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_hits_perc_similarity.FMT</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_hits_by_match.FMT</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_hits_per_gene.FMT</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/orfs_lengths.FMT</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/orfs_strands.FMT</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/orfs_by_gene.FMT</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_alignment_length.FMT</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_perc_similarity.FMT</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_bit_score.FMT</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_by_match.FMT</span></code></a><br>
+<a class="reference external" href="outputs.html#summarisescreen"><code class="docutils literal notranslate"><span class="pre">summary_plots.dir/ublast_orfs_per_gene.FMT</span></code></a><br>
+<a class="reference external" href="introduction.html#id1"><code class="docutils literal notranslate"><span class="pre">screen_results.dir/results.tsv</span></code></a><br>
+<a class="reference external" href="introduction.html#id1"><code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_length.FMT</span></code></a><br>
+<a class="reference external" href="introduction.html#id1"><code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_genus.FMT</span></code></a><br>
+<a class="reference external" href="introduction.html#id1"><code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_group.FMT</span></code></a><br>
+<a class="reference external" href="introduction.html#id1"><code class="docutils literal notranslate"><span class="pre">screen_results.dir/by_gene.FMT</span></code></a><br></p>
 <p><strong>Parameters</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">dpi</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">format</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">gag_colour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">pol_colour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">env_colour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">other_colour</span></code>]<br></p>
+<a class="reference external" href="parameters.html#dpi"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">dpi</span></code></a><br>
+<a class="reference external" href="parameters.html#format"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">format</span></code></a><br>
+<a class="reference external" href="parameters.html#gag-colour"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">gag_colour</span></code></a><br>
+<a class="reference external" href="parameters.html#pol-colour"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">pol_colour</span></code></a><br>
+<a class="reference external" href="parameters.html#env-colour"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">env_colour</span></code></a><br>
+<a class="reference external" href="parameters.html#other-colour"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">other_colour</span></code></a><br>
+<a class="reference external" href="parameters.html#match-axes"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">match_axes</span></code></a><br></p>
 <p>Generates a series of summary plots and tables showing the results of running the screening functions.</p>
 <p>The major outputs of this function are stored in the screen_results.dir directory. Further details of these files are provided in the <a class="reference external" href="introduction.html#main-output-files">Main Output Files</a> section.</p>
 <p>The other files show the output of the intermediate steps.<br></p>
@@ -591,15 +592,15 @@ None<br></p>
 <div class="section" id="makegroupfastas">
 <h3>makeGroupFastas<a class="headerlink" href="#makegroupfastas" title="Permalink to this headline">¶</a></h3>
 <p><strong>Input Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">grouped.dir/GENE_groups.tsv</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/group_phylogenies/*fasta</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/summary_phylogenies/*fasta</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/outgroups.tsv</span></code>]<br></p>
+<a class="reference external" href="outputs.html#assigngroups"><code class="docutils literal notranslate"><span class="pre">grouped.dir/GENE_groups.tsv</span></code></a><br>
+<a class="reference external" href="introduction.html#databases"><code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/group_phylogenies/*fasta</span></code></a><br>
+<a class="reference external" href="introduction.html#databases"><code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/summary_phylogenies/*fasta</span></code></a><br>
+<a class="reference external" href="introduction.html#databases"><code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/outgroups.tsv</span></code></a><br></p>
 <p><strong>Output Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">group_fastas.dir/GENE_(.*)_GENUS.fasta</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">group_fastas.dir/GENE_(.*)_GENUS_A.fasta</span></code>]<br></p>
+<a class="reference external" href="outputs.html#makegroupfastas"><code class="docutils literal notranslate"><span class="pre">group_fastas.dir/GENE_(.*)_GENUS.fasta</span></code></a><br>
+<a class="reference external" href="outputs.html#makegroupfastas"><code class="docutils literal notranslate"><span class="pre">group_fastas.dir/GENE_(.*)_GENUS_A.fasta</span></code></a><br></p>
 <p><strong>Parameters</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">[paths]</span> <span class="pre">path_to_ERVsearch</span></code>]<br></p>
+<a class="reference external" href="parameters.html#path-to-ervsearch"><code class="docutils literal notranslate"><span class="pre">[paths]</span> <span class="pre">path_to_ERVsearch</span></code></a><br></p>
 <p>Two sets of reference fasta files are available (files are stored in <code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/group_phylogenies</span></code> and <code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/summary_phylogenies</span></code>)</p>
 <ul class="simple">
 <li><p>group_phylogenies - groups of closely related ERVs for fine classification of sequences</p></li>
@@ -614,9 +615,9 @@ Where the most similar sequence is not part of a a well defined group, it has be
 <div class="section" id="makegrouptrees">
 <h3>makeGroupTrees<a class="headerlink" href="#makegrouptrees" title="Permalink to this headline">¶</a></h3>
 <p><strong>Input Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">group_fastas.dir/GENE_(.*_)GENUS_A.fasta</span></code>]<br></p>
+<a class="reference external" href="outputs.html#makegroupfastas"><code class="docutils literal notranslate"><span class="pre">group_fastas.dir/GENE_(.*_)GENUS_A.fasta</span></code></a><br></p>
 <p><strong>Output Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">group_trees.dir/GENE_(.*_)GENUS.tre</span></code>]<br></p>
+<a class="reference external" href="outputs.html#makegrouptrees"><code class="docutils literal notranslate"><span class="pre">group_trees.dir/GENE_(.*_)GENUS.tre</span></code></a><br></p>
 <p><strong>Parameters</strong><br>
 None<br></p>
 <p>Builds a phylogenetic tree, using the FastTree2 algorithm (http://www.microbesonline.org/fasttree) with the default settings plus the GTR model, for the aligned group FASTA files generated by the makeGroupFastas function.</p>
@@ -624,19 +625,19 @@ None<br></p>
 <div class="section" id="drawgrouptrees">
 <h3>drawGroupTrees<a class="headerlink" href="#drawgrouptrees" title="Permalink to this headline">¶</a></h3>
 <p><strong>Input Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">group_trees.dir/GENE_(.*_)GENUS.tre</span></code>]<br></p>
+<a class="reference external" href="outputs.html#makegrouptrees"><code class="docutils literal notranslate"><span class="pre">group_trees.dir/GENE_(.*_)GENUS.tre</span></code></a><br></p>
 <p><strong>Output Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">group_trees.dir/GENE_(.*_)GENUS.FMT</span></code>] (png, svg, pdf or jpg)<br></p>
+<a class="reference external" href="outputs.html#drawgrouptrees"><code class="docutils literal notranslate"><span class="pre">group_trees.dir/GENE_(.*_)GENUS.FMT</span></code></a> (png, svg, pdf or jpg)<br></p>
 <p><strong>Parameters</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">gag_colour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">pol_colour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">env_colour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">use_gene_colour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">maincolour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">highlightcolour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">outgroupcolour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">dpi</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">format</span></code>]<br></p>
+<a class="reference external" href="parameters.html#gag-colour"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">gag_colour</span></code></a><br>
+<a class="reference external" href="parameters.html#pol-colour"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">pol_colour</span></code></a><br>
+<a class="reference external" href="parameters.html#env-colour"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">env_colour</span></code></a><br>
+<a class="reference external" href="parameters.html#use-gene-colour"><code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">use_gene_colour</span></code></a><br>
+<a class="reference external" href="parameters.html#maincolour"><code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">maincolour</span></code></a><br>
+<a class="reference external" href="parameters.html#highlightcolour"><code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">highlightcolour</span></code></a><br>
+<a class="reference external" href="parameters.html#outgroupcolour"><code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">outgroupcolour</span></code></a><br>
+<a class="reference external" href="parameters.html#dpi"><code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">dpi</span></code></a><br>
+<a class="reference external" href="parameters.html#format"><code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">format</span></code></a><br></p>
 <p>Generates an image file for each file generated in the makeGroupTrees step, using ete3 (http://etetoolkit.org). Newly identified sequences are labelled as “~” and shown in a different colour.</p>
 <p>By default, newly identified sequences are shown in the colours specified in <code class="docutils literal notranslate"><span class="pre">plots_gag_colour</span></code>, <code class="docutils literal notranslate"><span class="pre">plots_pol_colour</span></code> and <code class="docutils literal notranslate"><span class="pre">plots_env_colour</span></code> - to do this then <code class="docutils literal notranslate"><span class="pre">trees_use_gene_colour</span></code> should be set to True in the <code class="docutils literal notranslate"><span class="pre">pipeline.ini</span></code>. Alternatively, a fixed colour can be used by setting <code class="docutils literal notranslate"><span class="pre">trees_use_gene_colour</span></code> to False and settings <code class="docutils literal notranslate"><span class="pre">trees_highlightcolour</span></code>. The text colour of the reference sequences (default black) can be set using <code class="docutils literal notranslate"><span class="pre">trees_maincolour</span></code> and the outgroup using <code class="docutils literal notranslate"><span class="pre">trees_outgroupcolour</span></code>.</p>
 <p>The output file DPI can be specified using <code class="docutils literal notranslate"><span class="pre">trees_dpi</span></code> and the format (which can be png, svg, pdf or jpg) using <code class="docutils literal notranslate"><span class="pre">trees_format</span></code>.</p>
@@ -644,15 +645,15 @@ None<br></p>
 <div class="section" id="makesummaryfastas">
 <h3>makeSummaryFastas<a class="headerlink" href="#makesummaryfastas" title="Permalink to this headline">¶</a></h3>
 <p><strong>Input Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">group_fastas.dir/GENE_(.*_)GENUS.fasta</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">group_trees.dir/GENE_(*_)GENUS.tre</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/summary_phylogenies/GENE_GENUS.fasta</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/group_phylogenies/(.*)_GENUS_GENE.fasta</span></code>]<br></p>
+<a class="reference external" href="outputs.html#makegroupfastas"><code class="docutils literal notranslate"><span class="pre">group_fastas.dir/GENE_(.*_)GENUS.fasta</span></code></a><br>
+<a class="reference external" href="outputs.html#makegrouptrees"><code class="docutils literal notranslate"><span class="pre">group_trees.dir/GENE_(*_)GENUS.tre</span></code></a><br>
+<a class="reference external" href="introduction.html#databases"><code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/summary_phylogenies/GENE_GENUS.fasta</span></code></a><br>
+<a class="reference external" href="introduction.html#databases"><code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/group_phylogenies/(.*)_GENUS_GENE.fasta</span></code></a><br></p>
 <p><strong>Output Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">summary_fastas.dir/GENE_GENUS.fasta</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">summary_fastas.dir/GENE_GENUS.tre</span></code>]<br></p>
+<a class="reference external" href="outputs.html#makesummaryfastas"><code class="docutils literal notranslate"><span class="pre">summary_fastas.dir/GENE_GENUS.fasta</span></code></a><br>
+<a class="reference external" href="outputs.html#makesummaryfastas"><code class="docutils literal notranslate"><span class="pre">summary_fastas.dir/GENE_GENUS.tre</span></code></a><br></p>
 <p><strong>Parameters</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">[paths]</span> <span class="pre">path_to_ERVsearch</span></code>]<br></p>
+<a class="reference external" href="parameters.html#path-to-ervsearch"><code class="docutils literal notranslate"><span class="pre">[paths]</span> <span class="pre">path_to_ERVsearch</span></code></a><br></p>
 <p>Based on the group phylogenetic trees generated in makeGroupTrees, monophyletic groups of newly idenified ERVs are identified. For each of these groups, a single sequence (the longest) is selected as representative. The representative sequences are combined with the FASTA files in <code class="docutils literal notranslate"><span class="pre">ERVsearch/phylogenies/summary_phylogenies</span></code>, which contain representative sequences for each retroviral gene and genus. These are extended to include further reference sequences from the same small group as the newly identified sequences.</p>
 <p>For example, if one MLV-like pol and one HERVF-like pol was identified in the gamma genus, the gamma_pol.fasta summary fasta would contain:
 * The new MLV-like pol sequence
@@ -668,9 +669,9 @@ None<br></p>
 <div class="section" id="makesummarytrees">
 <h3>makeSummaryTrees<a class="headerlink" href="#makesummarytrees" title="Permalink to this headline">¶</a></h3>
 <p><strong>Input Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">summary_fastas.dir/GENE_GENUS_A.fasta</span></code>]<br></p>
+<a class="reference external" href="outputs.html#makesummaryfastas"><code class="docutils literal notranslate"><span class="pre">summary_fastas.dir/GENE_GENUS_A.fasta</span></code></a><br></p>
 <p><strong>Output Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">summary_trees.dir/GENE_GENUS.tre</span></code>]<br></p>
+<a class="reference external" href="outputs.html#makesummarytrees"><code class="docutils literal notranslate"><span class="pre">summary_trees.dir/GENE_GENUS.tre</span></code></a><br></p>
 <p><strong>Parameters</strong><br>
 None<br></p>
 <p>Builds a phylogenetic tree, using the FastTree2 algorithm (http://www.microbesonline.org/fasttree) with the default settings plus the GTR model, for the aligned group FASTA files generated by the makeSummaryFastas function.</p>
@@ -678,19 +679,19 @@ None<br></p>
 <div class="section" id="drawsummarytrees">
 <h3>drawSummaryTrees<a class="headerlink" href="#drawsummarytrees" title="Permalink to this headline">¶</a></h3>
 <p><strong>Input Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">summary_trees.dir/GENE_GENUS.tre</span></code>]<br></p>
+<a class="reference external" href="outputs.html#makesummarytrees"><code class="docutils literal notranslate"><span class="pre">summary_trees.dir/GENE_GENUS.tre</span></code></a><br></p>
 <p><strong>Output Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">summary_trees.dir/GENE_GENUS.FMT</span></code>] (FMT = png, svg, pdf or jpg)<br></p>
+<a class="reference external" href="outputs.html#drawsummarytrees"><code class="docutils literal notranslate"><span class="pre">summary_trees.dir/GENE_GENUS.FMT</span></code></a>(FMT = png, svg, pdf or jpg)<br></p>
 <p><strong>Parameters</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">gag_colour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">pol_colour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">env_colour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">use_gene_colour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">maincolour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">highlightcolour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">outgroupcolour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">dpi</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">format</span></code>]<br></p>
+<a class="reference external" href="parameters.html#gag-colour"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">gag_colour</span></code></a><br>
+<a class="reference external" href="parameters.html#pol-colour"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">pol_colour</span></code></a><br>
+<a class="reference external" href="parameters.html#env-colour"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">env_colour</span></code></a><br>
+<a class="reference external" href="parameters.html#use-gene-colour"><code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">use_gene_colour</span></code></a><br>
+<a class="reference external" href="parameters.html#maincolour"><code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">maincolour</span></code></a><br>
+<a class="reference external" href="parameters.html#highlightcolour"><code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">highlightcolour</span></code></a><br>
+<a class="reference external" href="parameters.html#outgroupcolour"><code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">outgroupcolour</span></code></a><br>
+<a class="reference external" href="parameters.html#dpi"><code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">dpi</span></code></a><br>
+<a class="reference external" href="parameters.html#format"><code class="docutils literal notranslate"><span class="pre">[trees]</span> <span class="pre">format</span></code></a><br></p>
 <p>Generates an image file for each file generated in the makeSummaryTrees step, using ete3 (http://etetoolkit.org). Newly identified sequences are labelled as “~” and shown in a different colour. Monophyletic groups of newly identified ERVs have been collapsed (by choosing a single representative sequence) and the number of sequences in the group is added to the label and represented by the size of the node tip.</p>
 <p>By default, newly identified sequences are shown in the colours specified in <code class="docutils literal notranslate"><span class="pre">plots_gag_colour</span></code>, <code class="docutils literal notranslate"><span class="pre">plots_pol_colour</span></code> and <code class="docutils literal notranslate"><span class="pre">plots_env_colour</span></code> - to do this then <code class="docutils literal notranslate"><span class="pre">trees_use_gene_colour</span></code> should be set to True in the <code class="docutils literal notranslate"><span class="pre">pipeline.ini</span></code>. Alternatively, a fixed colour can be used by setting <code class="docutils literal notranslate"><span class="pre">trees_use_gene_colour</span></code> to False and settings <code class="docutils literal notranslate"><span class="pre">trees_highlightcolour</span></code>. The text colour of the reference sequences (default black) can be set using <code class="docutils literal notranslate"><span class="pre">trees_maincolour</span></code> and the outgroup using <code class="docutils literal notranslate"><span class="pre">trees_outgroupcolour</span></code>.</p>
 <p>The output file DPI can be specified using <code class="docutils literal notranslate"><span class="pre">trees_dpi</span></code> and the format (which can be png, svg, pdf or jpg) using <code class="docutils literal notranslate"><span class="pre">trees_format</span></code>.</p>
@@ -698,11 +699,11 @@ None<br></p>
 <div class="section" id="summariseclassify">
 <h3>summariseClassify<a class="headerlink" href="#summariseclassify" title="Permalink to this headline">¶</a></h3>
 <p><strong>Input Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">summary_fastas.dir/GENE_GENUS.fasta</span></code><br>]
-[<code class="docutils literal notranslate"><span class="pre">summary_trees.dir/GENE_GENUS.tre</span></code><br>]</p>
+<a class="reference external" href="outputs.html#makesummaryfastas"><code class="docutils literal notranslate"><span class="pre">summary_fastas.dir/GENE_GENUS.fasta</span></code></a><br>
+<a class="reference external" href="outputs.html#makesummarytrees"><code class="docutils literal notranslate"><span class="pre">summary_trees.dir/GENE_GENUS.tre</span></code></a><br></p>
 <p><strong>Output Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">classify_results.dir/results.tsv</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">classify_results.dir/by_gene_genus.FMT</span></code>] (png, svg, pdf or jpg)<br></p>
+<a class="reference external" href="outputs.html#summariseclassify"><code class="docutils literal notranslate"><span class="pre">classify_results.dir/results.tsv</span></code></a><br>
+<a class="reference external" href="outputs.html#summariseclassify"><code class="docutils literal notranslate"><span class="pre">classify_results.dir/by_gene_genus.FMT</span></code></a> (png, svg, pdf or jpg)<br></p>
 <p><strong>Parameters</strong><br>
 None</p>
 <p>Combines the results of the classify steps to generate additional summary files. The <code class="docutils literal notranslate"><span class="pre">results.tsv</span></code> output file lists the number of genes which have been collapsed into each group in the trees in the <code class="docutils literal notranslate"><span class="pre">summary_trees.dir</span></code> directory. The by_gene_genus.FMT plot is a bar chart of the same information, organised by gene and genus.</p>
@@ -731,9 +732,9 @@ None</p>
 <div class="section" id="makecleanbeds">
 <h3>makeCleanBeds<a class="headerlink" href="#makecleanbeds" title="Permalink to this headline">¶</a></h3>
 <p><strong>Input Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">grouped.dir/GENE_groups.tsv</span></code>]<br></p>
+<a class="reference external" href="outputs.html#assigngroups"><code class="docutils literal notranslate"><span class="pre">grouped.dir/GENE_groups.tsv</span></code></a><br></p>
 <p><strong>Output Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">clean_beds.dir/GENE.bed</span></code>]<br></p>
+<a class="reference external" href="outputs.html#makecleanbeds"><code class="docutils literal notranslate"><span class="pre">clean_beds.dir/GENE.bed</span></code></a><br></p>
 <p><strong>Parameters</strong><br>
 None<br></p>
 <p>Generates a bed file for each gene which contains the co-ordinates of the ORFs which have passed all filtering criteria in the Screen section.</p>
@@ -741,10 +742,10 @@ None<br></p>
 <div class="section" id="makecleanfastas">
 <h3>makeCleanFastas<a class="headerlink" href="#makecleanfastas" title="Permalink to this headline">¶</a></h3>
 <p><strong>Input Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">clean_beds.dir/GENE.bed</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">genome.fa</span></code>]<br></p>
+<a class="reference external" href="outputs.html#makecleanbeds"><code class="docutils literal notranslate"><span class="pre">clean_beds.dir/GENE.bed</span></code></a><br>
+<a class="reference external" href="introduction.html#required-input-files"><code class="docutils literal notranslate"><span class="pre">genome.fa</span></code></a><br></p>
 <p><strong>Output Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">clean_fastas.dir/GENE.fasta</span></code>]<br></p>
+<a class="reference external" href="outputs.html#makecleanfastas"><code class="docutils literal notranslate"><span class="pre">clean_fastas.dir/GENE.fasta</span></code></a><br></p>
 <p><strong>Parameters</strong><br>
 None<br></p>
 <p>Fasta files are generated containing the sequences of the regions listed by makeCleanBeds. These are extracted from the host chromosomes using bedtools getfasta (https://bedtools.readthedocs.io/en/latest/content/tools/getfasta.html).</p>
@@ -752,14 +753,14 @@ None<br></p>
 <div class="section" id="findervregions">
 <h3>findERVRegions<a class="headerlink" href="#findervregions" title="Permalink to this headline">¶</a></h3>
 <p><strong>Input Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">clean_fastas.dir/*.fasta</span></code>]<br></p>
+<a class="reference external" href="outputs.html#makecleanfastas"><code class="docutils literal notranslate"><span class="pre">clean_fastas.dir/*.fasta</span></code></a><br></p>
 <p><strong>Output Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/all_ORFs.bed</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/all_regions.bed</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/multi_gene_regions.bed</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/regions.fasta</span></code>]<br></p>
+<a class="reference external" href="outputs.html#findervregions"><code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/all_ORFs.bed</span></code></a><br>
+<a class="reference external" href="outputs.html#findervregions"><code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/all_regions.bed</span></code></a><br>
+<a class="reference external" href="outputs.html#findervregions"><code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/multi_gene_regions.bed</span></code></a><br>
+<a class="reference external" href="outputs.html#findervregions"><code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/regions.fasta</span></code></a><br></p>
 <p><strong>Parameters</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">[regions]</span> <span class="pre">maxdist</span></code>]<br></p>
+<a class="reference external" href="parameters.html#maxdist"><code class="docutils literal notranslate"><span class="pre">[regions]</span> <span class="pre">maxdist</span></code></a><br></p>
 <p>Combines the files containng the ORF regions for the different retroviral genes and merges any regions which are within <code class="docutils literal notranslate"><span class="pre">regions_maxdist</span></code> of each other to find larger regions containing multiple genes.
 The <code class="docutils literal notranslate"><span class="pre">all_ORFs.bed</span></code> output file is the concatenated and sorted bed files, <code class="docutils literal notranslate"><span class="pre">all_regions.bed</span> </code>contains the merged regions with any ORFs within regions_maxdist of each other (end to end) combined, plus all regions with a single ORF, generated from all_regions.bed using bedtools merge (https://bedtools.readthedocs.io/en/latest/content/tools/merge.html). The name, strand and score columns are concatenated for merged regions, delimited with a “,”.
 <code class="docutils literal notranslate"><span class="pre">multi_gene_regions.bed</span></code> contains only the regions which were found to contain multiple ORFs, <code class="docutils literal notranslate"><span class="pre">regions.fasta</span></code> is the sequence of these regions in FASTA format. At this point this includes regions with multiple ORFs from the same gene (e.g. two <em>pol</em> ORFs).</p>
@@ -767,15 +768,15 @@ The <code class="docutils literal notranslate"><span class="pre">all_ORFs.bed</s
 <div class="section" id="makeregiontables">
 <h3>makeRegionTables<a class="headerlink" href="#makeregiontables" title="Permalink to this headline">¶</a></h3>
 <p><strong>Input Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/multi_gene_regions.bed</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">grouped.dir/*_groups.tsv</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">genome.fa</span></code>]<br></p>
+<a class="reference external" href="outputs.html#findervregions"><code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/multi_gene_regions.bed</span></code></a><br>
+<a class="reference external" href="outputs.html#assigngroups"><code class="docutils literal notranslate"><span class="pre">grouped.dir/*_groups.tsv</span></code></a><br>
+<a class="reference external" href="introduction.html#required-input-files"><code class="docutils literal notranslate"><span class="pre">genome.fa</span></code></a><br></p>
 <p><strong>Output Files</strong>
-[<code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/ERV_regions_final.tsv</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/ERV_regions_final.bed</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/ERV_regions_final.fasta</span></code>]<br></p>
+<a class="reference external" href="outputs.html#makeregiontables"><code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/ERV_regions_final.tsv</span></code></a><br>
+<a class="reference external" href="outputs.html#makeregiontables"><code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/ERV_regions_final.bed</span></code></a><br>
+<a class="reference external" href="outputs.html#makeregiontables"><code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/ERV_regions_final.fasta</span></code></a><br></p>
 <p><strong>Parameters</strong><br>
-None<br></p>
+<a class="reference external" href="parameters.html#maxoverlap"><code class="docutils literal notranslate"><span class="pre">[regions]</span> <span class="pre">maxoverlap</span></code></a><br></p>
 <p>Takes a merged bed file consisting of regions of the genome identified as having more than one ERV-like ORF, finds the regions within this file
 which contain more than one different gene (e.g. gag and pol instead of two gag ORFs) and outputs a formatted table of information about these
 regions.</p>
@@ -809,27 +810,27 @@ regions.</p>
 <div class="section" id="plotervregions">
 <h3>plotERVRegions<a class="headerlink" href="#plotervregions" title="Permalink to this headline">¶</a></h3>
 <p><strong>Input_Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/ERV_regions_final.tsv</span></code>]<br></p>
+<a class="reference external" href="outputs.html#makeregiontables"><code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/ERV_regions_final.tsv</span></code></a><br></p>
 <p><strong>Output_Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">ERV_region_plots.dir/*FMT</span></code>]<br></p>
+<a class="reference external" href="outputs.html#plotervregions"><code class="docutils literal notranslate"><span class="pre">ERV_region_plots.dir/*FMT</span></code></a><br></p>
 <p><strong>Parameters</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">format</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">dpi</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">gag_colour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">pol_colour</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">env_colour</span></code>]<br></p>
+<a class="reference external" href="parameters.html#format"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">format</span></code></a><br>
+<a class="reference external" href="parameters.html#dpi"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">dpi</span></code></a><br>
+<a class="reference external" href="parameters.html#gag-colour"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">gag_colour</span></code></a><br>
+<a class="reference external" href="parameters.html#pol-colour"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">pol_colour</span></code></a><br>
+<a class="reference external" href="parameters.html#env-colour"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">env_colour</span></code></a><br></p>
 <p>For each region containing ORFs resembling more than one retroviral gene, a plot is generated showing how these ORFs are distributed on the genome relative to each other.</p>
 <p>Each gene is shown on a different line on the y axis, the x axis is chromosome co-ordinates.</p>
 </div>
 <div class="section" id="summariseervregions">
 <h3>summariseERVRegions<a class="headerlink" href="#summariseervregions" title="Permalink to this headline">¶</a></h3>
 <p><strong>Input Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/ERV_regions_final.tsv</span></code>]<br></p>
+<a class="reference external" href="outputs.html#makeregiontables"><code class="docutils literal notranslate"><span class="pre">ERV_regions.dir/ERV_regions_final.tsv</span></code></a><br></p>
 <p><strong>Output Files</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">erv_regions_results.dir/results.tsv</span></code>]<br>
-[<code class="docutils literal notranslate"><span class="pre">erv_regions_results.dir/erv_regions.FMT</span></code>]<br></p>
+<a class="reference external" href="introduction.html#id3"><code class="docutils literal notranslate"><span class="pre">erv_regions_results.dir/results.tsv</span></code></a><br>
+[<code class="docutils literal notranslate"><span class="pre">erv_regions_results.dir/erv_regions.FMT</span></code>](introduction.html#id3<br></p>
 <p><strong>Parameters</strong><br>
-[<code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">other_colour</span></code>]<br></p>
+<a class="reference external" href="parameters.html#other-colour"><code class="docutils literal notranslate"><span class="pre">[plots]</span> <span class="pre">other_colour</span></code></a><br></p>
 <p>Combines the results of the ERVregions steps to generate additional summary files.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">results.tsv</span></code> output file is a copy of the output of the makeRegionTables functions.
 This will usually have 37 columns:</p>

@@ -86,7 +86,7 @@ The following parameters are optional (as they have default values)
 6.4 [pol_colour](#pol-colour)<br>
 6.5 [env_colour](#env-colour)<br>
 7. [ORFs](#orfs)<br>
-7.1 [min_orf_len](#min_orf_len)<br>
+7.1 [min_orf_len](#min-orf-len)<br>
 7.2 [translation_table](#translation-table)<br>
 8. [trees](#trees)<br>
 8.1 [use_gene_colour](#use-gene-colour)<br>

@@ -89,6 +89,7 @@
 <li class="toctree-l1"><a class="reference internal" href="introduction.html#quick-start">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="introduction.html#pipeline-description">Pipeline Description</a></li>
 <li class="toctree-l1"><a class="reference internal" href="introduction.html#input-files">Input Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html#databases">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="introduction.html#usage">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="introduction.html#main-output-files">Main Output Files</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Parameters</a><ul>
@@ -142,6 +143,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#pol-colour">pol_colour</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#env-colour">env_colour</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#other-colour">other_colour</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#match-axes">match_axes</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#orfs">ORFs</a><ul>
@@ -167,6 +169,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="outputs.html">Minor Output Files</a></li>
 </ul>
 
             
@@ -312,7 +315,7 @@
 6.4 <a class="reference external" href="#pol-colour">pol_colour</a><br>
 6.5 <a class="reference external" href="#env-colour">env_colour</a><br></p></li>
 <li><p><a class="reference external" href="#orfs">ORFs</a><br>
-7.1 <a class="reference external" href="#min_orf_len">min_orf_len</a><br>
+7.1 <a class="reference external" href="#min-orf-len">min_orf_len</a><br>
 7.2 <a class="reference external" href="#translation-table">translation_table</a><br></p></li>
 <li><p><a class="reference external" href="#trees">trees</a><br>
 8.1 <a class="reference external" href="#use-gene-colour">use_gene_colour</a><br>
@@ -471,6 +474,12 @@ Default: <code class="docutils literal notranslate"><span class="pre">#d61f54</s
 Default: <code class="docutils literal notranslate"><span class="pre">#33b54d</span></code><br></p>
 <p>Colour for anything which doesn’t relate to a specific gene in summary plots. Default is green.</p>
 </div>
+<div class="section" id="match-axes">
+<h4>match_axes<a class="headerlink" href="#match-axes" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">string</span></code> <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code><br>
+Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+<p>If True, when gag, pol and env are shown as subplots on the same figure they should all have the same axis limits. If they do some can be very small but they are more comparable.</p>
+</div>
 </div>
 <div class="section" id="orfs">
 <h3>ORFs<a class="headerlink" href="#orfs" title="Permalink to this headline">¶</a></h3>
@@ -536,6 +545,12 @@ Default: <code class="docutils literal notranslate"><span class="pre">png</span>
 <p><code class="docutils literal notranslate"><span class="pre">integer</span></code><br>
 Default: 3000</p>
 <p>Maximum distance (in nucleotides) between ORFs to be defined as part of the same ERV region.</p>
+<div class="section" id="maxoverlap">
+<h5>maxoverlap<a class="headerlink" href="#maxoverlap" title="Permalink to this headline">¶</a></h5>
+<p><code class="docutils literal notranslate"><span class="pre">float</span></code><br>
+Default: 0.5</p>
+<p>Maximum proportion of an ORF which can overlap with an ORF from another gene before they are filtered out.</p>
+</div>
 </div>
 </div>
 </div>

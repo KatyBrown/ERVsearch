@@ -204,8 +204,18 @@ These are:
 Small groups of nucleotide sequences from the ORF database which are closely related, selected manually as representatives of these groups based on prior knowledge, sequence similarity and phylogenetic analysis. Newly identified sequences are assigned to these groups where possible.
 
 `ERVsearch/phylogenies/summary_phylogenies/*fasta`
+
 Broader groups of nucleotide sequences from the ORF database for each gene (gag, pol and env) and each genus (gamma, beta, delta, alpha, epsilon, lenti and spuma). Newly identified sequences are incorporated into phylogenetic trees based on these sequences, plus more closely related sequences from the `group_phylogenies` fasta files.
 
+Two addtional files are also provided:
+
+`ERVsearch/ERV_db/convert.tsv`
+
+Table showing the group each reference sequence belongs to.
+
+`ERVsearch/phylogenies/outgroups.tsv`
+
+Table providing the name of an appropriate outgroup for each phylogeny.
 
 ## Usage
 ### Running the Pipeline
