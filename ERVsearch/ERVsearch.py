@@ -16,17 +16,29 @@ import configparser
 import pathlib
 import math
 import shutil
-import HelperFunctions
-import Fasta
-import Bed
-import Exonerate
-import ORFs
-import Trees
-import Summary
-import Regions
-import Errors
+try:
+    import ERVsearch.HelperFunctions as HelperFunctions
+    import ERVsearch.Fasta as Fasta
+    import ERVsearch.Bed as Bed
+    import ERVsearch.Exonerate as Exonerate
+    import ERVsearch.ORFs as ORFs
+    import ERVsearch.Trees as Trees
+    import ERVsearch.Summary as Summary
+    import ERVsearch.Regions as Regions
+    import ERVsearch.Errors as Errors
+except ImportError:
+    import HelperFunctions
+    import Fasta
+    import Bed
+    import Exonerate
+    import ORFs
+    import Trees
+    import Summary
+    import Regions
+    import Errors
 
-parser = cmdline.get_argparse(description='Pipeline ERVs')
+
+parser = cmdline.get_argparse(description='ERVsearch pipeline to identify endogenous retrovirus like regions in a set of sequences')
 options = parser.parse_args()
 
 # Setup to read the ini config file
@@ -63,6 +75,8 @@ log.addHandler(handler)
 genes = []
 PARAMS['gene'] = {}
 
+PARAMS['paths']['path_to_ervsearch'] = os.path.split(
+    os.path.realpath(__file__))[0]
 # The default is to use /ERV_db/gag.fasta /ERV_db/pol.fasta and
 # /ERV_db/env.fasta in the pipeline directory but the user can
 # also provide their own FASTA files.

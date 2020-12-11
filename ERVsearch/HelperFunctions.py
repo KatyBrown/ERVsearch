@@ -5,7 +5,10 @@ General functions for the pipeline.
 import os
 import pandas as pd
 import shutil
-import Errors
+try:
+    import ERVsearch.Errors as Errors
+except ImportError:
+    import Errors
 
 pd.set_option('mode.chained_assignment', None)
 
@@ -54,7 +57,7 @@ def quickCheck(PARAMS, log):
                               log=log)
 
     pathD = {'ERVsearch':
-             '%s/ERVsearch/ERVsearch.py' % (
+             '%s/ERVsearch.py' % (
                  PARAMS['paths']['path_to_ERVsearch']),
              'usearch': PARAMS['paths']['path_to_usearch'],
              'exonerate': PARAMS['paths']['path_to_exonerate']}

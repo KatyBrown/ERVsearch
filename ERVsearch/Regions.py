@@ -3,12 +3,16 @@
 Functions to identify regions with multiple ERV-like ORFs
 '''
 import pandas as pd
-import HelperFunctions
-import ORFs
 import matplotlib
 import matplotlib.pyplot as plt
 import itertools
 import numpy as np
+try:
+    import ERVsearch.HelperFunctions as HelperFunctions
+    import ERVsearch.ORFs as ORFs
+except ImportError:
+    import HelperFunctions
+    import ORFs
 
 
 def plotERVRegions(table, genes, plotparams, log):

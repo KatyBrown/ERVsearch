@@ -7,9 +7,14 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import HelperFunctions
-import Fasta
-import ORFs
+try:
+    import ERVsearch.HelperFunctions as HelperFunctions
+    import ERVsearch.Fasta as Fasta
+    import ERVsearch.ORFs as ORFs
+except ImportError:
+    import HelperFunctions
+    import Fasta
+    import ORFs
 
 
 def getInfiles(allinfiles, gene, ind):

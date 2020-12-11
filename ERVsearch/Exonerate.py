@@ -7,7 +7,10 @@ import pandas as pd
 import numpy as np
 import subprocess
 import copy
-import Errors
+try:
+    import ERVsearch.Errors as Errors
+except ImportError:
+    import Errors
 
 
 def runExonerate(fasta, chrom, outf, log, exonerate):

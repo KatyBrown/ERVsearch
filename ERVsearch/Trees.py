@@ -6,8 +6,12 @@ import os
 import pandas as pd
 import ete3 as ete
 import subprocess
-import Fasta
-import Errors
+try:
+    import ERVsearch.Fasta as Fasta
+    import ERVsearch.Errors as Errors
+except ImportError:
+    import Fasta
+    import Errors
 pd.set_option('mode.chained_assignment', None)
 
 

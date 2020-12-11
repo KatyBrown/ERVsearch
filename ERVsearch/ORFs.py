@@ -7,8 +7,12 @@ import numpy as np
 import subprocess
 import re
 import textwrap
-import Fasta
-import Errors
+try:
+    import ERVsearch.Fasta as Fasta
+    import ERVsearch.Errors as Errors
+except ImportError:
+    import Fasta
+    import Errors
 
 
 def runTranseq(fasta, rawout, trans_tab, log):

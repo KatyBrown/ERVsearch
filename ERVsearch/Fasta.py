@@ -6,7 +6,10 @@ Functions for reading, generating and processing FASTA files
 import os
 import pandas as pd
 import subprocess
-import Errors
+try:
+    import ERVsearch.Errors as Errors
+except ImportError:
+    import Errors
 pd.set_option('mode.chained_assignment', None)
 
 
