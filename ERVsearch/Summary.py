@@ -312,7 +312,7 @@ def makeGenePlot(plot, bigtab, genes, title, plotparams, outfile):
                color=plotparams['%s_colour' % gene])
 
     # tidy up the axes
-    sp.set_xticks(np.arange(i))
+    sp.set_xticks(np.arange(len(genes)))
     sp.set_xticklabels(genes)
     sp.set_ylabel("Number of Regions")
     # add the title
