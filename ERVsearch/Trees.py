@@ -208,7 +208,7 @@ def drawTree(tree, outfile, maincolour, highlightcolour,
                 # Write the sequence name and the number of sequences it
                 # is representing
                 text = "%s (%i sequences)" % (item.name, sizeD[item.name])
-                item.add_face(ete.CircleFace(radius=countn, color=col),
+                item.add_face(ete.faces.CircleFace(radius=countn, color=col),
                               column=0)
             else:
                 # Otherwise just put the name
@@ -218,7 +218,7 @@ def drawTree(tree, outfile, maincolour, highlightcolour,
             text = item.name
 
         # Add the text to the node
-        TF = ete.TextFace(text)
+        TF = ete.faces.TextFace(text)
         item.add_face(TF, column=1)
         TF.fgcolor = col
 
@@ -228,7 +228,7 @@ def drawTree(tree, outfile, maincolour, highlightcolour,
     NS['size'] = 0
     for node in T.traverse():
         if not node.is_leaf():
-            f = ete.TextFace(node.support)
+            f = ete.faces.TextFace(node.support)
             # This sets the position of the branch support
             node.add_face(f, column=0, position="branch-top")
         node.set_style(NS)
